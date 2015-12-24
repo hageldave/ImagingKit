@@ -27,13 +27,21 @@ public class Img {
 	}
 	
 	public Img(BufferedImage img){
+		int type = img.getType();
+		if(type != BufferedImage.TYPE_INT_ARGB || type != BufferedImage.TYPE_INT_RGB){
+			throw new IllegalArgumentException("cannot use BufferedImage with type other than INT_ARGB or INT_RGB");
+		}
 		this.dimension = new Dimension(img.getWidth(),img.getHeight());
 		this.data = ((DataBufferInt)img.getRaster().getDataBuffer()).getData();
 	}
 	
+	public Img(int width, int height, int[] data){
+		this(new Dimension(width, height), data);
+	}
+	
 	public Img(Dimension dim, int[] data){
 		if(dim.width*dim.height != data.length){
-			throw new IllegalArgumentException(String.format("Provided Dimension %s does not match number of provided pixels %d", dimension, data.length));
+			throw new IllegalArgumentException(String.format("Provided Dimension %s does not match number of provided pixels %d", dim, data.length));
 		}
 		this.dimension = dim;
 		this.data = data;
@@ -78,10 +86,10 @@ public class Img {
 				return getPixel(x,y);
 			case boundary_mode_mirror:
 				if(x < 0){ // mirror x to right side of image
-					x = -x + dimension.width-1; 
+					x = -x - 1; 
 				}
 				if(y < 0 ){ // mirror y to bottom side of image
-					y = -y + dimension.height-1;
+					y = -y - 1;
 				}
 				x = (x/dimension.width) % 2 == 0 ? (x%dimension.width) : (dimension.width-1)-(x%dimension.width);
 				y = (y/dimension.height) % 2 == 0 ? (y%dimension.height) : (dimension.height-1)-(y%dimension.height);
@@ -91,6 +99,13 @@ public class Img {
 			}
 		} else { 
 			return getPixel(x, y);
+		}
+	}
+	
+	public static void main(String[] args) {
+		Img img = new Img(4,1, new int[]{1,0,0,4});
+		for(int i = -4; i < 16; i++){
+			System.out.println(img.getPixel(i, 0, boundary_mode_mirror));
 		}
 	}
 	
@@ -134,6 +149,20 @@ public class Img {
 	public BufferedImage toBufferedImage(BufferedImage img){
 		img.setRGB(0, 0, getWidth(), getHeight(), getData(), 0, getWidth());
 		return img;
+	}
+	
+	public static int ch(int color, int startBit, int numBits){
+		return (color >> startBit) & ((1 << numBits)-1);
+	}
+	
+	public static int combineCh(int bitsPerChannel, int ... channels){
+		int result = 0;
+		int startBit = 0;
+		for(int i = channels.length-1; i >= 0; i--){
+			result |= channels[i] << startBit;
+			startBit += bitsPerChannel;
+		}
+		return result;
 	}
 	
 	public static int a(int color){
