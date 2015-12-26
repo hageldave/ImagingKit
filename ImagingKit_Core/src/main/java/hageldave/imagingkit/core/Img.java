@@ -209,4 +209,11 @@ public class Img {
 		return rgba_bounded(0xff, r, g, b);
 	}
 	
+	public static int getGrey(int color, int redWeight, int greenWeight, int blueWeight){
+		return (r(color)*redWeight + g(color)*greenWeight + b(color)*blueWeight)/(redWeight+blueWeight+greenWeight);
+	}
+	
+	public static int getLuminance(int color){
+		return getGrey(color, 3,6,1);
+	}
 }
