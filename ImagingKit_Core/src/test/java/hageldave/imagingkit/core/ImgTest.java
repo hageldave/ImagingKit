@@ -17,7 +17,7 @@ public class ImgTest {
 		assertEquals(0xa124, Img.ch(color, 4, 16));
 		assertEquals(0x44, Img.ch(color, 0, 8));
 		
-		assertEquals(0x01001234, Img.rgba_fast(0x01, 0x00, 0x12, 0x34));
+		assertEquals(0x01001234, Img.argb_fast(0x01, 0x00, 0x12, 0x34));
 		assertEquals(0xff543210, Img.rgb_fast(0x54, 0x32, 0x10));
 		assertEquals(0xff00ff54, Img.rgb_bounded(-12, 260, 0x54));
 		assertEquals(0xffffffff, Img.rgb(0x15ff, 0xaff, 0x5cff));

@@ -115,7 +115,7 @@ public class Img {
 	}
 	
 	private static int interpolateColors(final int c00, final int c01, final int c10, final int c11, final float mx, final float my){
-		return rgba_fast/*_bounded*/(
+		return argb_fast/*_bounded*/(
 				blend( blend(a(c00), a(c01), mx), blend(a(c10), a(c11), mx), my),
 				blend( blend(r(c00), r(c01), mx), blend(r(c10), r(c11), mx), my),
 				blend( blend(g(c00), g(c01), mx), blend(g(c10), g(c11), mx), my),
@@ -164,11 +164,11 @@ public class Img {
 		return img;
 	}
 	
-	public static int ch(int color, int startBit, int numBits){
+	public static final int ch(final int color, final int startBit, final int numBits){
 		return (color >> startBit) & ((1 << numBits)-1);
 	}
 	
-	public static int combineCh(int bitsPerChannel, int ... channels){
+	public static final int combineCh(int bitsPerChannel, int ... channels){
 		int result = 0;
 		int startBit = 0;
 		for(int i = channels.length-1; i >= 0; i--){
@@ -178,55 +178,55 @@ public class Img {
 		return result;
 	}
 	
-	public static int a(int color){
+	public static final int a(final int color){
 		return (color >> 24) & 0xff;
 	}
 	
-	public static int r(int color){
+	public static final int r(final int color){
 		return (color >> 16) & 0xff;
 	}
 	
-	public static int g(int color){
+	public static final int g(final int color){
 		return (color >> 8) & 0xff;
 	}
 	
-	public static int b(int color){
+	public static final int b(final int color){
 		return (color) & 0xff;
 	}
 	
-	public static int rgba_fast(int a, int r, int g, int b){
+	public static final int argb_fast(final int a, final int r, final int g, final int b){
 		return (a<<24)|(r<<16)|(g<<8)|b;
 	}
 	
-	public static int rgba(int a, int r, int g, int b){
-		return rgba_fast(a & 0xff, r & 0xff, g & 0xff, b & 0xff);
+	public static final int argb(final int a, final int r, final int g, final int b){
+		return argb_fast(a & 0xff, r & 0xff, g & 0xff, b & 0xff);
 	}
 	
-	public static int rgba_bounded(int a, int r, int g, int b){
-		return rgba_fast(
+	public static final int argb_bounded(final int a, final int r, final int g, final int b){
+		return argb_fast(
 				a > 255 ? 255: a < 0 ? 0:a, 
 				r > 255 ? 255: r < 0 ? 0:r, 
 				g > 255 ? 255: g < 0 ? 0:g,
 				b > 255 ? 255: b < 0 ? 0:b);
 	}
 	
-	public static int rgb_fast(int r, int g, int b){
-		return rgba_fast(0xff, r, g, b);
+	public static final int rgb_fast(final int r, final int g, final int b){
+		return argb_fast(0xff, r, g, b);
 	}
 	
-	public static int rgb(int r, int g, int b){
-		return rgba(0xff, r, g, b);
+	public static final int rgb(final int r, final int g, final int b){
+		return argb(0xff, r, g, b);
 	}
 	
-	public static int rgb_bounded(int r, int g, int b){
-		return rgba_bounded(0xff, r, g, b);
+	public static final int rgb_bounded(final int r, final int g, final int b){
+		return argb_bounded(0xff, r, g, b);
 	}
 	
-	public static int getGrey(final int color, final int redWeight, final int greenWeight, final int blueWeight){
+	public static final int getGrey(final int color, final int redWeight, final int greenWeight, final int blueWeight){
 		return (r(color)*redWeight + g(color)*greenWeight + b(color)*blueWeight)/(redWeight+blueWeight+greenWeight);
 	}
 	
-	public static int getLuminance(int color){
+	public static final int getLuminance(final int color){
 		return getGrey(color, 2126, 7152, 722);
 	}
 }
