@@ -14,8 +14,8 @@ public class Img {
 	public static final int boundary_mode_mirror = -3;
 	
 	
-	private int[] data;
-	private Dimension dimension;
+	private final int[] data;
+	private final Dimension dimension;
 	
 	public Img(int width, int height){
 		this(new Dimension(width, height));
@@ -28,8 +28,8 @@ public class Img {
 	
 	public Img(BufferedImage img){
 		int type = img.getType();
-		if(type != BufferedImage.TYPE_INT_ARGB || type != BufferedImage.TYPE_INT_RGB){
-			throw new IllegalArgumentException("cannot use BufferedImage with type other than INT_ARGB or INT_RGB");
+		if(type != BufferedImage.TYPE_INT_ARGB && type != BufferedImage.TYPE_INT_RGB){
+			throw new IllegalArgumentException("cannot create Img as remote of BufferedImage with type other than INT_ARGB or INT_RGB");
 		}
 		this.dimension = new Dimension(img.getWidth(),img.getHeight());
 		this.data = ((DataBufferInt)img.getRaster().getDataBuffer()).getData();
@@ -67,7 +67,7 @@ public class Img {
 		return data;
 	}
 	
-	public int getPixel(int x, int y){
+	public int getPixel(final int x, final int y){
 		return this.data[y*dimension.width + x];
 	}
 	
@@ -102,16 +102,9 @@ public class Img {
 		}
 	}
 	
-	public static void main(String[] args) {
-		Img img = new Img(4,1, new int[]{1,0,0,4});
-		for(int i = -4; i < 16; i++){
-			System.out.println(img.getPixel(i, 0, boundary_mode_mirror));
-		}
-	}
-	
-	public int interpolatePixel(float xNormalized, float yNormalized){
-		float xF = xNormalized * getWidth();
-		float yF = yNormalized * getHeight();
+	public int interpolatePixel(final float xNormalized, final float yNormalized){
+		float xF = xNormalized * (getWidth()-1);
+		float yF = yNormalized * (getHeight()-1);
 		int x = (int)xF;
 		int y = (int)yF;
 		int c00 = getPixel(x, 							y);
@@ -121,7 +114,7 @@ public class Img {
 		return interpolateColors(c00, c01, c10, c11, xF-x, yF-y);
 	}
 	
-	private static int interpolateColors(int c00, int c01, int c10, int c11, float mx, float my){
+	private static int interpolateColors(final int c00, final int c01, final int c10, final int c11, final float mx, final float my){
 		return rgba_fast/*_bounded*/(
 				blend( blend(a(c00), a(c01), mx), blend(a(c10), a(c11), mx), my),
 				blend( blend(r(c00), r(c01), mx), blend(r(c10), r(c11), mx), my),
@@ -129,11 +122,25 @@ public class Img {
 				blend( blend(b(c00), b(c01), mx), blend(b(c10), b(c11), mx), my) );
 	}
 	
-	private static int blend(int channel1, int channel2, float m){
+	private static int blend(final int channel1, final int channel2, final float m){
 		return (int) ((channel2 * m) + (channel1 * (1f-m)));
 	}
 	
-	public void setPixel(int x, int y, int px){
+	public Img copyPixels(int x, int y, int w, int h, Img dest, int destX, int destY){
+		if(dest == null){
+			dest = new Img(w,h);
+		}
+		if(x==0 && destX==0 && w==dest.getWidth() && w==this.getWidth()){
+			System.arraycopy(this.getData(), y*w, dest.getData(), destY*w, w*h);
+		} else {
+			for(int i = 0; i < h; i++){
+				System.arraycopy(this.getData(), (y+i)*getWidth()+x, dest.getData(), (destY+i)*dest.getWidth()+destX, w);
+			}
+		}
+		return dest;
+	}
+	
+	public void setPixel(final int x, final int y, final int px){
 		this.data[y*dimension.width + x] = px;
 	}
 	
@@ -148,6 +155,12 @@ public class Img {
 	
 	public BufferedImage toBufferedImage(BufferedImage img){
 		img.setRGB(0, 0, getWidth(), getHeight(), getData(), 0, getWidth());
+		return img;
+	}
+	
+	public static Img fromBufferedImage(BufferedImage bimg){
+		Img img = new Img(bimg.getWidth(), bimg.getHeight());
+		bimg.getRGB(0, 0, img.getWidth(), img.getHeight(), img.getData(), 0, img.getWidth());
 		return img;
 	}
 	
