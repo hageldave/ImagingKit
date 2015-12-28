@@ -2,7 +2,11 @@ package hageldave.imagingkit.core;
 
 import java.awt.Dimension;
 import java.awt.image.BufferedImage;
+import java.awt.image.DataBuffer;
 import java.awt.image.DataBufferInt;
+import java.awt.image.DirectColorModel;
+import java.awt.image.Raster;
+import java.awt.image.WritableRaster;
 import java.util.Arrays;
 
 
@@ -26,13 +30,9 @@ public class Img {
 		this.dimension = dimension;
 	}
 	
-	public Img(BufferedImage img){
-		int type = img.getType();
-		if(type != BufferedImage.TYPE_INT_ARGB && type != BufferedImage.TYPE_INT_RGB){
-			throw new IllegalArgumentException("cannot create Img as remote of BufferedImage with type other than INT_ARGB or INT_RGB");
-		}
-		this.dimension = new Dimension(img.getWidth(),img.getHeight());
-		this.data = ((DataBufferInt)img.getRaster().getDataBuffer()).getData();
+	public Img(BufferedImage bimg){
+		this(bimg.getWidth(), bimg.getHeight());
+		bimg.getRGB(0, 0, this.getWidth(), this.getHeight(), this.getData(), 0, this.getWidth());
 	}
 	
 	public Img(int width, int height, int[] data){
@@ -158,9 +158,31 @@ public class Img {
 		return img;
 	}
 	
-	public static Img fromBufferedImage(BufferedImage bimg){
-		Img img = new Img(bimg.getWidth(), bimg.getHeight());
-		bimg.getRGB(0, 0, img.getWidth(), img.getHeight(), img.getData(), 0, img.getWidth());
+	public BufferedImage getRemoteBufferedImage(){
+		DirectColorModel cm = new DirectColorModel(32,
+				0x00ff0000,       // Red
+                0x0000ff00,       // Green
+                0x000000ff,       // Blue
+                0xff000000        // Alpha
+                );
+		DataBufferInt buffer = new DataBufferInt(getData(), numPixels());
+		WritableRaster raster = Raster.createPackedRaster(buffer, getWidth(), getHeight(), getWidth(), cm.getMasks(), null);
+		BufferedImage bimg = new BufferedImage(cm, raster, false, null);
+		return bimg;
+	}
+	
+	public static Img createRemoteImg(BufferedImage bimg){
+		int type = bimg.getRaster().getDataBuffer().getDataType();
+		if(type != DataBuffer.TYPE_INT){
+			throw new IllegalArgumentException(
+					String.format("cannot create Img as remote of provided BufferedImage!%n"
+							+ "Need BufferedImage with DataBuffer of type TYPE_INT (%d). Provided type: %d", 
+							DataBuffer.TYPE_INT, type));
+		}
+		Img img = new Img(
+				new Dimension(bimg.getWidth(),bimg.getHeight()), 
+				((DataBufferInt)bimg.getRaster().getDataBuffer()).getData()
+			);
 		return img;
 	}
 	

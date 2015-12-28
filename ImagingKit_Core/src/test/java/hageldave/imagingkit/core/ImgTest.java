@@ -124,21 +124,41 @@ public class ImgTest {
 					8,9,0,1,
 					2,3,4,5
 				}, 0, 4);
-		Img img = new Img(bimg);
-		// test same pixels
-		for(int y = 0; y < 4; y++)
-		for(int x = 0; x < 4; x++){
+		
+		{
+			// test same pixels
+			Img img = new Img(bimg);
+			for(int y = 0; y < 4; y++)
+			for(int x = 0; x < 4; x++){
 			assertEquals(bimg.getRGB(x, y), img.getPixel(x, y));
-		}
-		// test remoteness
-		Img img2 = Img.fromBufferedImage(bimg);
-		for(int y = 0; y < 4; y++)
-		for(int x = 0; x < 4; x++){
-			img.setPixel(x, y, -2000-x-y);
-			assertEquals(bimg.getRGB(x, y), img.getPixel(x, y));
-			assertNotEquals(bimg.getRGB(x, y), img2.getPixel(x, y));
+			}
 		}
 		
+		{
+			// test remoteness
+			Img img = new Img(bimg);
+			Img img2 = Img.createRemoteImg(bimg);
+			for(int y = 0; y < 4; y++)
+			for(int x = 0; x < 4; x++){
+				img2.setPixel(x, y, -2000-x-y);
+				assertNotEquals(bimg.getRGB(x, y), img.getPixel(x, y));
+				assertEquals(bimg.getRGB(x, y), img2.getPixel(x, y));
+			}
+		}
+		
+		{	
+			// test remoteness in both directions
+			Img img = Img.createRemoteImg(bimg);
+			BufferedImage r_bimg = img.getRemoteBufferedImage();
+			for(int y = 0; y < 4; y++)
+			for(int x = 0; x < 4; x++){
+				assertEquals(bimg.getRGB(x, y), r_bimg.getRGB(x, y));
+				bimg.setRGB(x, y, x+y+144);
+				assertEquals(bimg.getRGB(x, y), r_bimg.getRGB(x, y));
+				r_bimg.setRGB(x, y, x+y+166);
+				assertEquals(bimg.getRGB(x, y), r_bimg.getRGB(x, y));
+			}
+		}
 		
 	}
 	
