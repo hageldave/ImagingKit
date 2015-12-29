@@ -4,6 +4,8 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 import java.awt.image.BufferedImage;
+import java.util.LinkedList;
+import java.util.Spliterator;
 
 public class ImgTest {
 
@@ -164,17 +166,42 @@ public class ImgTest {
 	
 	@Test
 	public void iterator_test(){
-		Img img = new Img(16,9);
+		// iterator
 		{
-			int i = 0;
+			Img img = new Img(16,9);
+			int idx = 0;
 			for(Pixel p: img){
-				p.setValue(i);
-				i++;
+				p.setValue(idx);
+				idx++;
 			}
-			assertEquals(img.numValues(), i);
+			assertEquals(img.numValues(), idx);
+			for(int i = 0; i < img.numValues(); i++){
+				assertEquals(i, img.getData()[i]);
+			}
 		}
-		for(int i = 0; i < img.numValues(); i++){
-			assertEquals(i, img.getData()[i]);
+		
+		// spliterator
+		{
+			Img img = new Img(2000, 400);
+			Spliterator<Pixel> split = img.spliterator();
+			LinkedList<Spliterator<Pixel>> all = new LinkedList<>();
+			all.add(split);
+			int idx = 0;
+			while(idx < all.size()){
+				Spliterator<Pixel> sp = all.get(idx);
+				Spliterator<Pixel> child = sp.trySplit();
+				if(child != null){
+					all.add(child);
+				} else {
+					idx++;
+				}	
+			}
+			for(Spliterator<Pixel> iter: all){
+				iter.forEachRemaining((px) -> {px.setValue(px.getIndex());});
+			}
+			for(int i = 0; i < img.numValues(); i++){
+				assertEquals(i, img.getData()[i]);
+			}
 		}
 		
 		

@@ -18,3 +18,7 @@ hs_err_pid*
 
 #maven things
 */target/
+
+#special test classes
+*testmain.java
+*TestMain.java

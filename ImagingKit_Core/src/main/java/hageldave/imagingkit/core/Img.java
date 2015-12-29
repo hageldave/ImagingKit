@@ -222,11 +222,8 @@ public class Img implements Iterable<Pixel> {
 	}
 	
 	public Spliterator<Pixel> spliterator() {
-		return new ImgSpliterator(0, getHeight()-1);
+		return new ImgSpliterator(0, numValues()-1);
 	}
-	
-	public 
-	
 	
 	
 	public static final int ch(final int color, final int startBit, final int numBits){
@@ -299,21 +296,21 @@ public class Img implements Iterable<Pixel> {
 	
 	private class ImgSpliterator implements  Spliterator<Pixel> {
 		
-		Pixel px;
-		int endRow;
+		final Pixel px;
+		int endIndex;
 		
-		public ImgSpliterator(int startRow, int endRow) {
-			px = new Pixel(Img.this, 0, startRow);
-			this.endRow = endRow;
+		public ImgSpliterator(int startIndex, int endIndex) {
+			px = new Pixel(Img.this, startIndex);
+			this.endIndex = endIndex;
 		}
 		
-		public void setEndRow(int endRow) {
-			this.endRow = endRow;
+		public void setEndIndex(int endIndex) {
+			this.endIndex = endIndex;
 		}
 
 		@Override
 		public boolean tryAdvance(Consumer<? super Pixel> action) {
-			if(px.getY() <= endRow){
+			if(px.getIndex() <= endIndex){
 				int index = px.getIndex();
 				action.accept(px);
 				px.setIndex(index+1);
@@ -325,20 +322,19 @@ public class Img implements Iterable<Pixel> {
 		
 		@Override
 		public void forEachRemaining(Consumer<? super Pixel> action) {
-			int end = (endRow+1)*Img.this.getWidth();
 			int idx = px.getIndex();
-			for(;idx < end; px.setIndex(++idx)){
+			for(;idx <= endIndex; px.setIndex(++idx)){
 				action.accept(px);
 			}
 		}
 
 		@Override
 		public Spliterator<Pixel> trySplit() {
-			int currentRow = Math.min(px.getY(), endRow);
-			int midRow = currentRow + (endRow-currentRow)/2;
-			if(midRow > currentRow){
-				ImgSpliterator split = new ImgSpliterator(midRow, endRow);
-				setEndRow(midRow-1);
+			int currentIdx = Math.min(px.getIndex(), endIndex);
+			int midIdx = currentIdx + (endIndex-currentIdx)/2;
+			if(midIdx > currentIdx+1024){
+				ImgSpliterator split = new ImgSpliterator(midIdx, endIndex);
+				setEndIndex(midIdx-1);
 				return split;
 			} else {
 				return null;
@@ -348,7 +344,7 @@ public class Img implements Iterable<Pixel> {
 		@Override
 		public long estimateSize() {
 			int currentIndex = px.getIndex();
-			int lastIndexPlusOne = (endRow+1)*Img.this.getWidth();
+			int lastIndexPlusOne = endIndex+1;
 			return lastIndexPlusOne-currentIndex;
 		}
 
