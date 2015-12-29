@@ -8,9 +8,12 @@ import java.awt.image.DirectColorModel;
 import java.awt.image.Raster;
 import java.awt.image.WritableRaster;
 import java.util.Arrays;
+import java.util.Iterator;
+import java.util.Spliterator;
+import java.util.function.Consumer;
 
 
-public class Img {
+public class Img implements Iterable<Pixel> {
 
 	public static final int boundary_mode_zero = 0;
 	public static final int boundary_mode_repeat_edge = -1;
@@ -59,7 +62,7 @@ public class Img {
 		return dimension.height;
 	}
 	
-	public int numPixels(){
+	public int numValues(){
 		return getWidth()*getHeight();
 	}
 	
@@ -67,11 +70,11 @@ public class Img {
 		return data;
 	}
 	
-	public int getPixel(final int x, final int y){
+	public int getValue(final int x, final int y){
 		return this.data[y*dimension.width + x];
 	}
 	
-	public int getPixel(int x, int y, final int boundaryMode){
+	public int getValue(int x, int y, final int boundaryMode){
 		if(x < 0 || y < 0 || x >= dimension.width || y >= dimension.height){
 			switch (boundaryMode) {
 			case boundary_mode_zero:
@@ -79,11 +82,11 @@ public class Img {
 			case boundary_mode_repeat_edge:
 				x = (x < 0 ? 0: (x >= dimension.width ? dimension.width-1:x));
 				y = (y < 0 ? 0: (y >= dimension.height ? dimension.height-1:y));
-				return getPixel(x, y);
+				return getValue(x, y);
 			case boundary_mode_repeat_image:
 				x = (dimension.width + (x % dimension.width)) % dimension.width;
 				y = (dimension.height + (y % dimension.height)) % dimension.height;
-				return getPixel(x,y);
+				return getValue(x,y);
 			case boundary_mode_mirror:
 				if(x < 0){ // mirror x to right side of image
 					x = -x - 1; 
@@ -93,24 +96,24 @@ public class Img {
 				}
 				x = (x/dimension.width) % 2 == 0 ? (x%dimension.width) : (dimension.width-1)-(x%dimension.width);
 				y = (y/dimension.height) % 2 == 0 ? (y%dimension.height) : (dimension.height-1)-(y%dimension.height);
-				return getPixel(x, y);
+				return getValue(x, y);
 			default:
 				return boundaryMode; // boundary mode can be default color
 			}
 		} else { 
-			return getPixel(x, y);
+			return getValue(x, y);
 		}
 	}
 	
-	public int interpolatePixel(final float xNormalized, final float yNormalized){
+	public int interpolateValue(final float xNormalized, final float yNormalized){
 		float xF = xNormalized * (getWidth()-1);
 		float yF = yNormalized * (getHeight()-1);
 		int x = (int)xF;
 		int y = (int)yF;
-		int c00 = getPixel(x, 							y);
-		int c01 = getPixel(x, 						   (y+1 < getHeight() ? y+1:y));
-		int c10 = getPixel((x+1 < getWidth() ? x+1:x), 	y);
-		int c11 = getPixel((x+1 < getWidth() ? x+1:x), (y+1 < getHeight() ? y+1:y));
+		int c00 = getValue(x, 							y);
+		int c01 = getValue(x, 						   (y+1 < getHeight() ? y+1:y));
+		int c10 = getValue((x+1 < getWidth() ? x+1:x), 	y);
+		int c11 = getValue((x+1 < getWidth() ? x+1:x), (y+1 < getHeight() ? y+1:y));
 		return interpolateColors(c00, c01, c10, c11, xF-x, yF-y);
 	}
 	
@@ -126,7 +129,15 @@ public class Img {
 		return (int) ((channel2 * m) + (channel1 * (1f-m)));
 	}
 	
-	public Img copyPixels(int x, int y, int w, int h, Img dest, int destX, int destY){
+	public Pixel getPixel(){
+		return new Pixel(this, 0);
+	}
+	
+	public Pixel getPixel(int x, int y){
+		return new Pixel(this, x,y);
+	}
+	
+	public Img copyArea(int x, int y, int w, int h, Img dest, int destX, int destY){
 		if(dest == null){
 			dest = new Img(w,h);
 		}
@@ -140,8 +151,12 @@ public class Img {
 		return dest;
 	}
 	
-	public void setPixel(final int x, final int y, final int px){
+	public void setValue(final int x, final int y, final int px){
 		this.data[y*dimension.width + x] = px;
+	}
+	
+	public void fill(final int value){
+		Arrays.fill(getData(), value);
 	}
 	
 	public Img copy(){
@@ -165,7 +180,7 @@ public class Img {
                 0x000000ff,       // Blue
                 0xff000000        // Alpha
                 );
-		DataBufferInt buffer = new DataBufferInt(getData(), numPixels());
+		DataBufferInt buffer = new DataBufferInt(getData(), numValues());
 		WritableRaster raster = Raster.createPackedRaster(buffer, getWidth(), getHeight(), getWidth(), cm.getMasks(), null);
 		BufferedImage bimg = new BufferedImage(cm, raster, false, null);
 		return bimg;
@@ -185,6 +200,34 @@ public class Img {
 			);
 		return img;
 	}
+	
+	
+	@Override
+	public Iterator<Pixel> iterator() {
+		Iterator<Pixel> pxIter = new Iterator<Pixel>() {
+			Pixel px = new Pixel(Img.this, -1);
+			
+			@Override
+			public Pixel next() {
+				px.setIndex(px.getIndex()+1);
+				return px;
+			}
+			
+			@Override
+			public boolean hasNext() {
+				return px.getIndex()+1 < numValues();
+			}
+		};
+		return pxIter;
+	}
+	
+	public Spliterator<Pixel> spliterator() {
+		return new ImgSpliterator(0, getHeight()-1);
+	}
+	
+	public 
+	
+	
 	
 	public static final int ch(final int color, final int startBit, final int numBits){
 		return (color >> startBit) & ((1 << numBits)-1);
@@ -250,5 +293,69 @@ public class Img {
 	
 	public static final int getLuminance(final int color){
 		return getGrey(color, 2126, 7152, 722);
+	}
+	
+	
+	
+	private class ImgSpliterator implements  Spliterator<Pixel> {
+		
+		Pixel px;
+		int endRow;
+		
+		public ImgSpliterator(int startRow, int endRow) {
+			px = new Pixel(Img.this, 0, startRow);
+			this.endRow = endRow;
+		}
+		
+		public void setEndRow(int endRow) {
+			this.endRow = endRow;
+		}
+
+		@Override
+		public boolean tryAdvance(Consumer<? super Pixel> action) {
+			if(px.getY() <= endRow){
+				int index = px.getIndex();
+				action.accept(px);
+				px.setIndex(index+1);
+				return true;
+			} else {
+				return false;
+			}
+		}
+		
+		@Override
+		public void forEachRemaining(Consumer<? super Pixel> action) {
+			int end = (endRow+1)*Img.this.getWidth();
+			int idx = px.getIndex();
+			for(;idx < end; px.setIndex(++idx)){
+				action.accept(px);
+			}
+		}
+
+		@Override
+		public Spliterator<Pixel> trySplit() {
+			int currentRow = Math.min(px.getY(), endRow);
+			int midRow = currentRow + (endRow-currentRow)/2;
+			if(midRow > currentRow){
+				ImgSpliterator split = new ImgSpliterator(midRow, endRow);
+				setEndRow(midRow-1);
+				return split;
+			} else {
+				return null;
+			}
+		}
+
+		@Override
+		public long estimateSize() {
+			int currentIndex = px.getIndex();
+			int lastIndexPlusOne = (endRow+1)*Img.this.getWidth();
+			return lastIndexPlusOne-currentIndex;
+		}
+
+		@Override
+		public int characteristics() {
+			return NONNULL | SIZED | CONCURRENT | SUBSIZED;
+		}
+		
 	}
 }

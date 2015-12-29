@@ -35,37 +35,37 @@ public class ImgTest {
 				});
 		for(int mode: new int[]{Img.boundary_mode_zero, Img.boundary_mode_mirror, Img.boundary_mode_repeat_edge, Img.boundary_mode_repeat_image}){
 			// test corners
-			assertEquals(0, img.getPixel(0, 0, mode));
-			assertEquals(3, img.getPixel(3, 0, mode));
-			assertEquals(9, img.getPixel(0, 3, mode));
-			assertEquals(9, img.getPixel(3, 3, mode));
+			assertEquals(0, img.getValue(0, 0, mode));
+			assertEquals(3, img.getValue(3, 0, mode));
+			assertEquals(9, img.getValue(0, 3, mode));
+			assertEquals(9, img.getValue(3, 3, mode));
 		}
-		assertEquals(0, img.getPixel(-1, 0, Img.boundary_mode_zero));
-		assertEquals(0, img.getPixel(4, 0, Img.boundary_mode_zero));
-		assertEquals(0, img.getPixel(0, -1, Img.boundary_mode_zero));
-		assertEquals(0, img.getPixel(0, 4, Img.boundary_mode_zero));
+		assertEquals(0, img.getValue(-1, 0, Img.boundary_mode_zero));
+		assertEquals(0, img.getValue(4, 0, Img.boundary_mode_zero));
+		assertEquals(0, img.getValue(0, -1, Img.boundary_mode_zero));
+		assertEquals(0, img.getValue(0, 4, Img.boundary_mode_zero));
 		
-		assertEquals(0, img.getPixel(-2, 0, Img.boundary_mode_repeat_edge));
-		assertEquals(3, img.getPixel(3, -2, Img.boundary_mode_repeat_edge));
-		assertEquals(9, img.getPixel(-10, 10, Img.boundary_mode_repeat_edge));
-		assertEquals(3, img.getPixel(10, -10, Img.boundary_mode_repeat_edge));
+		assertEquals(0, img.getValue(-2, 0, Img.boundary_mode_repeat_edge));
+		assertEquals(3, img.getValue(3, -2, Img.boundary_mode_repeat_edge));
+		assertEquals(9, img.getValue(-10, 10, Img.boundary_mode_repeat_edge));
+		assertEquals(3, img.getValue(10, -10, Img.boundary_mode_repeat_edge));
 		
 		for(int y = 0; y < 4; y++)
 		for(int x = 0; x < 4; x++){
-			assertEquals(img.getPixel(x, y), img.getPixel(x+4, y, Img.boundary_mode_repeat_image));
-			assertEquals(img.getPixel(x, y), img.getPixel(x, y+4, Img.boundary_mode_repeat_image));
-			assertEquals(img.getPixel(x, y), img.getPixel(x-4, y, Img.boundary_mode_repeat_image));
-			assertEquals(img.getPixel(x, y), img.getPixel(x, y-4, Img.boundary_mode_repeat_image));
-			assertEquals(img.getPixel(x, y), img.getPixel(x+8, y+8, Img.boundary_mode_repeat_image));
-			assertEquals(img.getPixel(x, y), img.getPixel(x-8, y-8, Img.boundary_mode_repeat_image));
+			assertEquals(img.getValue(x, y), img.getValue(x+4, y, Img.boundary_mode_repeat_image));
+			assertEquals(img.getValue(x, y), img.getValue(x, y+4, Img.boundary_mode_repeat_image));
+			assertEquals(img.getValue(x, y), img.getValue(x-4, y, Img.boundary_mode_repeat_image));
+			assertEquals(img.getValue(x, y), img.getValue(x, y-4, Img.boundary_mode_repeat_image));
+			assertEquals(img.getValue(x, y), img.getValue(x+8, y+8, Img.boundary_mode_repeat_image));
+			assertEquals(img.getValue(x, y), img.getValue(x-8, y-8, Img.boundary_mode_repeat_image));
 		}
 		
 		for(int y = 0; y < 4; y++)
 		for(int x = 0; x < 4; x++){
-			assertEquals(img.getPixel(x, y), img.getPixel(x+8, y+8, Img.boundary_mode_mirror));
-			assertEquals(img.getPixel(x, y), img.getPixel(7-x, 7-y, Img.boundary_mode_mirror));
-			assertEquals(img.getPixel(x, y), img.getPixel(-8+x, -8+y, Img.boundary_mode_mirror));
-			assertEquals(img.getPixel(x, y), img.getPixel(-1-x, -1-y, Img.boundary_mode_mirror));
+			assertEquals(img.getValue(x, y), img.getValue(x+8, y+8, Img.boundary_mode_mirror));
+			assertEquals(img.getValue(x, y), img.getValue(7-x, 7-y, Img.boundary_mode_mirror));
+			assertEquals(img.getValue(x, y), img.getValue(-8+x, -8+y, Img.boundary_mode_mirror));
+			assertEquals(img.getValue(x, y), img.getValue(-1-x, -1-y, Img.boundary_mode_mirror));
 		}
 	}
 	
@@ -79,12 +79,12 @@ public class ImgTest {
 				});
 		
 		assertEquals(img.getData().length, img.getWidth()*img.getHeight());
-		assertEquals(img.getData().length, img.numPixels());
+		assertEquals(img.getData().length, img.numValues());
 		
 		int i = 0;
 		for(int y = 0; y < img.getHeight(); y++)
 		for(int x = 0; x < img.getWidth(); x++){
-			assertEquals(img.getData()[i], img.getPixel(x, y));
+			assertEquals(img.getData()[i], img.getValue(x, y));
 			i++;
 		}
 		
@@ -96,22 +96,22 @@ public class ImgTest {
 					4,5,6,7,8
 				});
 		
-		assertEquals(img.getPixel(0, 0), img.interpolatePixel(0, 0));
-		assertEquals(img.getPixel(img.getWidth()-1, img.getHeight()-1), img.interpolatePixel(1, 1));
-		assertEquals(img.getPixel(0, img.getHeight()-1), img.interpolatePixel(0, 1));
-		assertEquals(img.getPixel(img.getWidth()-1, 0), img.interpolatePixel(1, 0));
-		assertEquals(img.getPixel(2, 1), img.interpolatePixel(0.5f, 0.5f));
+		assertEquals(img.getValue(0, 0), img.interpolateValue(0, 0));
+		assertEquals(img.getValue(img.getWidth()-1, img.getHeight()-1), img.interpolateValue(1, 1));
+		assertEquals(img.getValue(0, img.getHeight()-1), img.interpolateValue(0, 1));
+		assertEquals(img.getValue(img.getWidth()-1, 0), img.interpolateValue(1, 0));
+		assertEquals(img.getValue(2, 1), img.interpolateValue(0.5f, 0.5f));
 		
 		// test copypixels
 		Img img2 = new Img(2,2);
-		img.copyPixels(0, 0, 2, 2, img2, 0, 0);
-		assertEquals(img.getPixel(0, 0), img2.getPixel(0, 0));
-		assertEquals(img.getPixel(1, 1), img2.getPixel(1, 1));
-		img.copyPixels(1, 1, 2, 2, img2, 0, 0);
-		assertEquals(img.getPixel(1, 1), img2.getPixel(0, 0));
-		assertEquals(img.getPixel(2, 2), img2.getPixel(1, 1));
-		img.copyPixels(4, 2, 1, 1, img2, 1, 0);
-		assertEquals(img.getPixel(4, 2), img2.getPixel(1, 0));
+		img.copyArea(0, 0, 2, 2, img2, 0, 0);
+		assertEquals(img.getValue(0, 0), img2.getValue(0, 0));
+		assertEquals(img.getValue(1, 1), img2.getValue(1, 1));
+		img.copyArea(1, 1, 2, 2, img2, 0, 0);
+		assertEquals(img.getValue(1, 1), img2.getValue(0, 0));
+		assertEquals(img.getValue(2, 2), img2.getValue(1, 1));
+		img.copyArea(4, 2, 1, 1, img2, 1, 0);
+		assertEquals(img.getValue(4, 2), img2.getValue(1, 0));
 	}
 	
 	@Test
@@ -130,7 +130,7 @@ public class ImgTest {
 			Img img = new Img(bimg);
 			for(int y = 0; y < 4; y++)
 			for(int x = 0; x < 4; x++){
-			assertEquals(bimg.getRGB(x, y), img.getPixel(x, y));
+			assertEquals(bimg.getRGB(x, y), img.getValue(x, y));
 			}
 		}
 		
@@ -140,9 +140,9 @@ public class ImgTest {
 			Img img2 = Img.createRemoteImg(bimg);
 			for(int y = 0; y < 4; y++)
 			for(int x = 0; x < 4; x++){
-				img2.setPixel(x, y, -2000-x-y);
-				assertNotEquals(bimg.getRGB(x, y), img.getPixel(x, y));
-				assertEquals(bimg.getRGB(x, y), img2.getPixel(x, y));
+				img2.setValue(x, y, -2000-x-y);
+				assertNotEquals(bimg.getRGB(x, y), img.getValue(x, y));
+				assertEquals(bimg.getRGB(x, y), img2.getValue(x, y));
 			}
 		}
 		
@@ -159,6 +159,25 @@ public class ImgTest {
 				assertEquals(bimg.getRGB(x, y), r_bimg.getRGB(x, y));
 			}
 		}
+		
+	}
+	
+	@Test
+	public void iterator_test(){
+		Img img = new Img(16,9);
+		{
+			int i = 0;
+			for(Pixel p: img){
+				p.setValue(i);
+				i++;
+			}
+			assertEquals(img.numValues(), i);
+		}
+		for(int i = 0; i < img.numValues(); i++){
+			assertEquals(i, img.getData()[i]);
+		}
+		
+		
 		
 	}
 	
