@@ -16,9 +16,9 @@ import java.util.function.Consumer;
 public class Img implements Iterable<Pixel> {
 
 	public static final int boundary_mode_zero = 0;
-	public static final int boundary_mode_repeat_edge = -1;
-	public static final int boundary_mode_repeat_image = -2;
-	public static final int boundary_mode_mirror = -3;
+	public static final int boundary_mode_repeat_edge = 1;
+	public static final int boundary_mode_repeat_image = 2;
+	public static final int boundary_mode_mirror = 3;
 	
 	
 	private final int[] data;
@@ -151,8 +151,8 @@ public class Img implements Iterable<Pixel> {
 		return dest;
 	}
 	
-	public void setValue(final int x, final int y, final int px){
-		this.data[y*dimension.width + x] = px;
+	public void setValue(final int x, final int y, final int value){
+		this.data[y*dimension.width + x] = value;
 	}
 	
 	public void fill(final int value){
@@ -301,7 +301,7 @@ public class Img implements Iterable<Pixel> {
 	
 	
 	
-	private class ImgSpliterator implements  Spliterator<Pixel> {
+	private final class ImgSpliterator implements  Spliterator<Pixel> {
 		
 		final Pixel px;
 		int endIndex;
@@ -316,7 +316,7 @@ public class Img implements Iterable<Pixel> {
 		}
 
 		@Override
-		public boolean tryAdvance(Consumer<? super Pixel> action) {
+		public boolean tryAdvance(final Consumer<? super Pixel> action) {
 			if(px.getIndex() <= endIndex){
 				int index = px.getIndex();
 				action.accept(px);
@@ -328,7 +328,7 @@ public class Img implements Iterable<Pixel> {
 		}
 		
 		@Override
-		public void forEachRemaining(Consumer<? super Pixel> action) {
+		public void forEachRemaining(final Consumer<? super Pixel> action) {
 			int idx = px.getIndex();
 			for(;idx <= endIndex; px.setIndex(++idx)){
 				action.accept(px);
@@ -363,7 +363,7 @@ public class Img implements Iterable<Pixel> {
 	}
 	
 	
-	private static class ParallelForEachExecutor extends CountedCompleter<Void> {
+	private final static class ParallelForEachExecutor extends CountedCompleter<Void> {
 		private static final long serialVersionUID = 1L;
 		
 		final Spliterator<Pixel> spliterator;
