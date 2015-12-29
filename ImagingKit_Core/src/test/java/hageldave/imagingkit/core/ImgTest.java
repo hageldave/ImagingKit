@@ -165,7 +165,7 @@ public class ImgTest {
 	}
 	
 	@Test
-	public void iterator_test(){
+	public void iterable_test(){
 		// iterator
 		{
 			Img img = new Img(16,9);
@@ -204,7 +204,14 @@ public class ImgTest {
 			}
 		}
 		
-		
+		// parallel foreach
+		{
+			Img img = new Img(3000, 2000);
+			img.forEachParallel( (px)->{px.setValue(px.getIndex());} );
+			for(int i = 0; i < img.numValues(); i++){
+				assertEquals(i, img.getData()[i]);
+			}
+		}
 		
 	}
 	

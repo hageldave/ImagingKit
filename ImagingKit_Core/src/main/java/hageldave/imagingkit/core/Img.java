@@ -10,8 +10,8 @@ import java.awt.image.WritableRaster;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Spliterator;
+import java.util.concurrent.CountedCompleter;
 import java.util.function.Consumer;
-
 
 public class Img implements Iterable<Pixel> {
 
@@ -221,8 +221,15 @@ public class Img implements Iterable<Pixel> {
 		return pxIter;
 	}
 	
+	@Override
 	public Spliterator<Pixel> spliterator() {
 		return new ImgSpliterator(0, numValues()-1);
+	}
+	
+	
+	public void forEachParallel(final Consumer<? super Pixel> action) {
+		ParallelForEachExecutor exec = new ParallelForEachExecutor(null, spliterator(), action);
+		exec.invoke();
 	}
 	
 	
@@ -353,5 +360,33 @@ public class Img implements Iterable<Pixel> {
 			return NONNULL | SIZED | CONCURRENT | SUBSIZED;
 		}
 		
+	}
+	
+	
+	private static class ParallelForEachExecutor extends CountedCompleter<Void> {
+		private static final long serialVersionUID = 1L;
+		
+		final Spliterator<Pixel> spliterator;
+		final Consumer<? super Pixel> action;
+		
+		ParallelForEachExecutor(
+				ParallelForEachExecutor parent, 
+				Spliterator<Pixel> spliterator,
+				Consumer<? super Pixel> action) 
+		{
+			super(parent);
+			this.spliterator = spliterator; 
+			this.action = action;
+		}
+
+		public void compute() {
+			Spliterator<Pixel> sub;
+			while ((sub = spliterator.trySplit()) != null) {
+				addToPendingCount(1);
+				new ParallelForEachExecutor(this, sub, action).fork();
+			}
+			spliterator.forEachRemaining(action);
+			propagateCompletion();
+		}
 	}
 }
