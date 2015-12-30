@@ -444,6 +444,14 @@ public class Img implements Iterable<Pixel> {
 			public boolean hasNext() {
 				return px.getIndex()+1 < numValues();
 			}
+			
+			@Override
+			public void forEachRemaining(Consumer<? super Pixel> action) {
+				px.setIndex(px.getIndex()+1);
+				for(int i = px.getIndex(); i < Img.this.numValues(); px.setIndex(++i)){
+					action.accept(px);
+				}
+			}
 		};
 		return pxIter;
 	}

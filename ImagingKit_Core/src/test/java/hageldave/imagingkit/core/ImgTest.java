@@ -4,6 +4,7 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 import java.awt.image.BufferedImage;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Spliterator;
 
@@ -293,6 +294,18 @@ public class ImgTest {
 		{
 			Img img = new Img(16,9);
 			img.iterator().forEachRemaining((px)->{px.setValue(px.getIndex());});
+			for(int i = 0; i < img.numValues(); i++){
+				assertEquals(i, img.getData()[i]);
+			}
+		}
+		
+		{
+			Img img = new Img(16,9);
+			Iterator<Pixel> it = img.iterator();
+			while(it.hasNext()){
+				Pixel px = it.next();
+				px.setValue(px.getIndex());
+			}
 			for(int i = 0; i < img.numValues(); i++){
 				assertEquals(i, img.getData()[i]);
 			}
