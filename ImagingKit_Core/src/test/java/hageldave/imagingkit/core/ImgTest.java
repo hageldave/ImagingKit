@@ -98,11 +98,11 @@ public class ImgTest {
 					4,5,6,7,8
 				});
 		
-		assertEquals(img.getValue(0, 0), img.interpolateValue(0, 0));
-		assertEquals(img.getValue(img.getWidth()-1, img.getHeight()-1), img.interpolateValue(1, 1));
-		assertEquals(img.getValue(0, img.getHeight()-1), img.interpolateValue(0, 1));
-		assertEquals(img.getValue(img.getWidth()-1, 0), img.interpolateValue(1, 0));
-		assertEquals(img.getValue(2, 1), img.interpolateValue(0.5f, 0.5f));
+		assertEquals(img.getValue(0, 0), img.interpolateARGB(0, 0));
+		assertEquals(img.getValue(img.getWidth()-1, img.getHeight()-1), img.interpolateARGB(1, 1));
+		assertEquals(img.getValue(0, img.getHeight()-1), img.interpolateARGB(0, 1));
+		assertEquals(img.getValue(img.getWidth()-1, 0), img.interpolateARGB(1, 0));
+		assertEquals(img.getValue(2, 1), img.interpolateARGB(0.5f, 0.5f));
 		
 		// test copypixels
 		Img img2 = new Img(2,2);
@@ -114,6 +114,116 @@ public class ImgTest {
 		assertEquals(img.getValue(2, 2), img2.getValue(1, 1));
 		img.copyArea(4, 2, 1, 1, img2, 1, 0);
 		assertEquals(img.getValue(4, 2), img2.getValue(1, 0));
+	}
+	
+	@Test
+	public void copyArea_test(){
+		// testing copy with overlapping area
+		
+		Img source = new Img(5, 10);
+		Img target = new Img(10, 5);
+		source.fill(1);
+		for(int value: source.getData()){
+			assertEquals(1, value);
+		}
+		for(int value: target.getData()){
+			assertEquals(0, value);
+		}
+		
+		source.copyArea(0, 0, 5, 10, target, 0, 0);
+		for(int y = 0; y < target.getHeight(); y++)
+		for(int x = 0; x < target.getWidth(); x++){
+			if(x < 5){
+				assertEquals(1, target.getValue(x, y));
+			} else {
+				assertEquals(0, target.getValue(x, y));
+			}
+		}
+		
+		target.fill(0);
+		source.copyArea(0, 0, 5, 10, target, -1, 0);
+		for(int y = 0; y < target.getHeight(); y++)
+		for(int x = 0; x < target.getWidth(); x++){
+			if(x < 4){
+				assertEquals(1, target.getValue(x, y));
+			} else {
+				assertEquals(0, target.getValue(x, y));
+			}
+		}
+		
+		target.fill(0);
+		source.copyArea(0, 0, 5, 10, target, 0, -6);
+		for(int y = 0; y < target.getHeight(); y++)
+		for(int x = 0; x < target.getWidth(); x++){
+			if(x < 5 && y < 4){
+				assertEquals(1, target.getValue(x, y));
+			} else {
+				assertEquals(0, target.getValue(x, y));
+			}
+		}
+		
+		target.fill(0);
+		source.copyArea(0, 0, 5, 10, target, 1, 0);
+		for(int y = 0; y < target.getHeight(); y++)
+		for(int x = 0; x < target.getWidth(); x++){
+			if(x > 0 && x < 6){
+				assertEquals(1, target.getValue(x, y));
+			} else {
+				assertEquals(0, target.getValue(x, y));
+			}
+		}
+		
+		target.fill(0);
+		source.copyArea(0, 0, 5, 10, target, 0, 1);
+		for(int y = 0; y < target.getHeight(); y++)
+		for(int x = 0; x < target.getWidth(); x++){
+			if(x < 5 && y > 0){
+				assertEquals(1, target.getValue(x, y));
+			} else {
+				assertEquals(0, target.getValue(x, y));
+			}
+		}
+		
+		// same width images
+		target = new Img(5, 9);
+		
+		source.copyArea(0, 0, 5, 10, target, 0, 0);
+		for(int value: target.getData()){
+			assertEquals(1, value);
+		}
+		
+		target.fill(0);
+		source.copyArea(0, 1, 5, 8, target, 0, 0);
+		for(int y = 0; y < target.getHeight(); y++)
+		for(int x = 0; x < target.getWidth(); x++){
+			if(y < 8){
+				assertEquals(1, target.getValue(x, y));
+			} else {
+				assertEquals(0, target.getValue(x, y));
+			}
+		}
+		
+		target.fill(0);
+		source.copyArea(0, 1, 5, 9, target, 0, 1);
+		for(int y = 0; y < target.getHeight(); y++)
+		for(int x = 0; x < target.getWidth(); x++){
+			if(y > 0){
+				assertEquals(1, target.getValue(x, y));
+			} else {
+				assertEquals(0, target.getValue(x, y));
+			}
+		}
+		
+		target.fill(0);
+		source.copyArea(0, 1, 5, 8, target, 0, -1);
+		for(int y = 0; y < target.getHeight(); y++)
+		for(int x = 0; x < target.getWidth(); x++){
+			if(y < 7){
+				assertEquals(1, target.getValue(x, y));
+			} else {
+				assertEquals(0, target.getValue(x, y));
+			}
+		}
 	}
 	
 	@Test
@@ -175,6 +285,22 @@ public class ImgTest {
 				idx++;
 			}
 			assertEquals(img.numValues(), idx);
+			for(int i = 0; i < img.numValues(); i++){
+				assertEquals(i, img.getData()[i]);
+			}
+		}
+		
+		{
+			Img img = new Img(16,9);
+			img.iterator().forEachRemaining((px)->{px.setValue(px.getIndex());});
+			for(int i = 0; i < img.numValues(); i++){
+				assertEquals(i, img.getData()[i]);
+			}
+		}
+		
+		{
+			Img img = new Img(16,9);
+			img.forEach((px)->{px.setValue(px.getIndex());});
 			for(int i = 0; i < img.numValues(); i++){
 				assertEquals(i, img.getData()[i]);
 			}
