@@ -13,15 +13,50 @@ import java.util.Spliterator;
 import java.util.concurrent.CountedCompleter;
 import java.util.function.Consumer;
 
+/**
+ * Image class with data stored in an int array. 
+ * <p>
+ * In contrast to {@link BufferedImage} the Img class only offers
+ * pixel data to be stored as integer values simplifying data retrieval
+ * and increasing performance due to less overhead and omitting color
+ * model conversions. <br>
+ * However the Img class can be easily used together with BufferedImages
+ * offering convenience methods like {@link #Img(BufferedImage)},
+ * {@link #toBufferedImage()} or {@link #createRemoteImg(BufferedImage)}.
+ * <p>
+ * Moreover the Img class targets lambda expressions introduced in Java 8 
+ * useful for per pixel operations implementing the {@link Iterable} interface
+ * providing {@link #iterator()}, {@link #spliterator()}, {@link #forEach(Consumer)}
+ * and {@link #forEachParallel(Consumer)}.
+ * 
+ * @author hageldave
+ */
 public class Img implements Iterable<Pixel> {
-
+	
+	/** boundary mode that will return 0 for out of bounds positions.
+	 * @see #getValue(int, int, int) */
 	public static final int boundary_mode_zero = 0;
+	
+	/** boundary mode that will repeat the the edge of of an Img for out of 
+	 * bounds positions.
+	 * @see #getValue(int, int, int) */
 	public static final int boundary_mode_repeat_edge = 1;
+	
+	/** boundary mode that will repeat the Img for out of bounds positions.
+	 * @see #getValue(int, int, int) */
 	public static final int boundary_mode_repeat_image = 2;
+	
+	/** boundary mode that will mirror the Img for out of bounds positions
+	 * @see #getValue(int, int, int) */
 	public static final int boundary_mode_mirror = 3;
 	
+	
+	/** data array of this Img containing a value for each pixel in row major order */
 	private final int[] data;
+	
+	/** dimension of this Img */
 	private final Dimension dimension;
+	
 	
 	/**
 	 * Creates a new Img of given dimensions.
@@ -221,11 +256,11 @@ public class Img implements Iterable<Pixel> {
 	}
 	
 	private static int interpolateColors(final int c00, final int c01, final int c10, final int c11, final float mx, final float my){
-		return argb_fast/*_bounded*/(
-				blend( blend(a(c00), a(c01), mx), blend(a(c10), a(c11), mx), my),
-				blend( blend(r(c00), r(c01), mx), blend(r(c10), r(c11), mx), my),
-				blend( blend(g(c00), g(c01), mx), blend(g(c10), g(c11), mx), my),
-				blend( blend(b(c00), b(c01), mx), blend(b(c10), b(c11), mx), my) );
+		return Pixel.argb_fast/*_bounded*/(
+				blend( blend(Pixel.a(c00), Pixel.a(c01), mx), blend(Pixel.a(c10), Pixel.a(c11), mx), my),
+				blend( blend(Pixel.r(c00), Pixel.r(c01), mx), blend(Pixel.r(c10), Pixel.r(c11), mx), my),
+				blend( blend(Pixel.g(c00), Pixel.g(c01), mx), blend(Pixel.g(c10), Pixel.g(c11), mx), my),
+				blend( blend(Pixel.b(c00), Pixel.b(c01), mx), blend(Pixel.b(c10), Pixel.b(c11), mx), my) );
 	}
 	
 	private static int blend(final int channel1, final int channel2, final float m){
@@ -242,6 +277,14 @@ public class Img implements Iterable<Pixel> {
 	
 	/**
 	 * Creates a new Pixel object for this Img at specified position.
+	 * <p>
+	 * <b>Tip:</b><br>
+	 * Do not use this method repeatedly while iterating the image.
+	 * Use {@link Pixel#setPosition(int, int)} instead to avoid excessive
+	 * allocation of Pixel objects.
+	 * <p>
+	 * You can also use <code>for(Pixel px: img){...}</code> syntax or the 
+	 * {@link #forEach(Consumer)} method to iterate this image.
 	 * @param x
 	 * @param y
 	 * @return a Pixel object for this Img at {x,y}.
@@ -493,75 +536,10 @@ public class Img implements Iterable<Pixel> {
 		Iterable.super.forEach(action);
 	}
 	
-	
-	public static final int ch(final int color, final int startBit, final int numBits){
-		return (color >> startBit) & ((1 << numBits)-1);
-	}
-	
-	public static final int combineCh(int bitsPerChannel, int ... channels){
-		int result = 0;
-		int startBit = 0;
-		for(int i = channels.length-1; i >= 0; i--){
-			result |= channels[i] << startBit;
-			startBit += bitsPerChannel;
-		}
-		return result;
-	}
-	
-	public static final int a(final int color){
-		return (color >> 24) & 0xff;
-	}
-	
-	public static final int r(final int color){
-		return (color >> 16) & 0xff;
-	}
-	
-	public static final int g(final int color){
-		return (color >> 8) & 0xff;
-	}
-	
-	public static final int b(final int color){
-		return (color) & 0xff;
-	}
-	
-	public static final int argb_fast(final int a, final int r, final int g, final int b){
-		return (a<<24)|(r<<16)|(g<<8)|b;
-	}
-	
-	public static final int argb(final int a, final int r, final int g, final int b){
-		return argb_fast(a & 0xff, r & 0xff, g & 0xff, b & 0xff);
-	}
-	
-	public static final int argb_bounded(final int a, final int r, final int g, final int b){
-		return argb_fast(
-				a > 255 ? 255: a < 0 ? 0:a, 
-				r > 255 ? 255: r < 0 ? 0:r, 
-				g > 255 ? 255: g < 0 ? 0:g,
-				b > 255 ? 255: b < 0 ? 0:b);
-	}
-	
-	public static final int rgb_fast(final int r, final int g, final int b){
-		return argb_fast(0xff, r, g, b);
-	}
-	
-	public static final int rgb(final int r, final int g, final int b){
-		return argb(0xff, r, g, b);
-	}
-	
-	public static final int rgb_bounded(final int r, final int g, final int b){
-		return argb_bounded(0xff, r, g, b);
-	}
-	
-	public static final int getGrey(final int color, final int redWeight, final int greenWeight, final int blueWeight){
-		return (r(color)*redWeight + g(color)*greenWeight + b(color)*blueWeight)/(redWeight+blueWeight+greenWeight);
-	}
-	
-	public static final int getLuminance(final int color){
-		return getGrey(color, 2126, 7152, 722);
-	}
-	
-	
-	
+	/**
+	 * Spliterator class for Img
+	 * @author hageldave
+	 */
 	private final class ImgSpliterator implements  Spliterator<Pixel> {
 		
 		final Pixel px;
@@ -623,7 +601,12 @@ public class Img implements Iterable<Pixel> {
 		
 	}
 	
-	
+	/**
+	 * CountedCompleter class for multithreaded execution of a Consumer on a
+	 * Pixel Spliterator. Used to realise multithreaded forEach loop.
+	 * @author hageldave
+	 * @see Img#forEachParallel(Consumer)
+	 */
 	private final static class ParallelForEachExecutor extends CountedCompleter<Void> {
 		private static final long serialVersionUID = 1L;
 		

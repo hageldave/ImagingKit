@@ -13,18 +13,18 @@ public class ImgTest {
 	@Test
 	public void channelMethods_test(){
 		int color = 0xffaa1244;
-		assertEquals(0xff, Img.a(color));
-		assertEquals(0xaa, Img.r(color));
-		assertEquals(0x12, Img.g(color));
-		assertEquals(0x44, Img.b(color));
-		assertEquals(0xa124, Img.ch(color, 4, 16));
-		assertEquals(0x44, Img.ch(color, 0, 8));
+		assertEquals(0xff, Pixel.a(color));
+		assertEquals(0xaa, Pixel.r(color));
+		assertEquals(0x12, Pixel.g(color));
+		assertEquals(0x44, Pixel.b(color));
+		assertEquals(0xa124, Pixel.ch(color, 4, 16));
+		assertEquals(0x44, Pixel.ch(color, 0, 8));
 		
-		assertEquals(0x01001234, Img.argb_fast(0x01, 0x00, 0x12, 0x34));
-		assertEquals(0xff543210, Img.rgb_fast(0x54, 0x32, 0x10));
-		assertEquals(0xff00ff54, Img.rgb_bounded(-12, 260, 0x54));
-		assertEquals(0xffffffff, Img.rgb(0x15ff, 0xaff, 0x5cff));
-		assertEquals(0b10101110, Img.combineCh(2, 0b10, 0b10, 0b11, 0b10));
+		assertEquals(0x01001234, Pixel.argb_fast(0x01, 0x00, 0x12, 0x34));
+		assertEquals(0xff543210, Pixel.rgb_fast(0x54, 0x32, 0x10));
+		assertEquals(0xff00ff54, Pixel.rgb_bounded(-12, 260, 0x54));
+		assertEquals(0xffffffff, Pixel.rgb(0x15ff, 0xaff, 0x5cff));
+		assertEquals(0b10101110, Pixel.combineCh(2, 0b10, 0b10, 0b11, 0b10));
 	}
 	
 	@Test
