@@ -25,9 +25,9 @@ import java.util.function.Consumer;
  * {@link #toBufferedImage()} or {@link #createRemoteImg(BufferedImage)}.
  * <p>
  * Moreover the Img class targets lambda expressions introduced in Java 8 
- * useful for per pixel operations implementing the {@link Iterable} interface
- * providing {@link #iterator()}, {@link #spliterator()}, {@link #forEach(Consumer)}
- * and {@link #forEachParallel(Consumer)}.
+ * useful for per pixel operations by implementing the {@link Iterable} 
+ * interface and providing {@link #iterator()}, {@link #spliterator()}, 
+ * {@link #forEach(Consumer)} and {@link #forEachParallel(Consumer)}.
  * 
  * @author hageldave
  */
@@ -160,6 +160,7 @@ public class Img implements Iterable<Pixel> {
 	 * @throws ArrayIndexOutOfBoundsException if resulting index from x and y
 	 * is not within the data arrays bounds.
 	 * @see #getValue(int, int, int)
+	 * @see #getPixel(int, int)
 	 * @see #setValue(int, int, int)
 	 */
 	public int getValue(final int x, final int y){
@@ -277,6 +278,7 @@ public class Img implements Iterable<Pixel> {
 	
 	/**
 	 * Creates a new Pixel object for this Img at specified position.
+	 * No bounds checks are performed for x and y.
 	 * <p>
 	 * <b>Tip:</b><br>
 	 * Do not use this method repeatedly while iterating the image.
