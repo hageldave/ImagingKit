@@ -6,6 +6,11 @@ package hageldave.imagingkit.core;
  * an Img. It is NOT the value and changing its position will not change the 
  * image, instead it will reference a different value of the image as the 
  * pixel object is a pointer to a value in the Imgs data array.
+ * <p>
+ * The Pixel class also provides a set of static methods for color decomposition
+ * and recombination from color channels like {@link #argb(int, int, int, int)}
+ * or {@link #a(int)}, {@link #r(int)}, {@link #g(int)}, {@link #b(int)}.
+ * 
  * @author hageldave
  */
 public class Pixel {

@@ -59,7 +59,7 @@ public class Img implements Iterable<Pixel> {
 	
 	
 	/**
-	 * Creates a new Img of given dimensions.
+	 * Creates a new Img of specified dimensions.
 	 * Values are initialized to 0.
 	 * @param width
 	 * @param height
@@ -69,7 +69,7 @@ public class Img implements Iterable<Pixel> {
 	}
 	
 	/**
-	 * Creates a new Img of given Dimension.
+	 * Creates a new Img of specified Dimension.
 	 * Values are initilaized to 0.
 	 * @param dimension
 	 */
@@ -90,7 +90,7 @@ public class Img implements Iterable<Pixel> {
 	}
 	
 	/**
-	 * Creates a new Img of privided dimensions.
+	 * Creates a new Img of specified dimensions.
 	 * Provided data array will be used as this images data.
 	 * @param width
 	 * @param height
@@ -101,7 +101,7 @@ public class Img implements Iterable<Pixel> {
 	}
 	
 	/**
-	 * Creates a new Img of privided dimensions.
+	 * Creates a new Img of specified dimensions.
 	 * Provided data array will be used as this images data.
 	 * @param dim
 	 * @param data
