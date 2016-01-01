@@ -303,7 +303,10 @@ public class Pixel {
 	 * @see #argb_fast(int, int, int, int)
 	 * @see #rgb(int, int, int)
 	 * @see #rgb_fast(int, int, int)
-	 * @see {@link #a(int)}, {@link #r(int)}, {@link #g(int)}, {@link #b(int)}
+	 * @see #a(int) 
+	 * @see #r(int) 
+	 * @see #g(int)
+	 * @see #b(int)
 	 */
 	public static final int rgb_bounded(final int r, final int g, final int b){
 		return argb_bounded(0xff, r, g, b);
@@ -323,7 +326,10 @@ public class Pixel {
 	 * @see #argb_fast(int, int, int, int)
 	 * @see #rgb_bounded(int, int, int)
 	 * @see #rgb_fast(int, int, int)
-	 * @see {@link #a(int)}, {@link #r(int)}, {@link #g(int)}, {@link #b(int)}
+	 * @see #a(int) 
+	 * @see #r(int) 
+	 * @see #g(int)
+	 * @see #b(int)
 	 */
 	public static final int rgb(final int r, final int g, final int b){
 		return argb(0xff, r, g, b);
@@ -344,7 +350,10 @@ public class Pixel {
 	 * @see #argb_fast(int, int, int, int)
 	 * @see #rgb_bounded(int, int, int)
 	 * @see #rgb(int, int, int)
-	 * @see {@link #a(int)}, {@link #r(int)}, {@link #g(int)}, {@link #b(int)}
+	 * @see #a(int) 
+	 * @see #r(int) 
+	 * @see #g(int)
+	 * @see #b(int)
 	 */
 	public static final int rgb_fast(final int r, final int g, final int b){
 		return argb_fast(0xff, r, g, b);
@@ -364,7 +373,10 @@ public class Pixel {
 	 * @see #rgb_bounded(int, int, int)
 	 * @see #rgb(int, int, int)
 	 * @see #rgb_fast(int, int, int)
-	 * @see {@link #a(int)}, {@link #r(int)}, {@link #g(int)}, {@link #b(int)}
+	 * @see #a(int) 
+	 * @see #r(int) 
+	 * @see #g(int)
+	 * @see #b(int)
 	 */
 	public static final int argb_bounded(final int a, final int r, final int g, final int b){
 		return argb_fast(
@@ -388,7 +400,10 @@ public class Pixel {
 	 * @see #rgb_bounded(int, int, int)
 	 * @see #rgb(int, int, int)
 	 * @see #rgb_fast(int, int, int)
-	 * @see {@link #a(int)}, {@link #r(int)}, {@link #g(int)}, {@link #b(int)}
+	 * @see #a(int) 
+	 * @see #r(int) 
+	 * @see #g(int)
+	 * @see #b(int)
 	 */
 	public static final int argb(final int a, final int r, final int g, final int b){
 		return argb_fast(a & 0xff, r & 0xff, g & 0xff, b & 0xff);
@@ -409,7 +424,10 @@ public class Pixel {
 	 * @see #rgb_bounded(int, int, int)
 	 * @see #rgb(int, int, int)
 	 * @see #rgb_fast(int, int, int)
-	 * @see {@link #a(int)}, {@link #r(int)}, {@link #g(int)}, {@link #b(int)}
+	 * @see #a(int) 
+	 * @see #r(int) 
+	 * @see #g(int)
+	 * @see #b(int)
 	 */
 	public static final int argb_fast(final int a, final int r, final int g, final int b){
 		return (a<<24)|(r<<16)|(g<<8)|b;
