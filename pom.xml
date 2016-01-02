@@ -11,6 +11,7 @@
 
 	<modules>
 		<module>ImagingKit_Core</module>
+		<module>ImagingKit_Filter</module>
 	</modules>
 	<name>ImagingKit</name>
 </project>
