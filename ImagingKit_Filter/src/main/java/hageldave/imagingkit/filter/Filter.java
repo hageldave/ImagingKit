@@ -1,6 +1,7 @@
 package hageldave.imagingkit.filter;
 
 import hageldave.imagingkit.core.Img;
+import hageldave.imagingkit.filter.settings.FilterSettings;
 
 public abstract class Filter {
 	
