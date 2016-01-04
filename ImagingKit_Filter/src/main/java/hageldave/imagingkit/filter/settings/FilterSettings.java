@@ -10,18 +10,33 @@ import java.util.Set;
 public class FilterSettings implements ReadOnlyFilterSettings {
 	protected final HashMap<String, Object> settings = new HashMap<>();
 	protected final HashMap<String, Class<?>> typeConstraints = new HashMap<>();
+	protected boolean discardUnconstrainedSettings;
 	
 	protected LinkedList<FilterSettingsListener> listeners = new LinkedList<>();
 	
+	public FilterSettings(boolean discardUnconstrainedSettings) {
+		this.discardUnconstrainedSettings = discardUnconstrainedSettings;
+	}
+	
 	public FilterSettings() {
-		
+		this(false);
+	}
+	
+	public FilterSettings(Map<String, Class<?>> typeConstraints, boolean discardUnconstrainedSettings) {
+		this.typeConstraints.putAll(typeConstraints);
+		this.discardUnconstrainedSettings = discardUnconstrainedSettings;
 	}
 	
 	public FilterSettings(Map<String, Class<?>> typeConstraints) {
-		this.typeConstraints.putAll(typeConstraints);
+		this(typeConstraints, false);
 	}
 	
-	public FilterSettings(Object[] typeConstraints) {
+	
+	public FilterSettings(Object[] typeConstraints){
+		this(typeConstraints, false);
+	}
+	
+	public FilterSettings(Object[] typeConstraints, boolean discardUnconstrainedSettings) {
 		if(typeConstraints.length % 2 != 0){
 			throw new IllegalArgumentException(
 					"Provided typeConstraints array is odd! An array with String Class pairs is excpected, "
@@ -30,9 +45,9 @@ public class FilterSettings implements ReadOnlyFilterSettings {
 		for(int i = 0; i < typeConstraints.length; i+=2){
 			if(typeConstraints[i] instanceof String){
 				String settingId = (String) typeConstraints[i];
-				if(typeConstraints[i+1] instanceof Class){
+				if(typeConstraints[i+1] == null || typeConstraints[i+1] instanceof Class){
 					@SuppressWarnings("rawtypes")
-					Class clazz = (Class) typeConstraints[i+1];
+					Class clazz = typeConstraints[i+1] != null ? (Class) typeConstraints[i+1]:Object.class;
 					if(this.typeConstraints.containsKey(settingId)){
 						throw new IllegalArgumentException(String.format(
 								"duplicate settingsID in type constraints array at %d", i));
@@ -40,19 +55,25 @@ public class FilterSettings implements ReadOnlyFilterSettings {
 					this.typeConstraints.put(settingId, clazz);
 				} else {
 					throw new IllegalArgumentException(String.format(
-							"Invalid value in type constraints array at index %d. Expected Class type.", i+1));
+							"Invalid value in type constraints array at index %d. Expected Class type, got:%s", i+1, typeConstraints[i+1]));
 				}
 			} else {
 				throw new IllegalArgumentException(String.format(
 						"Invalid value in type constraints array at index %d. Expected String type.", i));
 			}
 		}
+		this.discardUnconstrainedSettings = discardUnconstrainedSettings;
 	}
 	
 	public void set(String settingId, Object settingValue, boolean notifyListeners){
 		if(settingId == null || settingValue == null){
 			throw new NullPointerException("None of the arguments is allowed to be null");
 		}
+		if(discardUnconstrainedSettings && !isTypeConstrained(settingId)){
+			// discard this setting because there is no constraint for it
+			return;
+		}
+		
 		Class<?> clazz = typeConstraints.getOrDefault(settingId, Object.class);
 		if(clazz.isInstance(settingValue)){
 			Object previous = settings.put(settingId, settingValue);
@@ -80,7 +101,7 @@ public class FilterSettings implements ReadOnlyFilterSettings {
 			String id = settingIds.get(i);
 			Object value = settingValues.get(i);
 			Class<?> clazz = getTypeConstraint(id);
-			if(clazz != null && value != null && !clazz.isInstance(value)){
+			if(value != null && !clazz.isInstance(value)){
 				throw new IllegalArgumentException(String.format(
 						"Setting %s has type constraint %s! Provided value at index %d of type %s cannot be assigned to this setting.",
 						id, clazz.getName(), i, value.getClass().getName()));
@@ -91,6 +112,10 @@ public class FilterSettings implements ReadOnlyFilterSettings {
 		List<String> changedValues = new ArrayList<>(settingIds.size());
 		for(int i = 0; i < settingIds.size(); i++){
 			String id = settingIds.get(i);
+			if(discardUnconstrainedSettings && !isTypeConstrained(id)){
+				// discard setting because there is no constraint for it
+				continue;
+			}
 			Object newValue = settingValues.get(i);
 			Object old = oldVals.get(id);
 			if(newValue == null && old != null){
@@ -108,8 +133,21 @@ public class FilterSettings implements ReadOnlyFilterSettings {
 	}
 	
 	@Override
-	public Class<?> getTypeConstraint(String settingsId){
-		return typeConstraints.get(settingsId);
+	public Class<?> getTypeConstraint(String settingId){
+		Class<?> clazz;
+		return (clazz = typeConstraints.get(settingId)) != null ? clazz:Object.class;
+	}
+	
+	public boolean isTypeConstrained(String settingId){
+		return typeConstraints.containsKey(settingId);
+	}
+	
+	public boolean isDiscardUnconstrainedSettingsEnabled(){
+		return this.discardUnconstrainedSettings;
+	}
+	
+	public void enableDiscardUnconstrainedSettings(boolean enable){
+		this.discardUnconstrainedSettings = enable;
 	}
 	
 	@Override
@@ -133,7 +171,7 @@ public class FilterSettings implements ReadOnlyFilterSettings {
 	}
 	
 	
-	/** returns value, default value if not present or null if value is not an instance of specified type */
+	/** returns value when present or default value if not present or if value is not an instance of specified type */
 	@Override
 	public <T> T getAs(String settingId, Class<T> clazz, T defaultValue){
 		Object val = get(settingId, defaultValue);
@@ -141,10 +179,10 @@ public class FilterSettings implements ReadOnlyFilterSettings {
 			try{
 				return clazz.cast(val);
 			} catch(ClassCastException e){
-				return null;
+				return defaultValue;
 			}
 		}
-		return null;
+		return defaultValue;
 	}
 	
 	@Override
@@ -179,6 +217,7 @@ public class FilterSettings implements ReadOnlyFilterSettings {
 	public FilterSettings copy(){
 		FilterSettings cpy = new FilterSettings(typeConstraints);
 		cpy.settings.putAll(settings);
+		cpy.discardUnconstrainedSettings = this.discardUnconstrainedSettings;
 		return cpy;
 	}
 	
@@ -186,7 +225,7 @@ public class FilterSettings implements ReadOnlyFilterSettings {
 		Map<String, Class<?>> constraints = new HashMap<>();
 		Map<String, Object> settings = new HashMap<>();
 		for(String id: settingIds){
-			Class<?> clazz = getTypeConstraint(id);
+			Class<?> clazz = typeConstraints.get(id);
 			Object value = get(id);
 			if(clazz != null){
 				constraints.put(id, clazz);
@@ -197,6 +236,7 @@ public class FilterSettings implements ReadOnlyFilterSettings {
 		}
 		FilterSettings cpy = new FilterSettings(constraints);
 		cpy.settings.putAll(settings);
+		cpy.discardUnconstrainedSettings = this.discardUnconstrainedSettings;
 		return cpy;
 	}
 	
