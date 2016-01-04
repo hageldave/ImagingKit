@@ -25,6 +25,9 @@ public class FilterSettings_test {
 		assertFalse(settings.containsSetting(id));
 		assertEquals(0, settings.getSettingIds().size());
 		assertEquals(null, settings.get(id));
+		testException(()->{settings.set(null,null);}, NullPointerException.class);
+		testException(()->{settings.set(id,null);}, NullPointerException.class);
+		testException(()->{settings.set(null,5);}, NullPointerException.class);
 	}
 	
 	@Test
@@ -42,19 +45,19 @@ public class FilterSettings_test {
 		{
 			testException(()->
 			{
-				FilterSettings settings = new FilterSettings(new Object[]{id1});
+				new FilterSettings(new Object[]{id1});
 			}, IllegalArgumentException.class);
 			testException(()->
 			{
-				FilterSettings settings = new FilterSettings(new Object[]{id1,id2});
+				new FilterSettings(new Object[]{id1,id2});
 			}, IllegalArgumentException.class);
 			testException(()->
 			{
-				FilterSettings settings = new FilterSettings(new Object[]{id1,5});
+				new FilterSettings(new Object[]{id1,5});
 			}, IllegalArgumentException.class);
 			testException(()->
 			{
-				FilterSettings settings = new FilterSettings(new Object[]{id1,Object.class, id1, Integer.class});
+				new FilterSettings(new Object[]{id1,Object.class, id1, Integer.class});
 			}, IllegalArgumentException.class);
 			//---------------------------------
 			FilterSettings settings = new FilterSettings(new Object[]{id1, Integer.class, id2, null});
