@@ -10,6 +10,7 @@ import java.util.Set;
 public class FilterSettings implements ReadOnlyFilterSettings {
 	protected final HashMap<String, Object> settings = new HashMap<>();
 	protected final HashMap<String, Class<?>> typeConstraints = new HashMap<>();
+	protected final HashMap<String, Object> valueConstraints = new HashMap<>();
 	protected boolean discardUnconstrainedSettings;
 	
 	protected LinkedList<FilterSettingsListener> listeners = new LinkedList<>();

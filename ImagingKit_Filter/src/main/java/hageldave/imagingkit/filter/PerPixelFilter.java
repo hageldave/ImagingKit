@@ -4,6 +4,7 @@ import java.util.function.Consumer;
 
 import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.Pixel;
+import hageldave.imagingkit.filter.settings.FilterSettings;
 import hageldave.imagingkit.filter.settings.ReadOnlyFilterSettings;
 
 public abstract class PerPixelFilter extends Filter {
@@ -11,6 +12,11 @@ public abstract class PerPixelFilter extends Filter {
 	private ConfiguredPerPixelAction perPixelAction;
 	
 	public PerPixelFilter(PerPixelAction perPixelAction) {
+		this(perPixelAction, null);
+	}
+	
+	public PerPixelFilter(PerPixelAction perPixelAction, FilterSettings settings) {
+		super(settings);
 		this.perPixelAction = new ConfiguredPerPixelAction(perPixelAction);
 	}
 
