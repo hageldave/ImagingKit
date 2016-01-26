@@ -2,31 +2,34 @@ package hageldave.imagingkit.filter.settings;
 
 import java.util.Comparator;
 
-public class ValueRange<T> implements ValueConstraint<T> {
+import hageldave.imagingkit.filter.util.GenericsHelper;
+
+public class ValueRange<T> implements ValueConstraint {
 
 	public T min;
 	public T max;
 	public final Comparator<T> comparator;
 	public boolean minExclusive;
 	public boolean maxExclusive;
+	private final Class<T> valueType;
 	
-	public static <V extends Comparable<V>> ValueRange<V> fromComparable(V min, V max, boolean minExclusive, boolean maxExclusive){
-		return new ValueRange<V>((a,b)->a.compareTo(b), min, max, minExclusive, maxExclusive);
+	public static <V extends Comparable<V>> ValueRange<V> fromComparable(V min, V max, boolean minExclusive, boolean maxExclusive, Class<V> valueType){
+		return new ValueRange<V>((a,b)->a.compareTo(b), min, max, minExclusive, maxExclusive, valueType);
 	}
 	
-	public static <V extends Comparable<V>> ValueRange<V> fromComparable(V min, V max){
-		return fromComparable(min, max, false, false);
+	public static <V extends Comparable<V>> ValueRange<V> fromComparable(V min, V max, Class<V> valueType){
+		return fromComparable(min, max, false, false, valueType);
 	}
 	
-	public static <V extends Number> ValueRange<V> fromNumber(V min, V max, boolean minExclusive, boolean maxExclusive){
-		return new ValueRange<V>((a,b)->{return (int)Math.signum(a.doubleValue()-b.doubleValue());}, min, max, minExclusive, maxExclusive);
+	public static <V extends Number> ValueRange<V> fromNumber(V min, V max, boolean minExclusive, boolean maxExclusive, Class<V> valueType){
+		return new ValueRange<V>((a,b)->{return (int)Math.signum(a.doubleValue()-b.doubleValue());}, min, max, minExclusive, maxExclusive, valueType);
 	}
 	
-	public static <V extends Number> ValueRange<V> fromNumber(V min, V max){
-		return fromNumber(min, max, false, false);
+	public static <V extends Number> ValueRange<V> fromNumber(V min, V max, Class<V> valueType){
+		return fromNumber(min, max, false, false, valueType);
 	}
 	
-	public ValueRange(Comparator<T> comparator, T min, T max, boolean minExclusive, boolean maxExclusive) {
+	public ValueRange(Comparator<T> comparator, T min, T max, boolean minExclusive, boolean maxExclusive, Class<T> valueType) {
 		this.comparator = comparator;
 		if(comparator.compare(max, min) < 0){
 			this.min = max;
@@ -37,10 +40,11 @@ public class ValueRange<T> implements ValueConstraint<T> {
 		}
 		this.minExclusive = minExclusive;
 		this.maxExclusive = maxExclusive;
+		this.valueType = valueType;
 	}
 	
-	public ValueRange(Comparator<T> comparator, T min, T max){
-		this(comparator, min, max, false, false);
+	public ValueRange(Comparator<T> comparator, T min, T max, Class<T> valueType){
+		this(comparator, min, max, false, false, valueType);
 	}
 	
 	public boolean isLowerMin(T val){
@@ -71,8 +75,15 @@ public class ValueRange<T> implements ValueConstraint<T> {
 		return !_higher(val) && !_lower(val);
 	}
 	
+	public Class<T> getValueType(){
+		return this.valueType;
+	}
+	
 	@Override
-	public boolean isValuePermitted(T val) {
-		return isInRange(val);
+	public boolean isValuePermitted(Object val) {
+		if(GenericsHelper.isAssignableFrom(valueType, val.getClass())){
+			return isInRange(GenericsHelper.cast(val, valueType));
+		}
+		return false;
 	}
 }
