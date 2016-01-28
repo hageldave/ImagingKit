@@ -3,6 +3,7 @@ package hageldave.imagingkit.filter.util;
 
 public class GenericsHelper {
 
+	/** same as class.isAssignableFrom(class) but with implicit cast check for native numbers */
 	public static boolean isAssignableFrom(Class<?> assignedCls, Class<?> assigningCls){
 		if(isNativeNumberType(assigningCls) && isNativeNumberType(assignedCls)){
 			return isNumberImplicitlyCastableFrom(assignedCls, assigningCls);
@@ -53,6 +54,7 @@ public class GenericsHelper {
 	
 	
 	public static <T> T castToNativeNumber(Number num, Class<T> nativeNumberType){
+		System.out.format("casting from %s to %s%n", num.getClass().getName(), nativeNumberType.getName());
 		switch (getNativeOrder(nativeNumberType)) {
 		case 0:
 			return nativeNumberType.cast(num.byteValue());
@@ -72,7 +74,15 @@ public class GenericsHelper {
 		}
 	}
 	
+	/** same as class.cast(obj) but with explicit casting for native numbers e.g. int i = (int) 2.3f; */
+	@SuppressWarnings("unchecked")
 	public static <T> T cast(Object obj, Class<T> type){
+		if(obj == null){
+			return null;
+		}
+		if(obj.getClass() == type){
+			return (T) obj;
+		}
 		if(isNativeNumberType(obj.getClass()) && isNativeNumberType(type)){
 			return castToNativeNumber((Number)obj, type);
 		}

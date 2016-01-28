@@ -1,54 +1,35 @@
 package hageldave.imagingkit.filter.settings;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import hageldave.imagingkit.filter.util.GenericsHelper;
+
 public class FilterSettings implements ReadOnlyFilterSettings {
 	protected final HashMap<String, Object> settings = new HashMap<>();
-	protected final HashMap<String, Class<?>> typeConstraints = new HashMap<>();
-	protected final HashMap<String, ValueConstraint> valueConstraints = new HashMap<>();
+	protected final HashMap<String, SettingConstraint> constraints = new HashMap<>();
 	
 	protected LinkedList<FilterSettingsListener> listeners = new LinkedList<>();
 	
 	public FilterSettings() {
-		
+		//
 	}
 
 	
-	public FilterSettings(Map<String, Class<?>> typeConstraints) {
-		this.typeConstraints.putAll(typeConstraints);
+	public FilterSettings(SettingConstraint[] constraints) {
+		for(SettingConstraint c: constraints){
+			this.constraints.put(c.settingID, c);
+		}
 	}
 	
-	
-	public FilterSettings(Object[] typeConstraints) {
-		if(typeConstraints.length % 2 != 0){
-			throw new IllegalArgumentException(
-					"Provided typeConstraints array is odd! An array with String Class pairs is excpected, "
-					+ "e.g {\"setting1\", Integer.class, \"setting2\", Float.class}");
-		}
-		for(int i = 0; i < typeConstraints.length; i+=2){
-			if(typeConstraints[i] instanceof String){
-				String settingId = (String) typeConstraints[i];
-				if(typeConstraints[i+1] == null || typeConstraints[i+1] instanceof Class){
-					@SuppressWarnings("rawtypes")
-					Class clazz = typeConstraints[i+1] != null ? (Class) typeConstraints[i+1]:Object.class;
-					if(this.typeConstraints.containsKey(settingId)){
-						throw new IllegalArgumentException(String.format(
-								"duplicate settingsID in type constraints array at %d", i));
-					}
-					this.typeConstraints.put(settingId, clazz);
-				} else {
-					throw new IllegalArgumentException(String.format(
-							"Invalid value in type constraints array at index %d. Expected Class type, got:%s", i+1, typeConstraints[i+1]));
-				}
-			} else {
-				throw new IllegalArgumentException(String.format(
-						"Invalid value in type constraints array at index %d. Expected String type.", i));
-			}
+	public FilterSettings(Collection<SettingConstraint> constraints) {
+		for(SettingConstraint c: constraints){
+			this.constraints.put(c.settingID, c);
 		}
 	}
 	
@@ -57,16 +38,12 @@ public class FilterSettings implements ReadOnlyFilterSettings {
 			throw new NullPointerException("None of the arguments is allowed to be null");
 		}
 		
-		Class<?> clazz = typeConstraints.getOrDefault(settingId, Object.class);
-		if(clazz.isInstance(settingValue)){
+		SettingConstraint c = getConstraint(settingId);
+		if(c == null || c.isValuePermitted_ThrowIfNot(settingValue)){
 			Object previous = settings.put(settingId, settingValue);
 			if(notifyListeners && !settingValue.equals(previous)){
 				notifyListeners(settingId, settingValue, previous);
 			}
-		} else {
-			throw new IllegalArgumentException(String.format(
-					"Setting %s has type constraint %s! Provided value of type %s cannot be assigned to this setting.",
-					settingId, clazz.getName(), settingValue.getClass().getName()));
 		}
 	}
 	
@@ -83,11 +60,9 @@ public class FilterSettings implements ReadOnlyFilterSettings {
 		for(int i = 0; i < settingIds.size(); i++){
 			String id = settingIds.get(i);
 			Object value = settingValues.get(i);
-			Class<?> clazz = getTypeConstraint(id);
-			if(value != null && !clazz.isInstance(value)){
-				throw new IllegalArgumentException(String.format(
-						"Setting %s has type constraint %s! Provided value at index %d of type %s cannot be assigned to this setting.",
-						id, clazz.getName(), i, value.getClass().getName()));
+			SettingConstraint c = getConstraint(id);
+			if(value != null && c != null){
+				c.isValuePermitted_ThrowIfNot(value);
 			}
 		}
 		// now its safe to set all values
@@ -111,14 +86,30 @@ public class FilterSettings implements ReadOnlyFilterSettings {
 		notifyListeners(changedValues, newVals, oldVals);
 	}
 	
-	@Override
-	public Class<?> getTypeConstraint(String settingId){
-		Class<?> clazz;
-		return (clazz = typeConstraints.get(settingId)) != null ? clazz:Object.class;
+	public SettingConstraint getConstraint(String settingId){
+		return this.constraints.get(settingId);
 	}
 	
+	@Override
+	public Class<?> getTypeConstraint(String settingId){
+		SettingConstraint c = constraints.get(settingId);
+		return c == null ? Object.class: c.typeConstraint == null ? Object.class:c.typeConstraint;
+	}
+	
+	@Override
 	public boolean isTypeConstrained(String settingId){
-		return typeConstraints.containsKey(settingId);
+		return getTypeConstraint(settingId) != Object.class;
+	}
+	
+	@Override
+	public ValueConstraint getValueConstraint(String settingId){
+		SettingConstraint c = constraints.get(settingId);
+		return c == null ? ValueConstraint.ALLOWALLBUTNULL: c.valueConstraint == null ? ValueConstraint.ALLOWALLBUTNULL:c.valueConstraint;
+	}
+	
+	@Override
+	public boolean isValueConstrained(String settingId){
+		return getValueConstraint(settingId) != ValueConstraint.ALLOWALLBUTNULL;
 	}
 	
 	
@@ -143,18 +134,15 @@ public class FilterSettings implements ReadOnlyFilterSettings {
 	}
 	
 	
-	/** returns value when present or default value if not present or if value is not an instance of specified type */
+	/** returns value when present or default value if not present or if value cannot be cast to specified type */
 	@Override
 	public <T> T getAs(String settingId, Class<T> clazz, T defaultValue){
 		Object val = get(settingId, defaultValue);
-		if(clazz.isInstance(val)){
-			try{
-				return clazz.cast(val);
-			} catch(ClassCastException e){
-				return defaultValue;
-			}
+		try{
+			return GenericsHelper.cast(val, clazz);
+		} catch(ClassCastException e){
+			return defaultValue;
 		}
-		return defaultValue;
 	}
 	
 	@Override
@@ -187,26 +175,27 @@ public class FilterSettings implements ReadOnlyFilterSettings {
 	}
 	
 	public FilterSettings copy(){
-		FilterSettings cpy = new FilterSettings(typeConstraints);
+		FilterSettings cpy = new FilterSettings(constraints.values());
 		cpy.settings.putAll(settings);
 		return cpy;
 	}
 	
 	public FilterSettings copy(String... settingIds){
-		Map<String, Class<?>> constraints = new HashMap<>();
+		Map<String, SettingConstraint> constraints = new HashMap<>();
 		Map<String, Object> settings = new HashMap<>();
 		for(String id: settingIds){
-			Class<?> clazz = typeConstraints.get(id);
+			SettingConstraint constraint = constraints.get(id);
 			Object value = get(id);
-			if(clazz != null){
-				constraints.put(id, clazz);
+			if(constraint != null){
+				constraints.put(id, constraint);
 			}
 			if(value != null){
 				settings.put(id, value);
 			}
 		}
-		FilterSettings cpy = new FilterSettings(constraints);
+		FilterSettings cpy = new FilterSettings();
 		cpy.settings.putAll(settings);
+		cpy.constraints.putAll(constraints);
 		return cpy;
 	}
 	

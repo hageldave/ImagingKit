@@ -32,48 +32,10 @@ public class FilterSettings_test {
 	
 	@Test
 	public void testTypeConstraint(){
-		String id1 = "testSetting1";
-		String id2 = "testSetting2";
-		{
-			FilterSettings settings = new FilterSettings(true);
-			settings.set(id1, 5);
-			settings.set(id2, 8);
-			assertEquals(0, settings.getSettingIds().size());
-			assertEquals(null, settings.get(id1));
-			assertEquals(null, settings.get(id1));
-		}
-		{
-			testException(()->
-			{
-				new FilterSettings(new Object[]{id1});
-			}, IllegalArgumentException.class);
-			testException(()->
-			{
-				new FilterSettings(new Object[]{id1,id2});
-			}, IllegalArgumentException.class);
-			testException(()->
-			{
-				new FilterSettings(new Object[]{id1,5});
-			}, IllegalArgumentException.class);
-			testException(()->
-			{
-				new FilterSettings(new Object[]{id1,Object.class, id1, Integer.class});
-			}, IllegalArgumentException.class);
-			//---------------------------------
-			FilterSettings settings = new FilterSettings(new Object[]{id1, Integer.class, id2, null});
-			assertEquals(true, settings.isTypeConstrained(id1));
-			assertEquals(true, settings.isTypeConstrained(id2));
-			assertEquals(Integer.class, settings.getTypeConstraint(id1));
-			assertEquals(Object.class, settings.getTypeConstraint(id2));
-			testException(()->
-			{
-				settings.set(id1, "stringvalue");
-			}, IllegalArgumentException.class);
-			settings.set(id2, "stringvalue");
-			assertEquals(String.class, settings.get(id2).getClass());
-			settings.set(id1, 5);
-			assertEquals(5, settings.get(id1));
-		}
+//		String id1 = "testSetting1";
+//		String id2 = "testSetting2";
+		
+		// TODO
 	}
 	
 	public static void testException(Runnable codeThatThrows, Class<? extends Throwable> exClass){
