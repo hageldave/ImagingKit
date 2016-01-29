@@ -16,20 +16,11 @@ public class GenericsHelper {
 	}
 	
 	public static boolean isFloatingPointNative(Class<?> type){
-		return isAnyOf(type, Float.class, Double.class);
+		return MiscUtils.isAnyOf(type, Float.class, Double.class);
 	}
 	
 	public static boolean isIntegralNative(Class<?> type){
-		return isAnyOf(type, Integer.class, Long.class, Short.class, Byte.class);
-	}
-	
-	public static boolean isAnyOf(Class<?> type, Class<?> ... types){
-		for(Class<?> t: types){
-			if(type.equals(t)){
-				return true;
-			}
-		}
-		return false;
+		return MiscUtils.isAnyOf(type, Integer.class, Long.class, Short.class, Byte.class);
 	}
 	
 	private static int getNativeOrder(Class<?> type){
