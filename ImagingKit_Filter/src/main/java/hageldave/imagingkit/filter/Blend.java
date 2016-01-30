@@ -35,8 +35,8 @@ public class Blend {
 
 	public static int blend(int bottomRGBA, int topRGBA, float visibility, BlendFunction func){
 		int temp = 0;
-		float a = visibility*func.blend(temp=a(bottomRGBA), a(topRGBA)) + temp*(1-visibility);
-		visibility = Math.max(visibility-(1-(a(topRGBA)/255.0f)), 0);
+		float a = Math.min(visibility*(temp=a(topRGBA)) + a(bottomRGBA),0xff);
+		visibility = Math.max(visibility-(1-(temp/255.0f)), 0);
 		float oneMinusVis = 1-visibility;
 		float r = visibility*func.blend(temp=r(bottomRGBA), r(topRGBA)) + temp*oneMinusVis;
 		float g = visibility*func.blend(temp=g(bottomRGBA), g(topRGBA)) + temp*oneMinusVis;
