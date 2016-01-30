@@ -30,8 +30,8 @@ public class SettingConstraint {
 		if(isValuePermitted(value)){
 			return true;
 		} else {
-			throwIfValueNotPermitted(value);
 			throwIfTypeNotPermitted(value.getClass());
+			throwIfValueNotPermitted(value);
 			throw new RuntimeException("value not permitted");
 		}
 	}
@@ -46,7 +46,7 @@ public class SettingConstraint {
 		if(!isTypeAllowed(type)){
 			throw new IllegalArgumentException(String.format(
 					"Setting %s has type constraint %s! Values of type %s cannot be assigned to this setting.",
-					settingID, typeConstraint.getName(), type.getClass().getName()));
+					settingID, typeConstraint.getName(), type.getName()));
 		}
 	}
 	

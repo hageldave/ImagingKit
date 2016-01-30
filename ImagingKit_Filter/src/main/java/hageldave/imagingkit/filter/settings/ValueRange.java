@@ -86,4 +86,10 @@ public class ValueRange<T> implements ValueConstraint {
 		}
 		return false;
 	}
+	
+	@Override
+	public void throwIfValueNotPermitted(Object val) throws IllegalArgumentException {
+		if(!isValuePermitted(val))
+			throw new IllegalArgumentException(String.format("provided value %s is not in range of %s%s,%s%s", val, minExclusive ? "]":"[", min, max, maxExclusive ? "[":"]"));
+	}
 }

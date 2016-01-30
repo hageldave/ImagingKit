@@ -20,7 +20,7 @@ public abstract class Filter {
 
 	public abstract void applyTo(final Img img);
 	
-	protected FilterSettings getSettings() {
+	public FilterSettings getSettings() {
 		return settings;
 	}
 	
