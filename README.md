@@ -9,3 +9,15 @@ So far the *ImagingKit-Core* artifact of the library is available through the ma
     <version>1.0</version>
 </dependency>
 ```
+--
+### Code Examples
+Convert an image to grayscale:
+```java
+BufferedImage buffimg = ImageLoader.loadImage("myimage_colored.png", BufferedImage.TYPE_INT_ARGB);
+Img img = Img.createRemoteImg(buffimg);
+img.forEachParallel((pixel) -> {
+	int gray = (pixel.r() + pixel.g() + pixel.b())/3;
+	pixel.setARGB(pixel.a(), gray, gray, gray);
+});
+ImageSaver.saveImage(buffimg,"myimage_grayscale.png");
+```
