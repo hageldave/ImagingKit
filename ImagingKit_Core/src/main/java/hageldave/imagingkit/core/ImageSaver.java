@@ -3,7 +3,10 @@ package hageldave.imagingkit.core;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 
 import javax.imageio.ImageIO;
 
@@ -45,13 +48,14 @@ public class ImageSaver {
 	 * saving. This method converts to type INT_RGB for jpg, jpeg and bmp, 
 	 * and to type BYTE_BINARY for wbmp.
 	 * @param image to be saved
-	 * @param file to save image to
+	 * @param os {@link OutputStream} to write image to.
 	 * @param imgFileFormat image file format. Consult {@link #getSaveableImageFileFormats()}
 	 * to get the supported img file formats of your system. 
-	 * @return true if image was saved, false if an IOException occured during 
+	 * @throws ImageSaverException if an IOException occured during 
 	 * the process or no appropriate writer could be found for specified format.
+	 * @since 1.1
 	 */
-	public static boolean saveImage(Image image, File file, String imgFileFormat){
+	public static void saveImage(Image image, OutputStream os, String imgFileFormat){
 		BufferedImage bImg = null;
 		if(image instanceof BufferedImage){
 			bImg = (BufferedImage) image;
@@ -66,9 +70,9 @@ public class ImageSaver {
 		}
 
 		try {
-			return ImageIO.write(bImg, imgFileFormat, file);
+			ImageIO.write(bImg, imgFileFormat, os);
 		} catch (IOException e) {
-			return false;
+			throw new ImageSaverException(e);
 		}
 	}
 	
@@ -77,16 +81,37 @@ public class ImageSaver {
 	 * @param image to be saved
 	 * @param filename path to file
 	 * @param imgFileFormat image file format. Consult {@link #getSaveableImageFileFormats()}
-	 * @return true if image was saved, false if an IOException occured during 
+	 * @throws ImageSaverException if an IOException occured during 
 	 * the process, the provided filename path does refer to a directory or no 
-	 * appropriate writer could be found for specified format.
+	 * appropriate writer could be found for specified format. 
 	 */
-	public static boolean saveImage(Image image, String filename, String imgFileFormat){
+	public static void saveImage(Image image, String filename, String imgFileFormat){
 		File f = new File(filename);
 		if(!f.isDirectory()){
-			return saveImage(image, f, imgFileFormat);
+			saveImage(image, f, imgFileFormat);
+		} else {
+			throw new ImageSaverException(new IOException(String.format("provided file name denotes a directory. %s", filename)));
 		}
-		return false;
+	}
+	
+	/**
+	 * Saves image using {@link #saveImage(Image, OutputStream, String)}.
+	 * @param image to be saved
+	 * @param file to save image to
+	 * @param imgFileFormat image file format. Consult {@link #getSaveableImageFileFormats()}
+	 * @throws ImageSaverException if an IOException occured during 
+	 * the process, no OutputStream could be created due to a 
+	 * FileNotFoundException or no appropriate writer could be found for 
+	 * specified format.
+	 */
+	public static void saveImage(Image image, File file, String imgFileFormat){
+		FileOutputStream fos;
+		try {
+			fos = new FileOutputStream(file);
+			saveImage(image, fos, imgFileFormat);
+		} catch (FileNotFoundException e) {
+			throw new ImageSaverException(e);
+		}
 	}
 	
 	/**
@@ -94,18 +119,19 @@ public class ImageSaver {
 	 * format is extracted from the files name.
 	 * @param image to be saved
 	 * @param file to save image to
-	 * @return true if image was saved, false if an IOException occured during 
+	 * @throws ImageSaverException if an IOException occured during 
 	 * the process, the filename does not contain a dot to get the filetype
 	 * or no appropriate writer could be found for specified format.
 	 */
-	public static boolean saveImage(Image image, File file){
+	public static void saveImage(Image image, File file){
 		// get file ending
 		int dotIndex = file.getName().lastIndexOf('.');
 		if(dotIndex >= 0){
 			String ending = file.getName().substring(dotIndex+1, file.getName().length());
-			return saveImage(image, file, ending);
+			saveImage(image, file, ending);
+		} else {
+			throw new ImageSaverException("could not detect file format from file name. Missing dot. " + file.getName());
 		}
-		return false;
 	}
 	
 	/**
@@ -113,16 +139,41 @@ public class ImageSaver {
 	 * format is extracted from the files name.
 	 * @param image to be saved
 	 * @param filename path to file to save image to
-	 * @return true if image was saved, false if an IOException occured during 
+	 * @throws ImageSaverException if an IOException occured during 
 	 * the process, the filename does not contain a dot to get the filetype,
 	 * the provided filename path does refer to a directory, 
 	 * or no appropriate writer could be found for specified format.
 	 */
-	public static boolean saveImage(Image image, String filename){
+	public static void saveImage(Image image, String filename){
 		File f = new File(filename);
 		if(!f.isDirectory()){
-			return saveImage(image, f);
+			saveImage(image, f);
+		} else {
+			throw new ImageSaverException(new IOException(String.format("provided file name denotes a directory. %s", filename)));
 		}
-		return false;
+	}
+	
+	/**
+	 * RuntimeException class for Exceptions that occur during image saving.
+	 * @author hageldave
+	 * @since 1.1
+	 */
+	public static class ImageSaverException extends RuntimeException {
+		private static final long serialVersionUID = -2590926614530103717L;
+
+		public ImageSaverException() {
+		}
+		
+		public ImageSaverException(String message) {
+			super(message);
+		}
+		
+		public ImageSaverException(Throwable cause) {
+			super(cause);
+		}
+		
+		public ImageSaverException(String message, Throwable cause) {
+			super(message, cause);
+		}
 	}
 }

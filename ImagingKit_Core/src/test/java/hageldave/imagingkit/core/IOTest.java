@@ -40,11 +40,9 @@ public class IOTest {
 		}
 		
 		File testFile = new File(testDir, "test.png");
-		boolean success = ImageSaver.saveImage(img.getRemoteBufferedImage(), testFile);
-		assertTrue(success);
+		ImageSaver.saveImage(img.getRemoteBufferedImage(), testFile);
 		
 		Img loaded = Img.createRemoteImg(ImageLoader.loadImage(testFile, BufferedImage.TYPE_INT_ARGB));
-		assertTrue(loaded != null);
 		assertEquals(img.getDimension(), loaded.getDimension());
 		
 		for(Pixel p: loaded){
@@ -55,5 +53,21 @@ public class IOTest {
 	@After
 	public void cleanup(){
 		deleteTestDir();
+	}
+	
+	
+	public static void testException(Runnable codeThatThrows, Class<? extends Throwable> exClass){
+		boolean wasThrown = true;
+		try{
+			codeThatThrows.run();
+			wasThrown = false;
+		} catch(Throwable t){
+			if(!exClass.isInstance(t)){
+				fail(String.format("Expected Exception %s but got %s", exClass, t.getClass()));
+			}
+		}
+		if(!wasThrown){
+			fail(String.format("Expected Exception %s but none was thrown",exClass));
+		}
 	}
 }
