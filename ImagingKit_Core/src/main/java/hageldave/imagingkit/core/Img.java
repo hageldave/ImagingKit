@@ -506,6 +506,19 @@ public class Img implements Iterable<Pixel> {
 		return new ImgSpliterator(0, numValues()-1);
 	}
 	
+	// TODO: javadoc
+	public Spliterator<Pixel> spliterator(int x, int y, int width, int height) {
+		if(		width <= 0 || height <= 0 || 
+				x < 0 || y < 0 ||
+				x+width > getWidth() || y+height > getHeight() )
+		{
+			throw new IllegalArgumentException(String.format(
+							"provided area [%d,%d][%d,%d] is not within bounds of the image [%d,%d]", 
+							x,y,width,height, getWidth(), getHeight()));
+		}
+		return new ImgAreaSpliterator(x,y,width,height);
+	}
+	
 	/**
 	 * {@link #forEach(Consumer)} method but with multithreaded execution.
 	 * This Imgs {@link #spliterator()} is used to parallelize the workload.
@@ -516,6 +529,12 @@ public class Img implements Iterable<Pixel> {
 	 */
 	public void forEachParallel(final Consumer<? super Pixel> action) {
 		ParallelForEachExecutor exec = new ParallelForEachExecutor(null, spliterator(), action);
+		exec.invoke();
+	}
+	
+	// TODO: javadoc
+	public void forEachParallel(int xStart, int yStart, int width, int height, final Consumer<? super Pixel> action) {
+		ParallelForEachExecutor exec = new ParallelForEachExecutor(null, spliterator(xStart, yStart, width, height), action);
 		exec.invoke();
 	}
 	
@@ -530,6 +549,15 @@ public class Img implements Iterable<Pixel> {
 		}
 	}
 	
+	// TODO: javadoc
+	public void forEach(int xStart, int yStart, int width, int height, Consumer<? super Pixel> action) {
+		Pixel p = getPixel(xStart, yStart);
+		int numValues = width*height;
+		for(int i = 0; i < numValues; ++i, p.setPosition(xStart+i%width, yStart+i/width)){
+			action.accept(p);
+		}
+	}
+	
 	/** default implementation of {@link Iterable#forEach(Consumer)} <br>
 	 * only for performance test purposes as it is slower than the
 	 * {@link Img#forEach(Consumer)} implementation
@@ -539,10 +567,94 @@ public class Img implements Iterable<Pixel> {
 	}
 	
 	/**
+	 * Spliterator class for Img bound to a specific area
+	 * @author hageldave
+	 * @since 1.1
+	 */
+	private final class ImgAreaSpliterator implements Spliterator<Pixel> {
+		
+		final Pixel px;
+		final int startX, startY, width, height;
+		int areaEndIndex;
+		
+		public ImgAreaSpliterator(int xStart, int yStart, int width, int height){
+			this(xStart,yStart,width,height, 0,width*height-1);
+		}
+		
+		public ImgAreaSpliterator(int xStart, int yStart, int width, int height, int areaStartIndex, int areaEndIndex){
+			this.startX = xStart;
+			this.startY = yStart;
+			this.width = width;
+			this.height = height;
+			
+			Img img = Img.this;
+			int areaX = areaStartIndex%width;
+			int areaY = areaStartIndex/width;
+			this.px = new Pixel(img, img.getWidth()*(startY+areaY)+startX+areaX);
+			this.areaEndIndex = areaEndIndex;
+		}
+		
+		public void setEndIndex(int endIndex) {
+			this.areaEndIndex = endIndex;
+		}
+		
+		private int getAreaIdx(){
+			return (px.getY()-startY)*width+px.getX()-startX;
+		}
+		
+		@Override
+		public boolean tryAdvance(final Consumer<? super Pixel> action) {
+			int areaIDX = getAreaIdx();
+			if(areaIDX <= areaEndIndex){
+				action.accept(px);
+				areaIDX++;
+				px.setPosition(startX+areaIDX%width, startY+areaIDX/width);
+				return true;
+			} else {
+				return false;
+			}
+		}
+		
+		@Override
+		public void forEachRemaining(final Consumer<? super Pixel> action) {
+			int areaIDX = getAreaIdx();
+			for(;areaIDX <= areaEndIndex; ++areaIDX, px.setPosition(startX+areaIDX%width, startY+areaIDX/width)){
+				action.accept(px);
+			}
+		}
+		
+		@Override
+		public Spliterator<Pixel> trySplit() {
+			int currentIdx = Math.min(getAreaIdx(), areaEndIndex);
+			int midIdx = currentIdx + (areaEndIndex-currentIdx)/2;
+			if(midIdx > currentIdx+1024){
+				ImgAreaSpliterator split = new ImgAreaSpliterator(startX, startY, width, height, midIdx, areaEndIndex);
+				setEndIndex(midIdx-1);
+				return split;
+			} else {
+				return null;
+			}
+		}
+		
+		@Override
+		public long estimateSize() {
+			int currentIndex = getAreaIdx();
+			int lastIndexPlusOne = areaEndIndex+1;
+			return lastIndexPlusOne-currentIndex;
+		}
+		
+		@Override
+		public int characteristics() {
+			return NONNULL | SIZED | CONCURRENT | SUBSIZED;
+		}
+		
+	}
+	
+	/**
 	 * Spliterator class for Img
 	 * @author hageldave
 	 */
-	private final class ImgSpliterator implements  Spliterator<Pixel> {
+	private final class ImgSpliterator implements Spliterator<Pixel> {
 		
 		final Pixel px;
 		int endIndex;

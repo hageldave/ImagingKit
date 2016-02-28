@@ -352,6 +352,40 @@ public class ImgTest {
 			}
 		}
 		
+		// foreach area
+		{
+			Img img = new Img(2000,400);
+			img.forEach(40, 80, 500, 100, (px)->{px.setValue(px.getIndex());});
+			for(int i = 0; i < img.numValues(); i++){
+				int x = i % img.getWidth(); x-=40;
+				int y = i / img.getWidth(); y-=80;
+				if(x >= 0 && x < 500 && y >= 0 && y < 100){
+					assertEquals(i, img.getData()[i]);
+				} else {
+					assertEquals(0, img.getData()[i]);
+				}
+			}
+		}
+		
+		// parallel foreach area
+		{
+			Img img = new Img(3000,2000);
+			img.forEachParallel(40, 80, 1000, 500, (px)->{px.setValue(px.getIndex());});
+			for(int i = 0; i < img.numValues(); i++){
+				int x = i % img.getWidth(); x-=40;
+				int y = i / img.getWidth(); y-=80;
+				if(x >= 0 && x < 1000 && y >= 0 && y < 500){
+					assertEquals(i, img.getData()[i]);
+				} else {
+					assertEquals(0, img.getData()[i]);
+				}
+			}
+			
+			JunitUtils.testException(()->{
+				img.forEachParallel(0, 0, 3000,2001, (px)->{});
+			}, IllegalArgumentException.class);
+		}
+		
 	}
 	
 	
