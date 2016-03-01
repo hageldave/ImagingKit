@@ -501,6 +501,45 @@ public class Img implements Iterable<Pixel> {
 		return pxIter;
 	}
 	
+	
+	public Iterator<Pixel> iterator(final int xStart, final int yStart, final int width, final int height) {
+		Iterator<Pixel> pxIter = new Iterator<Pixel>() {
+			Pixel px = new Pixel(Img.this, -1);
+			int x = 0;
+			int y = 0;
+			@Override
+			public Pixel next() {
+				px.setPosition(x+xStart, y+yStart);
+				x++;
+				if(x >= width){
+					x=0;
+					y++;
+				}
+				return px;
+			}
+			
+			@Override
+			public boolean hasNext() {
+				return y < height;
+			}
+			
+			@Override
+			public void forEachRemaining(Consumer<? super Pixel> action) {
+				int xEnd = xStart+width;
+				int yEnd = yStart+height;
+				int x = this.x+xStart;
+				for(int y=this.y+yStart; y < yEnd; y++){
+					for(; x < xEnd; x++){
+						px.setPosition(x, y);
+						action.accept(px);
+					}
+					x = xStart;
+				}
+			}
+		};
+		return pxIter;
+	}
+	
 	@Override
 	public Spliterator<Pixel> spliterator() {
 		return new ImgSpliterator(0, numValues()-1);
@@ -551,10 +590,14 @@ public class Img implements Iterable<Pixel> {
 	
 	// TODO: javadoc
 	public void forEach(int xStart, int yStart, int width, int height, Consumer<? super Pixel> action) {
-		Pixel p = getPixel(xStart, yStart);
-		int numValues = width*height;
-		for(int i = 0; i < numValues; ++i, p.setPosition(xStart+i%width, yStart+i/width)){
-			action.accept(p);
+		Pixel p = getPixel();
+		int yEnd = yStart+height;
+		int xEnd = xStart+width;
+		for(int y = yStart; y < yEnd; y++){
+			for(int x = xStart; x < xEnd; x++){
+				p.setPosition(x, y);
+				action.accept(p);
+			}
 		}
 	}
 	
