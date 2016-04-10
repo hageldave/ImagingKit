@@ -1,8 +1,6 @@
 package hageldave.imagingkit.core;
 
 import java.awt.Dimension;
-import java.awt.Toolkit;
-import java.awt.font.ImageGraphicAttribute;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBuffer;
 import java.awt.image.DataBufferInt;
@@ -11,19 +9,9 @@ import java.awt.image.Raster;
 import java.awt.image.WritableRaster;
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Spliterator;
-import java.util.Spliterators;
 import java.util.concurrent.CountedCompleter;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
-
-import javax.swing.SpringLayout;
 
 /**
  * Image class with data stored in an int array. 
@@ -513,7 +501,15 @@ public class Img implements Iterable<Pixel> {
 		return pxIter;
 	}
 	
-	
+	/**
+	 * Returns an iterator for the specified area of the image. 
+	 * @param xStart left boundary of the area (inclusive)
+	 * @param yStart upper boundary of the area (inclusive)
+	 * @param width of the area
+	 * @param height of the area
+	 * @return iterator for iterating over the pixels in the specified area.
+	 * @since 1.1
+	 */
 	public Iterator<Pixel> iterator(final int xStart, final int yStart, final int width, final int height) {
 		Iterator<Pixel> pxIter = new Iterator<Pixel>() {
 			Pixel px = new Pixel(Img.this, -1);
@@ -557,22 +553,30 @@ public class Img implements Iterable<Pixel> {
 		return new ImgSpliterator(0, numValues()-1);
 	}
 	
-	// TODO: javadoc
-	public Spliterator<Pixel> spliterator(int x, int y, int width, int height) {
+	/**
+	 * Creates a {@link Spliterator} over the pixels within the specified area.
+	 * @param xStart left boundary of the area (inclusive)
+	 * @param yStart upper boundary of the area (inclusive)
+	 * @param width of the area
+	 * @param height of the area
+	 * @return spliterator for the specified area.
+	 * @since 1.1
+	 */
+	public Spliterator<Pixel> spliterator(final int xStart, final int yStart, final int width, final int height) {
 		if(		width <= 0 || height <= 0 || 
-				x < 0 || y < 0 ||
-				x+width > getWidth() || y+height > getHeight() )
+				xStart < 0 || yStart < 0 ||
+				xStart+width > getWidth() || yStart+height > getHeight() )
 		{
 			throw new IllegalArgumentException(String.format(
 							"provided area [%d,%d][%d,%d] is not within bounds of the image [%d,%d]", 
-							x,y,width,height, getWidth(), getHeight()));
+							xStart,yStart,width,height, getWidth(), getHeight()));
 		}
-		return new ImgAreaSpliterator(x,y,width,height);
+		return new ImgAreaSpliterator(xStart,yStart,width,height);
 	}
 	
 	/**
 	 * {@link #forEach(Consumer)} method but with multithreaded execution.
-	 * This Imgs {@link #spliterator()} is used to parallelize the workload.
+	 * This Img's {@link #spliterator()} is used to parallelize the workload.
 	 * As the threaded execution comes with a certain overhead it is only
 	 * suitable for more sophisticated consumer actions and large Images (1MP+) 
 	 * @param action
@@ -583,8 +587,21 @@ public class Img implements Iterable<Pixel> {
 		exec.invoke();
 	}
 	
-	// TODO: javadoc
-	public void forEachParallel(int xStart, int yStart, int width, int height, final Consumer<? super Pixel> action) {
+	/**
+	 * Applies the specified action to every pixel in the specified area of 
+	 * this image during a multithreaded execution.
+	 * This Img's {@link #spliterator(int, int, int, int)} is used to parallelize the workload.
+	 * As the threaded execution comes with a certain overhead it is only
+	 * suitable for more sophisticated consumer actions and large Images (1MP+) 
+	 * @param xStart left boundary of the area (inclusive)
+	 * @param yStart upper boundary of the area (inclusive)
+	 * @param width of the area
+	 * @param height of the area
+	 * @param action to be performed on each pixel
+	 * @see #forEach(int, int, int, int, Consumer)
+	 * @since 1.1
+	 */
+	public void forEachParallel(final int xStart, final int yStart, final int width, final int height, final Consumer<? super Pixel> action) {
 		ParallelForEachExecutor exec = new ParallelForEachExecutor(null, spliterator(xStart, yStart, width, height), action);
 		exec.invoke();
 	}
@@ -593,15 +610,24 @@ public class Img implements Iterable<Pixel> {
 	 * @see #forEachParallel(Consumer)
 	 */
 	@Override
-	public void forEach(Consumer<? super Pixel> action) {
+	public void forEach(final Consumer<? super Pixel> action) {
 		Pixel p = getPixel();
 		for(int i = 0; i < numValues(); p.setIndex(++i)){
 			action.accept(p);
 		}
 	}
 	
-	// TODO: javadoc
-	public void forEach(int xStart, int yStart, int width, int height, Consumer<? super Pixel> action) {
+	/**
+	 * Applies the specified action to every pixel in the specified area of this image.
+	 * @param xStart left boundary of the area (inclusive)
+	 * @param yStart upper boundary of the area (inclusive)
+	 * @param width of the area
+	 * @param height of the area
+	 * @param action to be performed on each pixel
+	 * @see #forEachParallel(int, int, int, int, Consumer)
+	 * @since 1.1
+	 */
+	public void forEach(final int xStart, final int yStart, final int width, final int height, final Consumer<? super Pixel> action) {
 		Pixel p = getPixel();
 		int yEnd = yStart+height;
 		int xEnd = xStart+width;
@@ -617,7 +643,7 @@ public class Img implements Iterable<Pixel> {
 	 * only for performance test purposes as it is slower than the
 	 * {@link Img#forEach(Consumer)} implementation
 	 */
-	void forEach_defaultimpl(Consumer<? super Pixel> action) {
+	void forEach_defaultimpl(final Consumer<? super Pixel> action) {
 		Iterable.super.forEach(action);
 	}
 	
@@ -832,66 +858,8 @@ public class Img implements Iterable<Pixel> {
 		}
 	}
 	
-	private static final class ForEachExecutor implements Runnable {
-		
-		final Spliterator<Pixel> spliterator;
-		final Consumer<? super Pixel> action;
-		
-		public ForEachExecutor(Spliterator<Pixel> spliterator, Consumer<? super Pixel> action) {
-			this.spliterator = spliterator;
-			this.action = action;
-		}
-		
-		public void run(){
-			spliterator.forEachRemaining(action);
-		}
-		
-		public Runnable setNumberOfThreads(int n){
-			if(n < 1){
-				throw new RuntimeException(String.format("Number of threads has to at least be 1, but specified %.",n));
-			}
-			if(n == 1){
-				return this;
-			}
-			return ()->{
-				ExecutorService executor = Executors.newFixedThreadPool(n);
-				List<Spliterator<Pixel>> list = new LinkedList<>();
-				list.add(spliterator);
-				int failSplits = 0;
-				// make so many splits that there are n spliterators
-				while(list.size() < n && failSplits < list.size()){
-					Spliterator<Pixel> spl = list.remove(0);
-					Spliterator<Pixel> spl2 = spl.trySplit();
-					list.add(spl);
-					if(spl2 == null){
-						failSplits ++;
-					} else {
-						list.add(spl2);
-					}
-				}
-				List<Future<?>> futures = new LinkedList<>();
-				for(Spliterator<Pixel> spl: list){
-					futures.add(executor.submit(()->{spl.forEachRemaining(action);}));
-				}
-				while(!futures.isEmpty()){
-					if(futures.get(0).isDone()){
-						futures.remove(0);
-					} else {
-						Thread.yield();
-					}
-				}
-			};
-		}
-		
-		
-	}
 	
-	
-	
-	
-	
-	
-	
+
 	
 	
 	
