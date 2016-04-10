@@ -370,7 +370,7 @@ public class ImgTest {
 		// parallel foreach area
 		{
 			Img img = new Img(3000,2000);
-			img.forEachParallel(40, 80, 1000, 500, (px)->{px.setValue(px.getIndex());});
+			img.forEachParallel(40, 80, 1000, 500, (px)->{px.setValue(px.getValue()+px.getIndex());});
 			for(int i = 0; i < img.numValues(); i++){
 				int x = i % img.getWidth(); x-=40;
 				int y = i / img.getWidth(); y-=80;

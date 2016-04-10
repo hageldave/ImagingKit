@@ -2,6 +2,7 @@ package hageldave.imagingkit.core;
 
 import java.awt.Dimension;
 import java.awt.Toolkit;
+import java.awt.font.ImageGraphicAttribute;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBuffer;
 import java.awt.image.DataBufferInt;
@@ -628,62 +629,91 @@ public class Img implements Iterable<Pixel> {
 	private final class ImgAreaSpliterator implements Spliterator<Pixel> {
 		
 		final Pixel px;
-		final int startX, startY, width, height;
-		int areaEndIndex;
+		final int startX, endXexcl;
+		int x,y, finalXexcl, finalYincl;
 		
 		public ImgAreaSpliterator(int xStart, int yStart, int width, int height){
-			this(xStart,yStart,width,height, 0,width*height-1);
+			this(xStart, xStart+width, xStart, yStart, xStart+width, yStart+height-1);
 		}
 		
-		public ImgAreaSpliterator(int xStart, int yStart, int width, int height, int areaStartIndex, int areaEndIndex){
+		private ImgAreaSpliterator(int xStart, int endXexcl, int x, int y, int finalXexcl, int finalYincl){
 			this.startX = xStart;
-			this.startY = yStart;
-			this.width = width;
-			this.height = height;
-			
-			Img img = Img.this;
-			int areaX = areaStartIndex%width;
-			int areaY = areaStartIndex/width;
-			this.px = new Pixel(img, img.getWidth()*(startY+areaY)+startX+areaX);
-			this.areaEndIndex = areaEndIndex;
+			this.endXexcl = endXexcl;
+			this.x = x;
+			this.y = y;
+			this.finalXexcl = finalXexcl;
+			this.finalYincl = finalYincl;
+			this.px = Img.this.getPixel(x, y);
 		}
 		
-		public void setEndIndex(int endIndex) {
-			this.areaEndIndex = endIndex;
-		}
-		
-		private int getAreaIdx(){
-			return (px.getY()-startY)*width+px.getX()-startX;
-		}
 		
 		@Override
 		public boolean tryAdvance(final Consumer<? super Pixel> action) {
-			int areaIDX = getAreaIdx();
-			if(areaIDX <= areaEndIndex){
-				action.accept(px);
-				areaIDX++;
-				px.setPosition(startX+areaIDX%width, startY+areaIDX/width);
-				return true;
-			} else {
+			if(y >= finalYincl && x >= finalXexcl){
 				return false;
+			} else {
+				action.accept(px);
+				if(x+1 >= endXexcl){
+					x = startX;
+					y++;
+				} else {
+					x++;
+				}
+				px.setPosition(x, y);
+				return true;
 			}
 		}
 		
 		@Override
 		public void forEachRemaining(final Consumer<? super Pixel> action) {
-			int areaIDX = getAreaIdx();
-			for(;areaIDX <= areaEndIndex; ++areaIDX, px.setPosition(startX+areaIDX%width, startY+areaIDX/width)){
-				action.accept(px);
+			if(this.y == finalYincl){
+				for(int x = this.x; x < finalXexcl; x++){
+					px.setPosition(x, finalYincl);
+					action.accept(px);
+				}
+			} else {
+				// end current row
+				for(int x = this.x; x < endXexcl; x++){
+					px.setPosition(x, this.y);
+					action.accept(px);
+				}
+				// do next rows right before final row
+				for(int y = this.y+1; y < this.finalYincl; y++){
+					for(int x = startX; x < endXexcl; x++ ){
+						px.setPosition(x, y);
+						action.accept(px);
+					}
+				}
+				// do final row
+				for(int x = startX; x < finalXexcl; x++){
+					px.setPosition(x, finalYincl);
+					action.accept(px);
+				}
 			}
 		}
 		
 		@Override
 		public Spliterator<Pixel> trySplit() {
-			int currentIdx = Math.min(getAreaIdx(), areaEndIndex);
-			int midIdx = currentIdx + (areaEndIndex-currentIdx)/2;
-			if(midIdx > currentIdx+1024){
-				ImgAreaSpliterator split = new ImgAreaSpliterator(startX, startY, width, height, midIdx, areaEndIndex);
-				setEndIndex(midIdx-1);
+			int width = (this.endXexcl-this.startX);
+			int idx = this.x - this.startX;
+			int finalIdx_excl = (this.finalYincl-this.y)*width + (this.finalXexcl-startX);
+			if(finalIdx_excl-idx > 1024){
+				int midIdx_excl = idx + (finalIdx_excl-idx)/2;
+				
+				int newFinalX_excl = startX + (midIdx_excl%width);
+				int newFinalY_incl = this.y + midIdx_excl/width;
+				
+				ImgAreaSpliterator split = new ImgAreaSpliterator(
+						startX, 
+						endXexcl, 
+						(newFinalX_excl < endXexcl ? newFinalX_excl:startX), 
+						(newFinalX_excl < endXexcl ? newFinalY_incl:newFinalY_incl+1), 
+						finalXexcl, 
+						finalYincl);
+				
+				this.finalXexcl = newFinalX_excl;
+				this.finalYincl = newFinalY_incl;
+				
 				return split;
 			} else {
 				return null;
@@ -692,9 +722,9 @@ public class Img implements Iterable<Pixel> {
 		
 		@Override
 		public long estimateSize() {
-			int currentIndex = getAreaIdx();
-			int lastIndexPlusOne = areaEndIndex+1;
-			return lastIndexPlusOne-currentIndex;
+			int idx = this.x - this.startX;
+			int finalIdx_excl = (this.finalYincl-this.y)*(this.endXexcl-this.startX) + (this.finalXexcl-startX);
+			return finalIdx_excl-idx;
 		}
 		
 		@Override
