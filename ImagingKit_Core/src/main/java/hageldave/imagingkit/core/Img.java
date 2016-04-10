@@ -1,6 +1,7 @@
 package hageldave.imagingkit.core;
 
 import java.awt.Dimension;
+import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBuffer;
 import java.awt.image.DataBufferInt;
@@ -9,9 +10,19 @@ import java.awt.image.Raster;
 import java.awt.image.WritableRaster;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Spliterator;
+import java.util.Spliterators;
 import java.util.concurrent.CountedCompleter;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+
+import javax.swing.SpringLayout;
 
 /**
  * Image class with data stored in an int array. 
@@ -790,4 +801,70 @@ public class Img implements Iterable<Pixel> {
 			propagateCompletion();
 		}
 	}
+	
+	private static final class ForEachExecutor implements Runnable {
+		
+		final Spliterator<Pixel> spliterator;
+		final Consumer<? super Pixel> action;
+		
+		public ForEachExecutor(Spliterator<Pixel> spliterator, Consumer<? super Pixel> action) {
+			this.spliterator = spliterator;
+			this.action = action;
+		}
+		
+		public void run(){
+			spliterator.forEachRemaining(action);
+		}
+		
+		public Runnable setNumberOfThreads(int n){
+			if(n < 1){
+				throw new RuntimeException(String.format("Number of threads has to at least be 1, but specified %.",n));
+			}
+			if(n == 1){
+				return this;
+			}
+			return ()->{
+				ExecutorService executor = Executors.newFixedThreadPool(n);
+				List<Spliterator<Pixel>> list = new LinkedList<>();
+				list.add(spliterator);
+				int failSplits = 0;
+				// make so many splits that there are n spliterators
+				while(list.size() < n && failSplits < list.size()){
+					Spliterator<Pixel> spl = list.remove(0);
+					Spliterator<Pixel> spl2 = spl.trySplit();
+					list.add(spl);
+					if(spl2 == null){
+						failSplits ++;
+					} else {
+						list.add(spl2);
+					}
+				}
+				List<Future<?>> futures = new LinkedList<>();
+				for(Spliterator<Pixel> spl: list){
+					futures.add(executor.submit(()->{spl.forEachRemaining(action);}));
+				}
+				while(!futures.isEmpty()){
+					if(futures.get(0).isDone()){
+						futures.remove(0);
+					} else {
+						Thread.yield();
+					}
+				}
+			};
+		}
+		
+		
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 }
