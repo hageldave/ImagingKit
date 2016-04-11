@@ -26,8 +26,41 @@ import java.util.function.Consumer;
  * <p>
  * Moreover the Img class targets lambda expressions introduced in Java 8 
  * useful for per pixel operations by implementing the {@link Iterable} 
- * interface and providing {@link #iterator()}, {@link #spliterator()}, 
- * {@link #forEach(Consumer)} and {@link #forEachParallel(Consumer)}.
+ * interface and providing 
+ * <ul>
+ * <li> {@link #iterator()} </li>
+ * <li> {@link #spliterator()} </li> 
+ * <li> {@link #forEach(Consumer)} </li>
+ * <li> and {@link #forEachParallel(Consumer)}. </li>
+ * </ul>
+ * <p>
+ * Since version 1.1 it is also possible to iterate over a specified area of the Img 
+ * using 
+ * <ul>
+ * <li> {@link #iterator(int, int, int, int)} </li>
+ * <li> {@link #spliterator(int, int, int, int)} </li>
+ * <li> {@link #forEach(int, int, int, int, Consumer)} </li>
+ * <li> and {@link #forEachParallel(int, int, int, int, Consumer)}. </li>
+ * </ul>
+ * <p>
+ * Here is an example of a parallelized per pixel operation:
+ * <pre>
+ * Img img = new Img(1024, 1024);
+ * img.forEachParallel(px -> {
+ *     double x = (px.getX()-512)/512.0;
+ *     double y = (px.getY()-512)/512.0;
+ *     double len = Math.max(Math.abs(x),Math.abs(y));
+ *     double angle = (Math.atan2(x,y)+Math.PI)*(180/Math.PI);
+ *     
+ *     double r = 255*Math.max(0,1-Math.abs((angle-120)/120.0));
+ *     double g = 255*Math.max(0, 1-Math.abs((angle-240)/120.0));
+ *     double b = 255*Math.max(0, angle <= 120 ? 
+ *          1-Math.abs((angle)/120.0):1-Math.abs((angle-360)/120.0));
+ *        
+ *     px.setRGB((int)(r*(1-len)), (int)(g*(1-len)), (int)(b*(1-len)));
+ * });
+ * ImageSaver.saveImage(img.getRemoteBufferedImage(), "polar_colors.png");
+ * </pre>
  * 
  * @author hageldave
  */
@@ -508,10 +541,20 @@ public class Img implements Iterable<Pixel> {
 	 * @param width of the area
 	 * @param height of the area
 	 * @return iterator for iterating over the pixels in the specified area.
+	 * @throws IllegalArgumentException if provided area is not within this 
+	 * Img's bounds.
 	 * @since 1.1
 	 */
 	public Iterator<Pixel> iterator(final int xStart, final int yStart, final int width, final int height) {
-		Iterator<Pixel> pxIter = new Iterator<Pixel>() {
+		if(		width <= 0 || height <= 0 || 
+				xStart < 0 || yStart < 0 ||
+				xStart+width > getWidth() || yStart+height > getHeight() )
+		{
+			throw new IllegalArgumentException(String.format(
+							"provided area [%d,%d][%d,%d] is not within bounds of the image [%d,%d]", 
+							xStart,yStart,width,height, getWidth(), getHeight()));
+		}
+		return new Iterator<Pixel>() {
 			Pixel px = new Pixel(Img.this, -1);
 			int x = 0;
 			int y = 0;
@@ -545,7 +588,6 @@ public class Img implements Iterable<Pixel> {
 				}
 			}
 		};
-		return pxIter;
 	}
 	
 	@Override
@@ -560,6 +602,8 @@ public class Img implements Iterable<Pixel> {
 	 * @param width of the area
 	 * @param height of the area
 	 * @return spliterator for the specified area.
+	 * @throws IllegalArgumentException if provided area is not within this 
+	 * Img's bounds.
 	 * @since 1.1
 	 */
 	public Spliterator<Pixel> spliterator(final int xStart, final int yStart, final int width, final int height) {
@@ -598,6 +642,8 @@ public class Img implements Iterable<Pixel> {
 	 * @param width of the area
 	 * @param height of the area
 	 * @param action to be performed on each pixel
+	 * @throws IllegalArgumentException if provided area is not within this 
+	 * Img's bounds.
 	 * @see #forEach(int, int, int, int, Consumer)
 	 * @since 1.1
 	 */
@@ -624,6 +670,8 @@ public class Img implements Iterable<Pixel> {
 	 * @param width of the area
 	 * @param height of the area
 	 * @param action to be performed on each pixel
+	 * @throws IllegalArgumentException if provided area is not within this 
+	 * Img's bounds.
 	 * @see #forEachParallel(int, int, int, int, Consumer)
 	 * @since 1.1
 	 */
