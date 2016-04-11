@@ -34,8 +34,8 @@ import java.util.function.Consumer;
  * <li> and {@link #forEachParallel(Consumer)}. </li>
  * </ul>
  * <p>
- * Since version 1.1 it is also possible to iterate over a specified area of the Img 
- * using 
+ * Since version 1.1 it is also possible to iterate over a specified area of 
+ * the Img using 
  * <ul>
  * <li> {@link #iterator(int, int, int, int)} </li>
  * <li> {@link #spliterator(int, int, int, int)} </li>
@@ -185,7 +185,7 @@ public class Img implements Iterable<Pixel> {
 	/**
 	 * Returns the value of this Img at the specified position.
 	 * No bounds checks will be performed, positions outside of this
-	 * images dimension can either result in a value for a different position
+	 * image's dimension can either result in a value for a different position
 	 * or an ArrayIndexOutOfBoundsException.
 	 * @param x
 	 * @param y
@@ -202,7 +202,7 @@ public class Img implements Iterable<Pixel> {
 	
 	/**
 	 * Returns the value of this Img at the specified position.
-	 * Bounds checks will be performed and positions outside of this images
+	 * Bounds checks will be performed and positions outside of this image's
 	 * dimensions will be handled according to the specified boundary mode.
 	 * <p>
 	 * <b><u>Boundary Modes</u></b><br>
@@ -265,15 +265,15 @@ public class Img implements Iterable<Pixel> {
 	/**
 	 * Returns a bilinearly interpolated ARGB value of the image for the 
 	 * specified normalized position (x and y within [0,1]). Position {0,0} 
-	 * denotes the images origin (top left corner), Position {1,1} denotes the 
+	 * denotes the image's origin (top left corner), position {1,1} denotes the 
 	 * opposite corner (pixel at {width-1, height-1}). 
 	 * <p>
-	 * An IndexOutOfBoundsException may be thrown for x and y greater than 1 
+	 * An ArrayIndexOutOfBoundsException may be thrown for x and y greater than 1 
 	 * or less than 0.
 	 * @param xNormalized
 	 * @param yNormalized
 	 * @throws ArrayIndexOutOfBoundsException when a resulting index is out of 
-	 * the data arrays bounds, which can only happen for x and y values less 
+	 * the data array's bounds, which can only happen for x and y values less 
 	 * than 0 or greater than 1.
 	 * @return bilinearly interpolated ARGB value.
 	 */
@@ -433,7 +433,7 @@ public class Img implements Iterable<Pixel> {
 	}
 	
 	/**
-	 * @return a BufferedImage of type INT_ARGB with this Imgs data copied to it.
+	 * @return a BufferedImage of type INT_ARGB with this Img's data copied to it.
 	 * @see #toBufferedImage(BufferedImage)
 	 * @see #getRemoteBufferedImage()
 	 */
@@ -443,7 +443,7 @@ public class Img implements Iterable<Pixel> {
 	}
 	
 	/**
-	 * Copies this Imgs data to the specified BufferedImage.
+	 * Copies this Img's data to the specified BufferedImage.
 	 * @param img
 	 * @return specified BufferedImage
 	 * @throws ArrayIndexOutOfBoundsException if the provided BufferedImage
@@ -461,7 +461,7 @@ public class Img implements Iterable<Pixel> {
 	 * this Img are reflected in the created BufferedImage and vice versa.
 	 * The created BufferedImage uses an ARGB DirectColorModel with an 
 	 * underlying DataBufferInt (similar to {@link BufferedImage#TYPE_INT_ARGB})
-	 * @return BufferedImage sharing this Imgs data.
+	 * @return BufferedImage sharing this Img's data.
 	 * @see #createRemoteImg(BufferedImage)
 	 * @see #toBufferedImage()
 	 */
@@ -479,7 +479,7 @@ public class Img implements Iterable<Pixel> {
 	}
 	
 	/**
-	 * Creates an Img sharing the specified BufferedImages data. Changes in 
+	 * Creates an Img sharing the specified BufferedImage's data. Changes in 
 	 * the BufferdImage are reflected in the created Img and vice versa.
 	 * <p>
 	 * Only BufferedImages with DataBuffer of {@link DataBuffer#TYPE_INT} can
