@@ -706,7 +706,14 @@ public class Img implements Iterable<Pixel> {
 		final int startX, endXexcl;
 		int x,y, finalXexcl, finalYincl;
 		
-		public ImgAreaSpliterator(int xStart, int yStart, int width, int height){
+		/**
+		 * Constructs a new ImgAreaSpliterator for the specified area
+		 * @param xStart left boundary of the area (inclusive)
+		 * @param yStart upper boundary of the area (inclusive)
+		 * @param width of the area
+		 * @param height of the area
+		 */
+		ImgAreaSpliterator(int xStart, int yStart, int width, int height){
 			this(xStart, xStart+width, xStart, yStart, xStart+width, yStart+height-1);
 		}
 		
@@ -817,12 +824,17 @@ public class Img implements Iterable<Pixel> {
 		final Pixel px;
 		int endIndex;
 		
-		public ImgSpliterator(int startIndex, int endIndex) {
+		/**
+		 * Constructs a new ImgSpliterator for the specified index range
+		 * @param startIndex first index of the range (inclusive)
+		 * @param endIndex last index of the range (inclusive)
+		 */
+		ImgSpliterator(int startIndex, int endIndex) {
 			px = new Pixel(Img.this, startIndex);
 			this.endIndex = endIndex;
 		}
 		
-		public void setEndIndex(int endIndex) {
+		private void setEndIndex(int endIndex) {
 			this.endIndex = endIndex;
 		}
 
@@ -894,7 +906,8 @@ public class Img implements Iterable<Pixel> {
 			this.spliterator = spliterator; 
 			this.action = action;
 		}
-
+		
+		@Override
 		public void compute() {
 			Spliterator<Pixel> sub;
 			while ((sub = spliterator.trySplit()) != null) {
