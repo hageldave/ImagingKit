@@ -45,6 +45,7 @@ import java.util.function.Consumer;
  * <p>
  * Here is an example of a parallelized per pixel operation:
  * <pre>
+ * {@code
  * Img img = new Img(1024, 1024);
  * img.forEachParallel(px -> {
  *     double x = (px.getX()-512)/512.0;
@@ -60,7 +61,7 @@ import java.util.function.Consumer;
  *     px.setRGB((int)(r*(1-len)), (int)(g*(1-len)), (int)(b*(1-len)));
  * });
  * ImageSaver.saveImage(img.getRemoteBufferedImage(), "polar_colors.png");
- * </pre>
+ * }</pre>
  * 
  * @author hageldave
  */
