@@ -21,3 +21,20 @@ img.forEachParallel((pixel) -> {
 });
 ImageSaver.saveImage(buffimg,"myimage_grayscale.png");
 ```
+Fancy polar color thing:
+```java
+Img img = new Img(1024, 1024);
+img.forEach(px -> {
+	double x = (px.getX()-512)/512.0;
+	double y = (px.getY()-512)/512.0;
+	double len = Math.max(Math.abs(x),Math.abs(y));
+	double angle = (Math.atan2(x,y)+Math.PI)*(180/Math.PI);
+	
+	double r = 255*Math.max(0,1-Math.abs((angle-120)/120.0));
+	double g = 255*Math.max(0, 1-Math.abs((angle-240)/120.0));
+	double b = 255*Math.max(0, angle <= 120 ? 
+			1-Math.abs((angle)/120.0):1-Math.abs((angle-360)/120.0));
+	
+	px.setRGB((int)(r*(1-len)), (int)(g*(1-len)), (int)(b*(1-len)));
+});
+ImageSaver.saveImage(img.getRemoteBufferedImage(), "polar_colors.png");
