@@ -282,7 +282,7 @@ public class ImgTest {
 			Img img = new Img(16,9);
 			int idx = 0;
 			for(Pixel p: img){
-				p.setValue(idx);
+				p.setValue(p.getValue()+idx);
 				idx++;
 			}
 			assertEquals(img.numValues(), idx);
@@ -293,7 +293,7 @@ public class ImgTest {
 		
 		{
 			Img img = new Img(16,9);
-			img.iterator().forEachRemaining((px)->{px.setValue(px.getIndex());});
+			img.iterator().forEachRemaining((px)->{px.setValue(px.getValue()+px.getIndex());});
 			for(int i = 0; i < img.numValues(); i++){
 				assertEquals(i, img.getData()[i]);
 			}
@@ -304,7 +304,7 @@ public class ImgTest {
 			Iterator<Pixel> it = img.iterator();
 			while(it.hasNext()){
 				Pixel px = it.next();
-				px.setValue(px.getIndex());
+				px.setValue(px.getValue()+px.getIndex());
 			}
 			for(int i = 0; i < img.numValues(); i++){
 				assertEquals(i, img.getData()[i]);
@@ -336,10 +336,40 @@ public class ImgTest {
 				}	
 			}
 			for(Spliterator<Pixel> iter: all){
-				iter.forEachRemaining((px) -> {px.setValue(px.getIndex());});
+				iter.tryAdvance((px) -> {px.setValue(px.getValue()+px.getIndex());});
+				iter.forEachRemaining((px) -> {px.setValue(px.getValue()+px.getIndex());});
 			}
 			for(int i = 0; i < img.numValues(); i++){
 				assertEquals(i, img.getData()[i]);
+			}
+		}
+		
+		// area spliterator
+		{
+			Img img = new Img(2000, 400);
+			Spliterator<Pixel> split = img.spliterator(40,10,500,300);
+			LinkedList<Spliterator<Pixel>> all = new LinkedList<>();
+			all.add(split);
+			int idx = 0;
+			while(idx < all.size()){
+				Spliterator<Pixel> sp = all.get(idx);
+				Spliterator<Pixel> child = sp.trySplit();
+				if(child != null){
+					all.add(child);
+				} else {
+					idx++;
+				}
+			}
+			for(Spliterator<Pixel> iter: all){
+				iter.tryAdvance((px) -> {px.setValue(px.getValue()+px.getIndex());});
+				iter.forEachRemaining((px) -> {px.setValue(px.getValue()+px.getIndex());});
+			}
+			for(Pixel px: img){
+				if(px.getX() < 40 || px.getX() >= 40+500 || px.getY() < 10 || px.getY() >= 10+300){
+					assertEquals(0, px.getValue());
+				} else {
+					assertEquals(px.getIndex(), px.getValue());
+				}
 			}
 		}
 		
@@ -355,7 +385,7 @@ public class ImgTest {
 		// foreach area
 		{
 			Img img = new Img(2000,400);
-			img.forEach(40, 80, 500, 100, (px)->{px.setValue(px.getIndex());});
+			img.forEach(40, 80, 500, 100, (px)->{px.setValue(px.getValue()+px.getIndex());});
 			for(int i = 0; i < img.numValues(); i++){
 				int x = i % img.getWidth(); x-=40;
 				int y = i / img.getWidth(); y-=80;
