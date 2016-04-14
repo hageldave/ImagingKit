@@ -6,7 +6,7 @@ So far the *ImagingKit-Core* artifact of the library is available through the ma
 <dependency>
     <groupId>com.github.hageldave.imagingkit</groupId>
     <artifactId>imagingkit-core</artifactId>
-    <version>1.0</version>
+    <version>1.1</version>
 </dependency>
 ```
 --
