@@ -12,6 +12,8 @@ import java.util.Iterator;
 import java.util.Spliterator;
 import java.util.concurrent.CountedCompleter;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /**
  * Image class with data stored in an int array. 
@@ -625,7 +627,7 @@ public class Img implements Iterable<Pixel> {
 	 * As the threaded execution comes with a certain overhead it is only
 	 * suitable for more sophisticated consumer actions and large Images (1MP+) 
 	 * @param action
-	 * @see #forEach(Consumer)
+	 * @see #forEach(Consumer action)
 	 */
 	public void forEachParallel(final Consumer<? super Pixel> action) {
 		ParallelForEachExecutor exec = new ParallelForEachExecutor(null, spliterator(), action);
@@ -635,7 +637,7 @@ public class Img implements Iterable<Pixel> {
 	/**
 	 * Applies the specified action to every pixel in the specified area of 
 	 * this image during a multithreaded execution.
-	 * This Img's {@link #spliterator(int, int, int, int)} is used to parallelize the workload.
+	 * This Img's {@link #spliterator(int,int,int,int)} is used to parallelize the workload.
 	 * As the threaded execution comes with a certain overhead it is only
 	 * suitable for more sophisticated consumer actions and large Images (1MP+) 
 	 * @param xStart left boundary of the area (inclusive)
@@ -645,7 +647,7 @@ public class Img implements Iterable<Pixel> {
 	 * @param action to be performed on each pixel
 	 * @throws IllegalArgumentException if provided area is not within this 
 	 * Img's bounds.
-	 * @see #forEach(int, int, int, int, Consumer)
+	 * @see #forEach(int x, int y, int w, int h, Consumer action)
 	 * @since 1.1
 	 */
 	public void forEachParallel(final int xStart, final int yStart, final int width, final int height, final Consumer<? super Pixel> action) {
@@ -654,7 +656,7 @@ public class Img implements Iterable<Pixel> {
 	}
 	
 	/**
-	 * @see #forEachParallel(Consumer)
+	 * @see #forEachParallel(Consumer action)
 	 */
 	@Override
 	public void forEach(final Consumer<? super Pixel> action) {
@@ -673,7 +675,7 @@ public class Img implements Iterable<Pixel> {
 	 * @param action to be performed on each pixel
 	 * @throws IllegalArgumentException if provided area is not within this 
 	 * Img's bounds.
-	 * @see #forEachParallel(int, int, int, int, Consumer)
+	 * @see #forEachParallel(int x, int y, int w, int h, Consumer action)
 	 * @since 1.1
 	 */
 	public void forEach(final int xStart, final int yStart, final int width, final int height, final Consumer<? super Pixel> action) {
@@ -695,6 +697,70 @@ public class Img implements Iterable<Pixel> {
 	void forEach_defaultimpl(final Consumer<? super Pixel> action) {
 		Iterable.super.forEach(action);
 	}
+	
+	/**
+	 * Returns a Pixel {@link Stream} of this Img.
+	 * This Img's {@link #spliterator()} is used to create the Stream.
+	 * @return Pixel Stream of this Img.
+	 * @see #parallelStream()
+	 * @see #stream(int x, int y, int w, int h)
+	 * @since 1.2
+	 */
+	public Stream<Pixel> stream() {
+		return StreamSupport.stream(spliterator(), false);
+	}
+	
+	/**
+	 * Returns a parallel Pixel {@link Stream} of this Img.
+	 * This Img's {@link #spliterator()} is used to create the Stream.
+	 * @return parallel Pixel Stream of this Img.
+	 * @see #stream()
+	 * @see #parallelStream(int x, int y, int w, int h)
+	 * @since 1.2
+	 */
+	public Stream<Pixel> parallelStream() {
+		return StreamSupport.stream(spliterator(), true);
+	}
+	
+	/**
+	 * Returns a Pixel {@link Stream} for the specified area of this Img.<br>
+	 * This Img's {@link #spliterator(int,int,int,int)} is used to create 
+	 * the Stream.
+	 * @param xStart left boundary of the area (inclusive)
+	 * @param yStart upper boundary of the area (inclusive)
+	 * @param width of the area
+	 * @param height of the area
+	 * @return Pixel Stream for specified area.
+	 * @throws IllegalArgumentException if provided area is not within this 
+	 * Img's bounds.
+	 * @see #parallelStream(int x, int y, int w, int h)
+	 * @see #stream()
+	 * @since 1.2
+	 */
+	public Stream<Pixel> stream(final int xStart, final int yStart, final int width, final int height){
+		return StreamSupport.stream(spliterator(xStart, yStart, width, height), false);
+	}
+	
+	
+	/**
+	 * Returns a parallel Pixel {@link Stream} for the specified area of this Img.<br>
+	 * This Img's {@link #spliterator(int,int,int,int)} is used to create 
+	 * the Stream.
+	 * @param xStart left boundary of the area (inclusive)
+	 * @param yStart upper boundary of the area (inclusive)
+	 * @param width of the area
+	 * @param height of the area
+	 * @return parallel Pixel Stream for specified area.
+	 * @throws IllegalArgumentException if provided area is not within this 
+	 * Img's bounds.
+	 * @see #stream(int x, int y, int w, int h)
+	 * @see #parallelStream()
+	 * @since 1.2
+	 */
+	public Stream<Pixel> parallelStream(final int xStart, final int yStart, final int width, final int height){
+		return StreamSupport.stream(spliterator(xStart, yStart, width, height), true);
+	}
+	
 	
 	/**
 	 * Spliterator class for Img bound to a specific area

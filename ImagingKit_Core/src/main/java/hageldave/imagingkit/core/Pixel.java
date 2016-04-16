@@ -5,7 +5,7 @@ package hageldave.imagingkit.core;
  * A Pixel object stores a position and can be used to get and set values of 
  * an Img. It is NOT the value and changing its position will not change the 
  * image, instead it will reference a different value of the image as the 
- * pixel object is a pointer to a value in the Imgs data array.
+ * pixel object is a pointer to a value in the Img's data array.
  * <p>
  * The Pixel class also provides a set of static methods for color decomposition
  * and recombination from color channels like {@link #argb(int, int, int, int)}
@@ -118,8 +118,8 @@ public class Pixel {
 	 * a different position may be set or an ArrayIndexOutOfBoundsException 
 	 * may be thrown.
 	 * @param pixelValue
-	 * @throws ArrayIndexOutOfBoundsException if this Pixels index is not in 
-	 * range of the Imgs data array.
+	 * @throws ArrayIndexOutOfBoundsException if this Pixel's index is not in 
+	 * range of the Img's data array.
 	 * @see #setARGB(int, int, int, int)
 	 * @see #setRGB(int, int, int)
 	 * @see #getValue()
@@ -137,8 +137,8 @@ public class Pixel {
 	 * a different position may be returned or an ArrayIndexOutOfBoundsException 
 	 * may be thrown.
 	 * @return the value of the Img currently referenced by this Pixel.
-	 * @throws ArrayIndexOutOfBoundsException if this Pixels index is not in 
-	 * range of the Imgs data array.
+	 * @throws ArrayIndexOutOfBoundsException if this Pixel's index is not in 
+	 * range of the Img's data array.
 	 * @see #a()
 	 * @see #r()
 	 * @see #g()
@@ -154,8 +154,8 @@ public class Pixel {
 	 * @return the alpha component of the value currently referenced by this
 	 * Pixel. It is assumed that the value is an ARGB value with 8bits per
 	 * color channel.
-	 * @throws ArrayIndexOutOfBoundsException if this Pixels index is not in 
-	 * range of the Imgs data array.
+	 * @throws ArrayIndexOutOfBoundsException if this Pixel's index is not in 
+	 * range of the Img's data array.
 	 * @see #r()
 	 * @see #g()
 	 * @see #b()
@@ -171,8 +171,8 @@ public class Pixel {
 	 * @return the red component of the value currently referenced by this
 	 * Pixel. It is assumed that the value is an ARGB value with 8bits per
 	 * color channel.
-	 * @throws ArrayIndexOutOfBoundsException if this Pixels index is not in 
-	 * range of the Imgs data array.
+	 * @throws ArrayIndexOutOfBoundsException if this Pixel's index is not in 
+	 * range of the Img's data array.
 	 * @see #a()
 	 * @see #g()
 	 * @see #b()
@@ -188,8 +188,8 @@ public class Pixel {
 	 * @return the green component of the value currently referenced by this
 	 * Pixel. It is assumed that the value is an ARGB value with 8bits per
 	 * color channel.
-	 * @throws ArrayIndexOutOfBoundsException if this Pixels index is not in 
-	 * range of the Imgs data array.
+	 * @throws ArrayIndexOutOfBoundsException if this Pixel's index is not in 
+	 * range of the Img's data array.
 	 * @see #a()
 	 * @see #r()
 	 * @see #b()
@@ -205,8 +205,8 @@ public class Pixel {
 	 * @return the blue component of the value currently referenced by this
 	 * Pixel. It is assumed that the value is an ARGB value with 8bits per
 	 * color channel.
-	 * @throws ArrayIndexOutOfBoundsException if this Pixels index is not in 
-	 * range of the Imgs data array.
+	 * @throws ArrayIndexOutOfBoundsException if this Pixel's index is not in 
+	 * range of the Img's data array.
 	 * @see #a()
 	 * @see #r()
 	 * @see #g()
@@ -225,8 +225,8 @@ public class Pixel {
 	 * @param r red
 	 * @param g green
 	 * @param b blue
-	 * @throws ArrayIndexOutOfBoundsException if this Pixels index is not in 
-	 * range of the Imgs data array.
+	 * @throws ArrayIndexOutOfBoundsException if this Pixel's index is not in 
+	 * range of the Img's data array.
 	 * @see #setRGB(int, int, int)
 	 * @see #argb(int, int, int, int)
 	 * @see #argb_bounded(int, int, int, int)
@@ -243,8 +243,8 @@ public class Pixel {
 	 * @param r red
 	 * @param g green
 	 * @param b blue
-	 * @throws ArrayIndexOutOfBoundsException if this Pixels index is not in 
-	 * range of the Imgs data array.
+	 * @throws ArrayIndexOutOfBoundsException if this Pixel's index is not in 
+	 * range of the Img's data array.
 	 * @see #setARGB(int, int, int, int)
 	 * @see #argb(int, int, int, int)
 	 * @see #argb_bounded(int, int, int, int)
@@ -255,6 +255,87 @@ public class Pixel {
 		setValue(Pixel.rgb(r, g, b));
 	}
 	
+	/**
+	 * Sets alpha channel value of this Pixel.
+	 * @param a alpha value in range [0..255]
+	 * @throws ArrayIndexOutOfBoundsException if this Pixel's index is not in 
+	 * range of the Img's data array.
+	 * @see #setARGB(int a, int r, int g, int b)
+	 * @since 1.2
+	 */
+	public void setA(int a){
+		setValue((getValue() & 0x00ffffff) | ((a<<24) & 0xff000000));
+	}
+	
+	/**
+	 * Sets red channel value of this Pixel.
+	 * @param r red value in range [0..255]
+	 * @throws ArrayIndexOutOfBoundsException if this Pixel's index is not in 
+	 * range of the Img's data array.
+	 * @see #setARGB(int a, int r, int g, int b)
+	 * @see #setRGB(int r, int g, int b)
+	 * @since 1.2
+	 */
+	public void setR(int r){
+		setValue((getValue() & 0xff00ffff) | ((r<<16) & 0x00ff0000));
+	}
+	
+	/**
+	 * Sets green channel value of this Pixel.
+	 * @param g green value in range [0..255]
+	 * @throws ArrayIndexOutOfBoundsException if this Pixel's index is not in 
+	 * range of the Img's data array.
+	 * @see #setARGB(int a, int r, int g, int b)
+	 * @see #setRGB(int r, int g, int b)
+	 * @since 1.2
+	 */
+	public void setG(int g){
+		setValue((getValue() & 0xffff00ff) | ((g<<8) & 0x0000ff00));
+	}
+	
+	/**
+	 * Sets blue channel value of this Pixel.
+	 * @param b blue value in range [0..255]
+	 * @throws ArrayIndexOutOfBoundsException if this Pixel's index is not in 
+	 * range of the Img's data array.
+	 * @see #setARGB(int a, int r, int g, int b)
+	 * @see #setRGB(int r, int g, int b)
+	 * @since 1.2
+	 */
+	public void setB(int b){
+		setValue((getValue() & 0xffffff00) | ((b) & 0x000000ff));
+	}
+	
+	/**
+	 * @return 8bit luminance value of this pixel. <br>
+	 * Using weights r=0.2126 g=0.7152 b=0.0722
+	 * @throws ArrayIndexOutOfBoundsException if this Pixel's index is not in 
+	 * range of the Img's data array.
+	 * @see #getGrey(int, int, int)
+	 * @see #getLuminance(int)
+	 * @since 1.2
+	 */
+	public int getLuminance(){
+		return Pixel.getLuminance(getValue());
+	}
+	
+	/**
+	 * Calculates the grey value of this pixel using specified weights.
+	 * @param redWeight
+	 * @param greenWeight
+	 * @param blueWeight
+	 * @return grey value of pixel for specified weights
+	 * @throws ArithmeticException divide by zero if the weights sum up to 0.
+	 * @throws ArrayIndexOutOfBoundsException if this Pixel's index is not in 
+	 * range of the Img's data array.
+	 * @see #getLuminance()
+	 * @see #getGrey(int, int, int, int)
+	 * @since 1.2
+	 */
+	public int getGrey(final int redWeight, final int greenWeight, final int blueWeight){
+		return Pixel.getGrey(getValue(), redWeight, greenWeight, blueWeight);
+	}
+	
 
 	/* * * * * * * * * */
 	// STATIC  METHODS //
@@ -262,8 +343,8 @@ public class Pixel {
 	
 	/**
 	 * @param color RGB(24bit) or ARGB(32bit) value 
-	 * @return 8bit luminance value of given RGB value. Using weights r=0.2126 g=0.7152
-	 * b=0.0722
+	 * @return 8bit luminance value of given RGB value. <br>
+	 * Using weights r=0.2126 g=0.7152 b=0.0722
 	 * @see #getGrey(int, int, int, int)
 	 */
 	public static final int getLuminance(final int color){
