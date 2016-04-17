@@ -258,10 +258,10 @@ public class Img implements Iterable<Pixel> {
 	
 	private static int interpolateColors(final int c00, final int c01, final int c10, final int c11, final float mx, final float my){
 		return Pixel.argb_fast/*_bounded*/(
-				blend( blend(Pixel.a(c00), Pixel.a(c01), mx), blend(Pixel.a(c10), Pixel.a(c11), mx), my),
-				blend( blend(Pixel.r(c00), Pixel.r(c01), mx), blend(Pixel.r(c10), Pixel.r(c11), mx), my),
-				blend( blend(Pixel.g(c00), Pixel.g(c01), mx), blend(Pixel.g(c10), Pixel.g(c11), mx), my),
-				blend( blend(Pixel.b(c00), Pixel.b(c01), mx), blend(Pixel.b(c10), Pixel.b(c11), mx), my) );
+				blend( blend(Pixel.a(c00), Pixel.a(c10), mx), blend(Pixel.a(c01), Pixel.a(c11), mx), my),
+				blend( blend(Pixel.r(c00), Pixel.r(c10), mx), blend(Pixel.r(c01), Pixel.r(c11), mx), my),
+				blend( blend(Pixel.g(c00), Pixel.g(c10), mx), blend(Pixel.g(c01), Pixel.g(c11), mx), my),
+				blend( blend(Pixel.b(c00), Pixel.b(c10), mx), blend(Pixel.b(c01), Pixel.b(c11), mx), my) );
 	}
 	
 	private static int blend(final int channel1, final int channel2, final float m){
