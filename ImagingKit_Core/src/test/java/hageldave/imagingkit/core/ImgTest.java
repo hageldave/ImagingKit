@@ -25,6 +25,17 @@ public class ImgTest {
 		assertEquals(0xff00ff54, Pixel.rgb_bounded(-12, 260, 0x54));
 		assertEquals(0xffffffff, Pixel.rgb(0x15ff, 0xaff, 0x5cff));
 		assertEquals(0b10101110, Pixel.combineCh(2, 0b10, 0b10, 0b11, 0b10));
+		
+		Pixel p = new Pixel(new Img(1,1), 0);
+		assertEquals(0, p.getValue());
+		p.setR(0xff);
+		assertEquals(0x00ff0000, p.getValue());
+		p.setG(0xaa);
+		assertEquals(0x00ffaa00, p.getValue());
+		p.setB(0xcdef);
+		assertEquals(0x00ffaaef, p.getValue());
+		p.setA(p.r());
+		assertEquals(0xffffaaef, p.getValue());
 	}
 	
 	@Test

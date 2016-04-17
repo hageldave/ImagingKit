@@ -111,6 +111,30 @@ public class Pixel {
 	}
 	
 	/**
+	 * Returns the normalized x coordinate of this Pixel.
+	 * This will return 0 for Pixels at the left boundary and 1 for Pixels
+	 * at the right boundary of the Img.<br>
+	 * <em>For Img's that are only 1 Pixel wide, <u>NaN</u> is returned.</em> 
+	 * @return normalized x coordinate within [0..1]
+	 * @since 1.2
+	 */
+	public float getXnormalized() {
+		return getX() * 1.0f / (img.getWidth()-1.0f);
+	}
+	
+	/**
+	 * Returns the normalized y coordinate of this Pixel.
+	 * This will return 0 for Pixels at the upper boundary and 1 for Pixels
+	 * at the lower boundary of the Img.<br>
+	 * <em>For Img's that are only 1 Pixel high, <u>NaN</u> is returned.</em> 
+	 * @return normalized y coordinate within [0..1]
+	 * @since 1.2
+	 */
+	public float getYnormalized() {
+		return getY() * 1.0f / (img.getHeight()-1.0f);
+	}
+	
+	/**
 	 * Sets the value of the Img at the position currently referenced by 
 	 * this Pixel.
 	 * <p>
