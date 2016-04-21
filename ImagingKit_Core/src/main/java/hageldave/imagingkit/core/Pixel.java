@@ -381,12 +381,15 @@ public class Pixel {
 	 * <p>
 	 * Weights are integer values so normalized weights need to be converted
 	 * beforehand. E.g. normalized weights (0.33, 0.62, 0.05) would be have to
-	 * be converted to integer weights (33, 62, 5). 
+	 * be converted to integer weights (33, 62, 5).
+	 * <p>
+	 * When using weights with same signs, the value is within [0..255]. When
+	 * weights have mixed signs the resulting value is unbounded.
 	 * @param color RGB(24bit) or ARGB(32bit) value 
 	 * @param redWeight
 	 * @param greenWeight
 	 * @param blueWeight
-	 * @return weighted grey value (8bit) of RGB color value.
+	 * @return weighted grey value (8bit) of RGB color value for non-negative weights.
 	 * @throws ArithmeticException divide by zero if the weights sum up to 0.
 	 * @see #getLuminance(int)
 	 */
