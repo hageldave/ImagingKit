@@ -243,6 +243,70 @@ public class Pixel {
 	}
 	
 	/**
+	 * @return the normalized alpha component of the value currently referenced by this
+	 * Pixel. This will return a value in [0.0 .. 1.0].
+	 * @throws ArrayIndexOutOfBoundsException if this Pixel's index is not in 
+	 * range of the Img's data array.
+	 * 
+	 * @see #a()
+	 * @see #r_normalized()
+	 * @see #g_normalized()
+	 * @see #b_normalized()
+	 * @since 1.2
+	 */
+	public float a_normalized(){
+		return Pixel.a_normalized(getValue());
+	}
+	
+	/**
+	 * @return the normalized red component of the value currently referenced by this
+	 * Pixel. This will return a value in [0.0 .. 1.0].
+	 * @throws ArrayIndexOutOfBoundsException if this Pixel's index is not in 
+	 * range of the Img's data array.
+	 * 
+	 * @see #r()
+	 * @see #a_normalized()
+	 * @see #g_normalized()
+	 * @see #b_normalized()
+	 * @since 1.2
+	 */
+	public float r_normalized(){
+		return Pixel.r_normalized(getValue());
+	}
+	
+	/**
+	 * @return the normalized green component of the value currently referenced by this
+	 * Pixel. This will return a value in [0.0 .. 1.0].
+	 * @throws ArrayIndexOutOfBoundsException if this Pixel's index is not in 
+	 * range of the Img's data array.
+	 * 
+	 * @see #g()
+	 * @see #a_normalized()
+	 * @see #r_normalized()
+	 * @see #b_normalized()
+	 * @since 1.2
+	 */
+	public float g_normalized(){
+		return Pixel.g_normalized(getValue());
+	}
+	
+	/**
+	 * @return the normalized blue component of the value currently referenced by this
+	 * Pixel. This will return a value in [0.0 .. 1.0].
+	 * @throws ArrayIndexOutOfBoundsException if this Pixel's index is not in 
+	 * range of the Img's data array.
+	 * 
+	 * @see #b()
+	 * @see #a_normalized()
+	 * @see #r_normalized()
+	 * @see #g_normalized()
+	 * @since 1.2
+	 */
+	public float b_normalized(){
+		return Pixel.b_normalized(getValue());
+	}
+	
+	/**
 	 * Sets an ARGB value at the position currently referenced by this Pixel.
 	 * Each channel value is assumed to be 8bit and otherwise truncated.
 	 * @param a alpha
@@ -280,7 +344,53 @@ public class Pixel {
 	}
 	
 	/**
-	 * Sets alpha channel value of this Pixel.
+	 * Sets an ARGB value at the position currently referenced by this Pixel. <br>
+	 * Each channel value is assumed to be within [0.0 .. 1.0]. Channel values
+	 * outside these bounds will result in a broken, malformed ARBG value.
+	 * @param a normalized alpha
+	 * @param r normalized red
+	 * @param g normalized green
+	 * @param b normalized blue
+	 * @throws ArrayIndexOutOfBoundsException if this Pixel's index is not in 
+	 * range of the Img's data array.
+	 * 
+	 * @see #setRGB_fromNormalized(float, float, float)
+	 * @see #setARGB(int, int, int, int)
+	 * @see #a_normalized()
+	 * @see #r_normalized()
+	 * @see #g_normalized()
+	 * @see #b_normalized()
+	 * @since 1.2
+	 */
+	public void setARGB_fromNormalized(float a, float r, float g, float b){
+		setValue(Pixel.argb_fromNormalized(a, r, g, b));
+	}
+	
+	/**
+	 * Sets an opaque RGB value at the position currently referenced by this Pixel. <br>
+	 * Each channel value is assumed to be within [0.0 .. 1.0]. Channel values
+	 * outside these bounds will result in a broken, malformed ARBG value.
+	 * @param r normalized red
+	 * @param g normalized green
+	 * @param b normalized blue
+	 * @throws ArrayIndexOutOfBoundsException if this Pixel's index is not in 
+	 * range of the Img's data array.
+	 * 
+	 * @see #setARGB_fromNormalized(float, float, float, float)
+	 * @see #setRGB(int, int, int, int)
+	 * @see #a_normalized()
+	 * @see #r_normalized()
+	 * @see #g_normalized()
+	 * @see #b_normalized()
+	 * @since 1.2
+	 */
+	public void setRGB_fromNormalized(float r, float g, float b){
+		setValue(Pixel.rgb_fromNormalized(r, g, b));
+	}
+	
+	/**
+	 * Sets alpha channel value of this Pixel. Value will be truncated to
+	 * 8bits (e.g. 0x12ff will truncate to 0xff).
 	 * @param a alpha value in range [0..255]
 	 * @throws ArrayIndexOutOfBoundsException if this Pixel's index is not in 
 	 * range of the Img's data array.
@@ -292,7 +402,8 @@ public class Pixel {
 	}
 	
 	/**
-	 * Sets red channel value of this Pixel.
+	 * Sets red channel value of this Pixel. Value will be truncated to
+	 * 8bits (e.g. 0x12ff will truncate to 0xff).
 	 * @param r red value in range [0..255]
 	 * @throws ArrayIndexOutOfBoundsException if this Pixel's index is not in 
 	 * range of the Img's data array.
@@ -305,7 +416,8 @@ public class Pixel {
 	}
 	
 	/**
-	 * Sets green channel value of this Pixel.
+	 * Sets green channel value of this Pixel. Value will be truncated to
+	 * 8bits (e.g. 0x12ff will truncate to 0xff).
 	 * @param g green value in range [0..255]
 	 * @throws ArrayIndexOutOfBoundsException if this Pixel's index is not in 
 	 * range of the Img's data array.
@@ -318,7 +430,8 @@ public class Pixel {
 	}
 	
 	/**
-	 * Sets blue channel value of this Pixel.
+	 * Sets blue channel value of this Pixel. Value will be truncated to
+	 * 8bits (e.g. 0x12ff will truncate to 0xff).
 	 * @param b blue value in range [0..255]
 	 * @throws ArrayIndexOutOfBoundsException if this Pixel's index is not in 
 	 * range of the Img's data array.
@@ -468,6 +581,28 @@ public class Pixel {
 	}
 
 	/**
+	 * Packs normalized ARGB color components (values in [0.0 .. 1.0]) into a 
+	 * single 32bit integer value with alpha=255 (opaque).
+	 * Component values less than 0 or greater than 1 are NOT truncated and will 
+	 * result in a broken, malformed value.
+	 * @param r red
+	 * @param g green
+	 * @param b blue
+	 * @return packed ARGB value
+	 * 
+	 * @see #argb_fromNormalized(float, float, float, float)
+	 * @see #rgb(int, int, int)
+	 * @see #a_normalized(int)
+	 * @see #r_normalized(int)
+	 * @see #g_normalized(int)
+	 * @see #b_normalized(int)
+	 * @since 1.2
+	 */
+	public static final int rgb_fromNormalized(final float r, final float g, final float b){
+		return rgb_fast((int)(r*0xff), (int)(g*0xff), (int)(b*0xff));
+	}
+
+	/**
 	 * Packs 8bit ARGB color components into a single 32bit integer value.
 	 * Components are clamped to [0,255].
 	 * @param a alpha
@@ -542,6 +677,29 @@ public class Pixel {
 	}
 
 	/**
+	 * Packs normalized ARGB color components (values in [0.0 .. 1.0]) into a 
+	 * single 32bit integer value.
+	 * Component values less than 0 or greater than 1 are NOT truncated and will 
+	 * result in a broken, malformed value.
+	 * @param a alpha
+	 * @param r red
+	 * @param g green
+	 * @param b blue
+	 * @return packed ARGB value
+	 * 
+	 * @see #rgb_fromNormalized(float, float, float)
+	 * @see #argb(int, int, int, int)
+	 * @see #a_normalized(int)
+	 * @see #r_normalized(int)
+	 * @see #g_normalized(int)
+	 * @see #b_normalized(int)
+	 * @since 1.2
+	 */
+	public static final int argb_fromNormalized(final float a, final float r, final float g, final float b){
+		return argb_fast((int)(a*0xff), (int)(r*0xff), (int)(g*0xff), (int)(b*0xff));
+	}
+
+	/**
 	 * @param color ARGB(32bit) or RGB(24bit) value
 	 * @return blue component(8bit) of specified color.
 	 * @see #a(int)
@@ -581,7 +739,7 @@ public class Pixel {
 	}
 
 	/**
-	 * @param color ARGB(32bit) or RGB(24bit) value
+	 * @param color ARGB(32bit) value
 	 * @return alpha component(8bit) of specified color.
 	 * @see #r(int)
 	 * @see #g(int)
@@ -592,7 +750,63 @@ public class Pixel {
 	public static final int a(final int color){
 		return (color >> 24) & 0xff;
 	}
-
+	
+	/**
+	 * @param color ARGB(32bit) or RGB(24bit) value
+	 * @return normalized blue component of specified color <br>
+	 * (value in [0.0 .. 1.0]).
+	 * @see #b()
+	 * @see #r_normalized(int)
+	 * @see #g_normalized(int)
+	 * @see #a_normalized(int)
+	 * @since 1.2
+	 */
+	public static final float b_normalized(final int color){
+		return b(color)/255.0f;
+	}
+	
+	/**
+	 * @param color ARGB(32bit) or RGB(24bit) value
+	 * @return normalized green component of specified color <br>
+	 * (value in [0.0 .. 1.0]).
+	 * @see #g()
+	 * @see #r_normalized(int)
+	 * @see #b_normalized(int)
+	 * @see #a_normalized(int)
+	 * @since 1.2
+	 */
+	public static final float g_normalized(final int color){
+		return g(color)/255.0f;
+	}
+	
+	/**
+	 * @param color ARGB(32bit) or RGB(24bit) value
+	 * @return normalized red component of specified color <br>
+	 * (value in [0.0 .. 1.0]).
+	 * @see #r()
+	 * @see #b_normalized(int)
+	 * @see #g_normalized(int)
+	 * @see #a_normalized(int)
+	 * @since 1.2
+	 */
+	public static final float r_normalized(final int color){
+		return r(color)/255.0f;
+	}
+	
+	/**
+	 * @param color ARGB(32bit) value
+	 * @return normalized alpha component of specified color <br>
+	 * (value in [0.0 .. 1.0]).
+	 * @see #a()
+	 * @see #r_normalized(int)
+	 * @see #g_normalized(int)
+	 * @see #a_normalized(int)
+	 * @since 1.2
+	 */
+	public static final float a_normalized(final int color){
+		return a(color)/255.0f;
+	}
+	
 	/**
 	 * Generalized channel packing method similar to {@link #argb(int, int, int, int)}
 	 * but for arbitrary channel sizes and number of channels. 

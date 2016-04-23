@@ -38,9 +38,9 @@ public enum ColorSpaceTransformation {
 	}),
 	RGB_2_HSV(px->
 	{
-		float r = px.r()/255.0f;
-		float g = px.g()/255.0f;
-		float b = px.b()/255.0f;
+		float r = px.r_normalized();
+		float g = px.g_normalized();
+		float b = px.b_normalized();
 		
 		float max,p,q,o; max=p=q=o=0;
 		if(r > max){ max=r; p=g; q=b; o=0; }
@@ -58,9 +58,22 @@ public enum ColorSpaceTransformation {
 		}
 	}),
 	HSV_2_RGB(px->{
-		float h = px.r()/255.0f;
-		float hi = px.r()/(256.0f/6);
-		float f = hi - (hi=(float) Math.floor(hi));
+		float h = px.r_normalized()*359;
+		float s = px.g_normalized();
+		float v = px.b_normalized();
+		float hi = h/60;
+		float f = hi - (hi=(int)hi);
+		float p = v*(1-s);
+		float q = v*(1-s*f);
+		float t = v*(1-s*(1-f));
+		switch((int)hi){
+		case 1: px.setARGB_fromNormalized(px.a_normalized(), q,v,p); break;
+		case 2: px.setARGB_fromNormalized(px.a_normalized(), p,v,t); break;
+		case 3: px.setARGB_fromNormalized(px.a_normalized(), p,q,v); break;
+		case 4: px.setARGB_fromNormalized(px.a_normalized(), t,p,v); break;
+		case 5: px.setARGB_fromNormalized(px.a_normalized(), v,p,q); break;
+		default:px.setARGB_fromNormalized(px.a_normalized(), v,t,p); break;
+		}
 	})
 	;	
 	
