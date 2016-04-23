@@ -177,7 +177,7 @@ public class Pixel {
 	/**
 	 * @return the alpha component of the value currently referenced by this
 	 * Pixel. It is assumed that the value is an ARGB value with 8bits per
-	 * color channel.
+	 * color channel, so this will return a value in [0..255].
 	 * @throws ArrayIndexOutOfBoundsException if this Pixel's index is not in 
 	 * range of the Img's data array.
 	 * @see #r()
@@ -194,7 +194,7 @@ public class Pixel {
 	/**
 	 * @return the red component of the value currently referenced by this
 	 * Pixel. It is assumed that the value is an ARGB value with 8bits per
-	 * color channel.
+	 * color channel, so this will return a value in [0..255].
 	 * @throws ArrayIndexOutOfBoundsException if this Pixel's index is not in 
 	 * range of the Img's data array.
 	 * @see #a()
@@ -211,7 +211,7 @@ public class Pixel {
 	/**
 	 * @return the green component of the value currently referenced by this
 	 * Pixel. It is assumed that the value is an ARGB value with 8bits per
-	 * color channel.
+	 * color channel, so this will return a value in [0..255].
 	 * @throws ArrayIndexOutOfBoundsException if this Pixel's index is not in 
 	 * range of the Img's data array.
 	 * @see #a()
@@ -228,7 +228,7 @@ public class Pixel {
 	/**
 	 * @return the blue component of the value currently referenced by this
 	 * Pixel. It is assumed that the value is an ARGB value with 8bits per
-	 * color channel.
+	 * color channel, so this will return a value in [0..255].
 	 * @throws ArrayIndexOutOfBoundsException if this Pixel's index is not in 
 	 * range of the Img's data array.
 	 * @see #a()
