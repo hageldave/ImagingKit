@@ -2,7 +2,6 @@ package hageldave.imagingkit.core;
 
 import java.util.function.Consumer;
 
-
 public enum ColorSpaceTransformation {
 	/** TODO: javadocs for each */
 	RGB_2_LAB(px->
@@ -15,11 +14,42 @@ public enum ColorSpaceTransformation {
 			z = r*0.0193339f + g*0.1191920f + b*0.9503041f;
 		}
 		float L,a,b; L=a=b=0;
-		{// now convert to Lab
+		{// now convert to Lab 
 			float temp = LAB.func(y/LAB.Yn);
-			L = 116*temp-16;
-			a = 500*(LAB.func(x/LAB.Xn)-temp);
+//			// with ranges L[0,100] ab[-100,100]
+//			L = 116*temp-16;
+//			a = 500*(LAB.func(x/LAB.Xn) - temp);
+//			b = 200*(temp - LAB.func(z/LAB.Zn));
+			// with ranges L[0,255] ab[-127,127];
+			L = (116*temp-16)*(255.0f/100);
+			a = 500*(127.0f/100)*(LAB.func(x/LAB.Xn) - temp);
+			b = 200*(127.0f/100)*(temp - LAB.func(z/LAB.Zn));
 		}
+		
+		px.setARGB(px.a(),
+				(int)L,
+				(int)(a+127),
+				(int)(b+127));
+	}),
+	LAB_2_RGB(px->{
+		float L = (px.r_normalized()     )*100;
+		float A = ((px.g()-127)/254.0f)*200;
+		float B = ((px.b()-127)/254.0f)*200;
+		
+		// LAB to XYZ
+		float x =  LAB.Xn*LAB.funcInv((L+16)/116 + (A/500));
+		float y =  LAB.Yn*LAB.funcInv((L+16)/116);
+		float z =  LAB.Zn*LAB.funcInv((L+16)/116 - (B/200));
+		
+		// XYZ to RGB
+		float r =  3.2404542f*x -1.5371385f*y  -0.4985314f*z;
+		float g = -0.9692660f*x +1.8760108f*y  +0.0415560f*z;
+		float b =  0.0556434f*x -0.2040259f*y  +1.0572252f*z;
+		
+		px.setARGB(px.a(), 
+				clamp0xff((int)(r*0xff)), 
+				clamp0xff((int)(g*0xff)), 
+				clamp0xff((int)(b*0xff)));
 	}),
 	RGB_2_HSV(px->
 	{
@@ -70,22 +100,28 @@ public enum ColorSpaceTransformation {
 		this.transformation = transformation;
 	}
 	
+	static int clamp0xff(int i){
+		return Math.min(0xff, Math.max(0, i));
+	}
+	
 	
 	////STATIC ////
-	private static final class LAB {
-		static final float Xn = 95.047f;
-		static final float Yn = 100f;
-		static final float Zn = 108.883f;
+	static final class LAB {
+		static final float Xn = 0.95047f;
+		static final float Yn = 1.00000f;
+		static final float Zn = 1.08883f;
 		static final float lab6_29 = 6.0f/29.0f;
 		static final float lab6_29_3 = lab6_29*lab6_29*lab6_29;
 		static final float lab1_3_29_6_2 = (1.0f/3.0f) * (29.0f/6.0f) * (29.0f/6.0f);
 
 		static float func(float q){
 			return q > lab6_29_3 ? (float)Math.cbrt(q):lab1_3_29_6_2*q + (4.0f/29.0f);
+//			return (float) Math.cbrt(q);
 		}
 
 		static float funcInv(float q){
 			return q > lab6_29 ? q*q*q : 3*lab6_29*lab6_29*(q-(4.0f/29.0f));
+//			return q*q*q;
 		}
 	}
 }
