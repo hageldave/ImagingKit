@@ -3,7 +3,20 @@ package hageldave.imagingkit.core;
 import java.util.function.Consumer;
 
 public enum ColorSpaceTransformation {
-	/** TODO: javadocs for each */
+	
+	/**
+	 * Transforms colors from the RGB domain to the CIE L*a*b* domain. 
+	 * <p>
+	 * The L component ranges from 0 to 255, the A and B component from 0 to 254.
+	 * Zero chromaticity is located at A=127 B=127 on the AB plane. 
+	 * <p>
+	 * The B component is mapped to the least significant 8 bits of the integer
+	 * value (0..7 equivalent to blue in RGB), <br>
+	 * the A component to the next 8 bits (8..15 equivalent to green in RGB) and <br>
+	 * the L component to the following 8 bits (16..23 equivalent to red in RGB). <br>
+	 * The alpha channel (most significant 8 bits 24..31) will be preserved.
+	 * @see #LAB_2_RGB
+	 */
 	RGB_2_LAB(px->
 	{
 		float x,y,z; x=y=z=0;
@@ -31,6 +44,13 @@ public enum ColorSpaceTransformation {
 				(int)(a+127),
 				(int)(b+127));
 	}),
+	
+	/**
+	 * Transforms colors from the CIE L*a*b* domain to the RGB domain. 
+	 * <br>
+	 * This is the inverse transformation of {@link #RGB_2_LAB}.
+	 * @see #LAB_2_RGB
+	 */
 	LAB_2_RGB(px->{
 		float L = (px.r_normalized()     )*100;
 		float A = ((px.g()-127)/254.0f)*200;
@@ -51,6 +71,24 @@ public enum ColorSpaceTransformation {
 				clamp0xff((int)(g*0xff)), 
 				clamp0xff((int)(b*0xff)));
 	}),
+	
+	/**
+	 * Transforms colors from the RGB domain to the HSV domain (hue, saturation, value). 
+	 * <p>
+	 * All of the HSV components range from 0 to 255 and therefore use 8bits of the 
+	 * integer value each. <br>
+	 * The V component uses the least significant 8 bits (0..7 equivalent to blue in RGB), <br>
+	 * the S component uses the next 8 bits (8..15 equivalent to green in RGB) and <br>
+	 * the H component the following 8 bits (16..23 equivalent to red in RGB). <br>
+	 * The alpha channel (most significant 8 bits 24..31) will be preserved.
+	 * <p>
+	 * Notice that the H (hue) component is cyclic (describes an angle) and can therefore 
+	 * be kept in range using the modulo operator <code>(h%256)</code> or 
+	 * 8bit truncation <code>(h&0xff)</code> which is implemented by all of the 
+	 * Pixel.argb or rgb methods that do not explicitly state differently 
+	 * (e.g. rgb_fast or rgb_bounded do not use truncation).
+	 * @see #HSV_2_RGB
+	 */
 	RGB_2_HSV(px->
 	{
 		float r = px.r_normalized();
@@ -72,6 +110,13 @@ public enum ColorSpaceTransformation {
 			px.setARGB(px.a(),(int)r,(int)g,(int)b);
 		}
 	}),
+	
+	/**
+	 * Transforms colors from the HSV domain (hue, saturation, value) to the RGB domain.
+	 * <br>
+	 * This is the inverse transformation of {@link #RGB_2_HSV}.
+	 * @see #RGB_2_HSV
+	 */
 	HSV_2_RGB(px->
 	{
 		float h = px.r_normalized()*359;
@@ -93,20 +138,36 @@ public enum ColorSpaceTransformation {
 	})
 	;	
 	
-	//// ATTRIBUTES ////
+	////// ATTRIBUTES / METHODS //////
+	/** 
+	 * The Pixel Consumer that transforms a pixel's value. <br>
+	 * Pass this to {@link Img#forEach(Consumer)} or similar methods.
+	 * @see #get()
+	 */
 	public final Consumer<Pixel> transformation;
 	
 	private ColorSpaceTransformation(Consumer<Pixel> transformation) {
 		this.transformation = transformation;
 	}
 	
+	/**
+	 * This is syntactic sugar for referencing the {@link #transformation}
+	 * attribute. 
+	 * @return the Pixel Consumer that transforms a pixel's value. <br>
+	 * Pass this to {@link Img#forEach(Consumer)} or similar methods.
+	 * @see #transformation
+	 */
+	public final Consumer<Pixel> get(){return transformation;}
+	
+	
+	
+	////// STATIC //////
 	static int clamp0xff(int i){
 		return Math.min(0xff, Math.max(0, i));
 	}
 	
-	
-	////STATIC ////
-	static final class LAB {
+	// CIE L*a*b* helper class
+	private static final class LAB {
 		static final float Xn = 0.95047f;
 		static final float Yn = 1.00000f;
 		static final float Zn = 1.08883f;
@@ -116,12 +177,10 @@ public enum ColorSpaceTransformation {
 
 		static float func(float q){
 			return q > lab6_29_3 ? (float)Math.cbrt(q):lab1_3_29_6_2*q + (4.0f/29.0f);
-//			return (float) Math.cbrt(q);
 		}
 
 		static float funcInv(float q){
 			return q > lab6_29 ? q*q*q : 3*lab6_29*lab6_29*(q-(4.0f/29.0f));
-//			return q*q*q;
 		}
 	}
 }
