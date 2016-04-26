@@ -15,6 +15,10 @@ public enum ColorSpaceTransformation {
 	 * the A component to the next 8 bits (8..15 equivalent to green in RGB) and <br>
 	 * the L component to the following 8 bits (16..23 equivalent to red in RGB). <br>
 	 * The alpha channel (most significant 8 bits 24..31) will be preserved.
+	 * <p>
+	 * This is a two step transformation as RGB needs to be transformed to CIE XYZ 
+	 * and then to CIE L*a*b*. For the transformation to XYZ it is assumed that
+	 * colors are in sRGB with D65 illuminant.
 	 * @see #LAB_2_RGB
 	 */
 	RGB_2_LAB(px->
@@ -46,9 +50,15 @@ public enum ColorSpaceTransformation {
 	}),
 	
 	/**
-	 * Transforms colors from the CIE L*a*b* domain to the RGB domain. 
-	 * <br>
+	 * Transforms colors from the CIE L*a*b* domain to the RGB domain. <br>
 	 * This is the inverse transformation of {@link #RGB_2_LAB}.
+	 * <p>
+	 * The CIE L*a*b* color space comprises more colors than RGB. Colors that 
+	 * are outside the RGB gamut will be clamped to the RGB boundaries.
+	 * <p>
+	 * This is a two step transformation because CIE L*a*b* has to be transformed
+	 * to CIE XYZ first and then to RGB. For the conversion from XYZ to RGB
+	 * it is assumed that RGB is sRGB with D65 illuminant.
 	 * @see #LAB_2_RGB
 	 */
 	LAB_2_RGB(px->{
