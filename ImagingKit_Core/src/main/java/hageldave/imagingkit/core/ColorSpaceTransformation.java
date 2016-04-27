@@ -67,19 +67,24 @@ public enum ColorSpaceTransformation {
 		float B = ((px.b()-127)/254.0f)*200;
 		
 		// LAB to XYZ
-		float x =  LAB.Xn*LAB.funcInv((L+16)/116 + (A/500));
-		float y =  LAB.Yn*LAB.funcInv((L+16)/116);
-		float z =  LAB.Zn*LAB.funcInv((L+16)/116 - (B/200));
+		float temp = (L+16)/116;
+		float x =  LAB.Xn*LAB.funcInv(temp + (A/500));
+		float y =  LAB.Yn*LAB.funcInv(temp);
+		float z =  LAB.Zn*LAB.funcInv(temp - (B/200));
 		
 		// XYZ to RGB
-		float r =  3.2404542f*x -1.5371385f*y  -0.4985314f*z;
-		float g = -0.9692660f*x +1.8760108f*y  +0.0415560f*z;
-		float b =  0.0556434f*x -0.2040259f*y  +1.0572252f*z;
-		
-		px.setARGB(px.a(), 
-				clamp0xff((int)(r*0xff)), 
-				clamp0xff((int)(g*0xff)), 
-				clamp0xff((int)(b*0xff)));
+//		float r =  3.2404542f*x -1.5371385f*y  -0.4985314f*z;
+//		float g = -0.9692660f*x +1.8760108f*y  +0.0415560f*z;
+//		float b =  0.0556434f*x -0.2040259f*y  +1.0572252f*z;
+//		px.setARGB(px.a(), 
+//				clamp0xff((int)(r*0xff)), 
+//				clamp0xff((int)(g*0xff)), 
+//				clamp0xff((int)(b*0xff)));
+		px.setARGB(px.a(),
+				//                            X             Y             Z
+				clamp0xff( (int)(( 3.2404542f*x -1.5371385f*y -0.4985314f*z)*0xff) ),  // R
+				clamp0xff( (int)((-0.9692660f*x +1.8760108f*y +0.0415560f*z)*0xff) ),  // G
+				clamp0xff( (int)(( 0.0556434f*x -0.2040259f*y +1.0572252f*z)*0xff) )); // B
 	}),
 	
 	/**
