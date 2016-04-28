@@ -420,6 +420,7 @@ public class Pixel {
 	 * range of the Img's data array.
 	 * 
 	 * @see #setRGB_preserveAlpha(int, int, int)
+	 * @since 1.2
 	 */
 	public void setRGB_fromNormalized_preserveAlpha(float r, float g, float b){
 		setValue((getValue() & 0xff000000) | Pixel.rgb_fromNormalized(r, g, b));

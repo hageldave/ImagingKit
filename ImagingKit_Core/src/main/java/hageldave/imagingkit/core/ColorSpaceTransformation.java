@@ -2,6 +2,11 @@ package hageldave.imagingkit.core;
 
 import java.util.function.Consumer;
 
+/**
+ * 
+ * @author hageldave
+ * @since 1.2
+ */
 public enum ColorSpaceTransformation {
 	
 	/**
