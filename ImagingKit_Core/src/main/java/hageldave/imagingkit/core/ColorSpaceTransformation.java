@@ -43,7 +43,7 @@ public enum ColorSpaceTransformation {
 			b = 200*(127.0f/100)*(temp - LAB.func(z/LAB.Zn));
 		}
 		
-		px.setARGB(px.a(),
+		px.setRGB_preserveAlpha(
 				(int)L,
 				(int)(a+127),
 				(int)(b+127));
@@ -80,7 +80,7 @@ public enum ColorSpaceTransformation {
 //				clamp0xff((int)(r*0xff)), 
 //				clamp0xff((int)(g*0xff)), 
 //				clamp0xff((int)(b*0xff)));
-		px.setARGB(px.a(),
+		px.setRGB_preserveAlpha(
 				//                            X             Y             Z
 				clamp0xff( (int)(( 3.2404542f*x -1.5371385f*y -0.4985314f*z)*0xff) ),  // R
 				clamp0xff( (int)((-0.9692660f*x +1.8760108f*y +0.0415560f*z)*0xff) ),  // G
@@ -122,7 +122,7 @@ public enum ColorSpaceTransformation {
 			r = 256+(256.0f/6) * (o + (p-q)/(max-min));
 			g = 255*((max-min)/max);
 			b = 255*max;
-			px.setARGB(px.a(),(int)r,(int)g,(int)b);
+			px.setRGB_preserveAlpha((int)r,(int)g,(int)b);
 		}
 	}),
 	
@@ -134,7 +134,7 @@ public enum ColorSpaceTransformation {
 	 */
 	HSV_2_RGB(px->
 	{
-		float h = px.r_normalized()*359;
+		float h = px.r() * (360.0f/256);
 		float s = px.g_normalized();
 		float v = px.b_normalized();
 		float hi = h/60;
@@ -143,12 +143,12 @@ public enum ColorSpaceTransformation {
 		float q = v*(1-s*f);
 		float t = v*(1-s*(1-f));
 		switch((int)hi){
-		case 1: px.setARGB_fromNormalized(px.a_normalized(), q,v,p); break;
-		case 2: px.setARGB_fromNormalized(px.a_normalized(), p,v,t); break;
-		case 3: px.setARGB_fromNormalized(px.a_normalized(), p,q,v); break;
-		case 4: px.setARGB_fromNormalized(px.a_normalized(), t,p,v); break;
-		case 5: px.setARGB_fromNormalized(px.a_normalized(), v,p,q); break;
-		default:px.setARGB_fromNormalized(px.a_normalized(), v,t,p); break;
+		case 1: px.setRGB_fromNormalized_preserveAlpha(q,v,p); break;
+		case 2: px.setRGB_fromNormalized_preserveAlpha(p,v,t); break;
+		case 3: px.setRGB_fromNormalized_preserveAlpha(p,q,v); break;
+		case 4: px.setRGB_fromNormalized_preserveAlpha(t,p,v); break;
+		case 5: px.setRGB_fromNormalized_preserveAlpha(v,p,q); break;
+		default:px.setRGB_fromNormalized_preserveAlpha(v,t,p); break;
 		}
 	})
 	;	

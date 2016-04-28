@@ -316,6 +316,7 @@ public class Pixel {
 	 * @throws ArrayIndexOutOfBoundsException if this Pixel's index is not in 
 	 * range of the Img's data array.
 	 * @see #setRGB(int, int, int)
+	 * @see #setRGB_preserveAlpha(int, int, int)
 	 * @see #argb(int, int, int, int)
 	 * @see #argb_bounded(int, int, int, int)
 	 * @see #argb_fast(int, int, int, int)
@@ -334,6 +335,7 @@ public class Pixel {
 	 * @throws ArrayIndexOutOfBoundsException if this Pixel's index is not in 
 	 * range of the Img's data array.
 	 * @see #setARGB(int, int, int, int)
+	 * @see #setRGB_preserveAlpha(int, int, int)
 	 * @see #argb(int, int, int, int)
 	 * @see #argb_bounded(int, int, int, int)
 	 * @see #argb_fast(int, int, int, int)
@@ -341,6 +343,22 @@ public class Pixel {
 	 */
 	public void setRGB(int r, int g, int b){
 		setValue(Pixel.rgb(r, g, b));
+	}
+	
+	/**
+	 * Sets an RGB value at the position currently referenced by this Pixel.
+	 * The present alpha value will not be altered by this operation.
+	 * Each channel value is assumed to be 8bit and otherwise truncated.
+	 * @param r red
+	 * @param g green
+	 * @param b blue
+	 * @throws ArrayIndexOutOfBoundsException if this Pixel's index is not in 
+	 * range of the Img's data array.
+	 * @see #setRGB_fromNormalized_preserveAlpha(float, float, float)
+	 * @since 1.2
+	 */
+	public void setRGB_preserveAlpha(int r, int g, int b){
+		setValue((getValue() & 0xff000000 ) | Pixel.argb(0, r, g, b));
 	}
 	
 	/**
@@ -355,6 +373,7 @@ public class Pixel {
 	 * range of the Img's data array.
 	 * 
 	 * @see #setRGB_fromNormalized(float, float, float)
+	 * @see #setRGB_fromNormalized_preserveAlpha(float, float, float)
 	 * @see #setARGB(int, int, int, int)
 	 * @see #a_normalized()
 	 * @see #r_normalized()
@@ -377,6 +396,7 @@ public class Pixel {
 	 * range of the Img's data array.
 	 * 
 	 * @see #setARGB_fromNormalized(float, float, float, float)
+	 * @see #setRGB_fromNormalized_preserveAlpha(float, float, float)
 	 * @see #setRGB(int, int, int, int)
 	 * @see #a_normalized()
 	 * @see #r_normalized()
@@ -386,6 +406,23 @@ public class Pixel {
 	 */
 	public void setRGB_fromNormalized(float r, float g, float b){
 		setValue(Pixel.rgb_fromNormalized(r, g, b));
+	}
+	
+	/**
+	 * Sets an RGB value at the position currently referenced by this Pixel. 
+	 * The present alpha value will not be altered by this operation. <br>
+	 * Each channel value is assumed to be within [0.0 .. 1.0]. Channel values
+	 * outside these bounds will result in a broken, malformed ARBG value.
+	 * @param r normalized red
+	 * @param g normalized green
+	 * @param b normalized blue
+	 * @throws ArrayIndexOutOfBoundsException if this Pixel's index is not in 
+	 * range of the Img's data array.
+	 * 
+	 * @see #setRGB_preserveAlpha(int, int, int)
+	 */
+	public void setRGB_fromNormalized_preserveAlpha(float r, float g, float b){
+		setValue((getValue() & 0xff000000) | Pixel.rgb_fromNormalized(r, g, b));
 	}
 	
 	/**
