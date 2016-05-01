@@ -28,6 +28,7 @@ public enum ColorSpaceTransformation {
 	 * and then to CIE L*a*b*. For the transformation to XYZ it is assumed that
 	 * colors are in sRGB with D65 illuminant.
 	 * @see #LAB_2_RGB
+	 * @since 1.2
 	 */
 	RGB_2_LAB(val->
 	{
@@ -49,9 +50,10 @@ public enum ColorSpaceTransformation {
 			L = (116*temp-16)*(255.0f/100);
 			a = 500*(127.0f/100)*(LAB.func(x/LAB.Xn) - temp);
 			b = 200*(127.0f/100)*(temp - LAB.func(z/LAB.Zn));
+			System.out.println(b);
 		}
-		
-		return Pixel.rgb(
+		// TODO: here was something fishy.. had to use bounded, is this necessary?
+		return Pixel.rgb_bounded(
 				(int)L,
 				(int)(a+127),
 				(int)(b+127));
@@ -68,6 +70,7 @@ public enum ColorSpaceTransformation {
 	 * to CIE XYZ first and then to RGB. For the conversion from XYZ to RGB
 	 * it is assumed that RGB is sRGB with D65 illuminant.
 	 * @see #LAB_2_RGB
+	 * @since 1.2
 	 */
 	LAB_2_RGB(val->{
 		float L = (Pixel.r_normalized(val)  )*100;
@@ -103,6 +106,7 @@ public enum ColorSpaceTransformation {
 	 * Pixel.argb or rgb methods that do not explicitly state differently 
 	 * (e.g. rgb_fast or rgb_bounded do not use truncation).
 	 * @see #HSV_2_RGB
+	 * @since 1.2
 	 */
 	RGB_2_HSV(val->
 	{
@@ -131,6 +135,7 @@ public enum ColorSpaceTransformation {
 	 * <br>
 	 * This is the inverse transformation of {@link #RGB_2_HSV}.
 	 * @see #RGB_2_HSV
+	 * @since 1.2
 	 */
 	HSV_2_RGB(val->
 	{
@@ -164,6 +169,7 @@ public enum ColorSpaceTransformation {
 	 * Returns the Pixel Consumer that transforms a pixel's value. <br>
 	 * Pass this to {@link Img#forEach(Consumer)} or similar methods.
 	 * @return the Pixel Consumer corresponding to this transformation.
+	 * @since 1.2
 	 */
 	public final Consumer<Pixel> get(){
 		return px -> px.setValue(transform(px.getValue()));
@@ -175,9 +181,10 @@ public enum ColorSpaceTransformation {
 	 * the last 8 bits are preserved and can be used for alpha like ARGB does.
 	 * @param color to be transformed.
 	 * @return transformed color.
+	 * @since 1.2
 	 */
 	public final int transform(int color){
-		return (color & 0xff000000) | transformation.transform(color);
+		return (color & 0xff000000) | (transformation.transform(color) & 0x00ffffff);
 	}
 	
 	
