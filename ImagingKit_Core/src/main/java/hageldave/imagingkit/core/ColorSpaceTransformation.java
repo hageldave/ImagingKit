@@ -42,17 +42,17 @@ public enum ColorSpaceTransformation {
 		float L,a,b; L=a=b=0;
 		{// now convert to Lab 
 			float temp = LAB.func(y/LAB.Yn);
-//			// with ranges L[0,100] ab[-100,100]
-//			L = 116*temp-16;
-//			a = 500*(LAB.func(x/LAB.Xn) - temp);
-//			b = 200*(temp - LAB.func(z/LAB.Zn));
+			// with ranges L[0,100] ab[-100,100]
+			// L = 116*temp-16;
+			// a = 500*(LAB.func(x/LAB.Xn) - temp);
+			// b = 200*(temp - LAB.func(z/LAB.Zn));
+			
 			// with ranges L[0,255] ab[-127,127];
 			L = (116*temp-16)*(255.0f/100);
 			a = 500*(127.0f/100)*(LAB.func(x/LAB.Xn) - temp);
 			b = 200*(127.0f/100)*(temp - LAB.func(z/LAB.Zn));
-			System.out.println(b);
 		}
-		// TODO: here was something fishy.. had to use bounded, is this necessary?
+		
 		return Pixel.rgb_bounded(
 				(int)L,
 				(int)(a+127),
@@ -83,11 +83,11 @@ public enum ColorSpaceTransformation {
 		float y =  LAB.Yn*LAB.funcInv(temp);
 		float z =  LAB.Zn*LAB.funcInv(temp - (B/200));
 		
-		return Pixel.rgb(
+		return Pixel.rgb_bounded(
 				//                            X             Y             Z
-				clamp0xff( (int)(( 3.2404542f*x -1.5371385f*y -0.4985314f*z)*0xff) ),  // R
-				clamp0xff( (int)((-0.9692660f*x +1.8760108f*y +0.0415560f*z)*0xff) ),  // G
-				clamp0xff( (int)(( 0.0556434f*x -0.2040259f*y +1.0572252f*z)*0xff) )); // B
+				(int)(( 3.2404542f*x -1.5371385f*y -0.4985314f*z)*0xff ),  // R
+				(int)((-0.9692660f*x +1.8760108f*y +0.0415560f*z)*0xff ),  // G
+				(int)(( 0.0556434f*x -0.2040259f*y +1.0572252f*z)*0xff )); // B
 	}),
 	
 	/**
