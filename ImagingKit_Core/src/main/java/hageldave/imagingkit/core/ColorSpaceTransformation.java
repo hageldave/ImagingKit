@@ -54,9 +54,9 @@ public enum ColorSpaceTransformation {
 		}
 		
 		return Pixel.rgb_bounded(
-				(int)L,
-				(int)(a+127),
-				(int)(b+127));
+				Math.round(L),
+				Math.round(a+127),
+				Math.round(b+127));
 	}),
 	
 	/**
@@ -85,9 +85,9 @@ public enum ColorSpaceTransformation {
 		
 		return Pixel.rgb_bounded(
 				//                            X             Y             Z
-				(int)(( 3.2404542f*x -1.5371385f*y -0.4985314f*z)*0xff ),  // R
-				(int)((-0.9692660f*x +1.8760108f*y +0.0415560f*z)*0xff ),  // G
-				(int)(( 0.0556434f*x -0.2040259f*y +1.0572252f*z)*0xff )); // B
+				Math.round(( 3.2404542f*x -1.5371385f*y -0.4985314f*z)*0xff ),  // R
+				Math.round((-0.9692660f*x +1.8760108f*y +0.0415560f*z)*0xff ),  // G
+				Math.round(( 0.0556434f*x -0.2040259f*y +1.0572252f*z)*0xff )); // B
 	}),
 	
 	/**
@@ -126,7 +126,7 @@ public enum ColorSpaceTransformation {
 			r = 256+(256.0f/6) * (o + (p-q)/(max-min));
 			g = 255*((max-min)/max);
 			b = 255*max;
-			return Pixel.rgb((int)r,(int)g,(int)b);
+			return Pixel.rgb(Math.round(r),Math.round(g),Math.round(b));
 		}
 	}),
 	
@@ -220,10 +220,12 @@ public enum ColorSpaceTransformation {
 
 		static float func(float q){
 			return q > lab6_29_3 ? (float)Math.cbrt(q):lab1_3_29_6_2*q + (4.0f/29.0f);
+//			return (float)Math.cbrt(q);
 		}
 
 		static float funcInv(float q){
 			return q > lab6_29 ? q*q*q : 3*lab6_29*lab6_29*(q-(4.0f/29.0f));
+//			return q*q*q;
 		}
 	}
 }

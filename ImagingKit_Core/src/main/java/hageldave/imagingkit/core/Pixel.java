@@ -568,7 +568,10 @@ public class Pixel {
 	 * @see #b(int)
 	 */
 	public static final int rgb_bounded(final int r, final int g, final int b){
-		return argb_bounded(0xff, r, g, b);
+		return argb_fast(0xff, 
+				r > 255 ? 255: r < 0 ? 0:r, 
+				g > 255 ? 255: g < 0 ? 0:g,
+				b > 255 ? 255: b < 0 ? 0:b);
 	}
 
 	/**
