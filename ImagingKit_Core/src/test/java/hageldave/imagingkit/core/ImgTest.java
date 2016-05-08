@@ -21,6 +21,8 @@ public class ImgTest {
 		assertEquals(0x44, Pixel.ch(color, 0, 8));
 		assertEquals(1.0, Pixel.a_normalized(color), 0);
 		assertEquals(0xaa/255.0f, Pixel.r_normalized(color), 0);
+		assertEquals(0x12/255.0f, Pixel.g_normalized(color), 0);
+		assertEquals(0x44/255.0f, Pixel.b_normalized(color), 0);
 		
 		assertEquals(0x01001234, Pixel.argb_fast(0x01, 0x00, 0x12, 0x34));
 		assertEquals(0xff543210, Pixel.rgb_fast(0x54, 0x32, 0x10));
