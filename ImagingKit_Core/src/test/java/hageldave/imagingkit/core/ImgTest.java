@@ -19,12 +19,18 @@ public class ImgTest {
 		assertEquals(0x44, Pixel.b(color));
 		assertEquals(0xa124, Pixel.ch(color, 4, 16));
 		assertEquals(0x44, Pixel.ch(color, 0, 8));
+		assertEquals(1.0, Pixel.a_normalized(color), 0);
+		assertEquals(0xaa/255.0f, Pixel.r_normalized(color), 0);
 		
 		assertEquals(0x01001234, Pixel.argb_fast(0x01, 0x00, 0x12, 0x34));
 		assertEquals(0xff543210, Pixel.rgb_fast(0x54, 0x32, 0x10));
 		assertEquals(0xff00ff54, Pixel.rgb_bounded(-12, 260, 0x54));
 		assertEquals(0xffffffff, Pixel.rgb(0x15ff, 0xaff, 0x5cff));
 		assertEquals(0b10101110, Pixel.combineCh(2, 0b10, 0b10, 0b11, 0b10));
+		assertEquals(0xffff00ff, Pixel.argb_fromNormalized(1, 1, 0, 1));
+		assertEquals(0x0000ff00, Pixel.argb_fromNormalized(0, 0, 1, 0));
+		assertEquals(0x66778899, Pixel.argb_fromNormalized(0x66/255.0f, 0x77/255.0f, 0x88/255.0f, 0x99/255.0f));
+		assertEquals(0xff778899, Pixel.rgb_fromNormalized(0x77/255.0f, 0x88/255.0f, 0x99/255.0f));
 		
 		Pixel p = new Pixel(new Img(1,1), 0);
 		assertEquals(0, p.getValue());
