@@ -552,6 +552,37 @@ public class ImgTest {
 				}
 			}
 		}
+		{
+			Img img = new Img(4,4000);
+			Spliterator<Pixel> split = img.spliterator(0,0,3,4000);
+			LinkedList<Spliterator<Pixel>> all = new LinkedList<>();
+			all.add(split);
+			split.tryAdvance((px) -> {px.setValue(px.getValue()+px.getIndex());});
+			int idx = 0;
+			while(idx < all.size()){
+				Spliterator<Pixel> sp = all.get(idx);
+				sp.tryAdvance((px) -> {px.setValue(px.getValue()+px.getIndex());});
+				Spliterator<Pixel> child = sp.trySplit();
+				if(child != null){
+					all.add(child);
+				} else {
+					idx++;
+				}
+			}
+			for(Spliterator<Pixel> iter: all){
+				while(iter.tryAdvance((px) -> {
+					px.setValue(px.getValue()+px.getIndex());
+				}));
+			}
+			for(Pixel px: img){
+				if(px.getX() >= 3){
+					assertEquals(0, px.getValue());
+				} else {
+					assertEquals(px.getIndex(), px.getValue());
+				}
+			}
+		}
+
 		
 		// parallel foreach
 		{

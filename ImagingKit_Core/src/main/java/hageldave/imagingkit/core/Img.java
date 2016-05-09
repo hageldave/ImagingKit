@@ -850,12 +850,16 @@ public class Img implements Iterable<Pixel> {
 				
 				int newFinalX_excl = startX + (midIdx_excl%width);
 				int newFinalY_incl = this.y + midIdx_excl/width;
-				
+				System.out.format("w=%d idx=%d mididx=%d newfinalX=%d endX=%d %n", width, idx, midIdx_excl, newFinalX_excl, endXexcl);
 				ImgAreaSpliterator split = new ImgAreaSpliterator(
 						startX, 
 						endXexcl, 
-						(newFinalX_excl < endXexcl ? newFinalX_excl:startX), 
-						(newFinalX_excl < endXexcl ? newFinalY_incl:newFinalY_incl+1), 
+						(newFinalX_excl < endXexcl ? 
+								newFinalX_excl:
+								startX), 
+						(newFinalX_excl < endXexcl ? 
+								newFinalY_incl:
+								newFinalY_incl+1), 
 						finalXexcl, 
 						finalYincl);
 				
