@@ -423,7 +423,7 @@ public class Pixel {
 	 * @since 1.2
 	 */
 	public void setRGB_fromNormalized_preserveAlpha(float r, float g, float b){
-		setValue((getValue() & 0xff000000) | Pixel.rgb_fromNormalized(r, g, b));
+		setValue((getValue() & 0xff000000) | Pixel.argb(0,(int)(0xff*r),(int)(0xff*g),(int)(0xff*b)) );
 	}
 	
 	/**

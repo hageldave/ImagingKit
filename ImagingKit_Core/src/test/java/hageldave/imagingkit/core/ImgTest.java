@@ -27,14 +27,30 @@ public class ImgTest {
 		assertEquals(0x01001234, Pixel.argb_fast(0x01, 0x00, 0x12, 0x34));
 		assertEquals(0xff543210, Pixel.rgb_fast(0x54, 0x32, 0x10));
 		assertEquals(0xff00ff54, Pixel.rgb_bounded(-12, 260, 0x54));
+		assertEquals(0xff000000, Pixel.rgb_bounded(-2, -260, -16));
+		assertEquals(0xff887799, Pixel.rgb_bounded(0x88, 0x77, 0x99));
+		assertEquals(0xffffffff, Pixel.rgb_bounded(260, 256, 258));
+		assertEquals(0x8800ff54, Pixel.argb_bounded(0x88, -12, 260, 0x54));
+		assertEquals(0x00000000, Pixel.argb_bounded(-4 ,-2, -260, -16));
+		assertEquals(0x66887799, Pixel.argb_bounded(0x66, 0x88, 0x77, 0x99));
+		assertEquals(0xffffffff, Pixel.argb_bounded(1022, 260, 256, 258));
 		assertEquals(0xffffffff, Pixel.rgb(0x15ff, 0xaff, 0x5cff));
+		assertEquals(0x44770122, Pixel.argb(0x44, 0x177, 0x101, 0x222));
 		assertEquals(0b10101110, Pixel.combineCh(2, 0b10, 0b10, 0b11, 0b10));
 		assertEquals(0xffff00ff, Pixel.argb_fromNormalized(1, 1, 0, 1));
 		assertEquals(0x0000ff00, Pixel.argb_fromNormalized(0, 0, 1, 0));
 		assertEquals(0x66778899, Pixel.argb_fromNormalized(0x66/255.0f, 0x77/255.0f, 0x88/255.0f, 0x99/255.0f));
 		assertEquals(0xff778899, Pixel.rgb_fromNormalized(0x77/255.0f, 0x88/255.0f, 0x99/255.0f));
+		assertEquals(0x44, Pixel.getGrey(0xffff44, 0, 0, 2));
+		assertEquals(0x77, Pixel.getGrey(0xff7744, 0, 3, 0));
+		assertEquals(0x99, Pixel.getGrey(0x99ff44, 4, 0, 0));
+		assertEquals(128, Pixel.getGrey(Pixel.rgb(127, 128, 129), 1, 1, 1));
+		assertEquals(100, Pixel.getGrey(Pixel.rgb(80, 80, 120), 1, 1, 2));
+		assertEquals(0xaa, Pixel.getLuminance(0xffaaaaaa));
 		
-		Pixel p = new Pixel(new Img(1,1), 0);
+		Img img = new Img(11,11);
+		Pixel p = new Pixel(img, 0);
+		assertEquals(img, p.getImg());
 		assertEquals(0, p.getValue());
 		p.setR(0xff);
 		assertEquals(0x00ff0000, p.getValue());
@@ -44,6 +60,58 @@ public class ImgTest {
 		assertEquals(0x00ffaaef, p.getValue());
 		p.setA(p.r());
 		assertEquals(0xffffaaef, p.getValue());
+		
+		p.setA(0x44);
+		p.setRGB_preserveAlpha(0x88, 0x77, 0x66);
+		assertEquals(0x44887766, p.getValue());
+		p.setRGB_fromNormalized_preserveAlpha(0, 0, 0);
+		assertEquals(0x44000000, p.getValue());
+		p.setRGB_fromNormalized_preserveAlpha(0.4f, 0.7f, 0.3f);
+		assertEquals(Pixel.argb(0x44,(int)(255*0.4f),(int)(255*0.7f),(int)(255*0.3f)), p.getValue());
+		assertEquals(0x44/255f, p.a_normalized(),0);
+		assertEquals(0.4f, p.r_normalized(), 0.01);
+		assertEquals(0.7f, p.g_normalized(), 0.01);
+		assertEquals(0.3f, p.b_normalized(), 0.01);
+		p.setARGB(0x22, 0x11, 0x44, 0x33);
+		assertEquals(0x22114433, p.getValue());
+		p.setARGB_fromNormalized(1, 0x33/255.0f, 0x70/255.0f, 0);
+		assertEquals(0xff337000, p.getValue());
+		p.setRGB(0x22, 0x33, 0x44);
+		assertEquals(0xff223344, p.getValue());
+		p.setRGB_fromNormalized(0x88/255f, 0xee/255f, 0xcc/255f);
+		assertEquals(0xff88eecc, p.getValue());
+		p.setA(0x44);
+		assertEquals(0x44, p.a());
+		assertEquals(0x88, p.r());
+		assertEquals(0xee, p.g());
+		assertEquals(0xcc, p.b());
+		
+		
+		assertEquals(0, p.getX());
+		assertEquals(0, p.getY());
+		assertEquals(0, p.getXnormalized(), 0);
+		assertEquals(0, p.getYnormalized(), 0);
+		p.setPosition(5, 0);
+		assertEquals(5, p.getX());
+		assertEquals(0, p.getY());
+		assertEquals(0.5f, p.getXnormalized(), 0);
+		assertEquals(0, p.getYnormalized(), 0);
+		p.setPosition(5, 5);
+		assertEquals(5, p.getX());
+		assertEquals(5, p.getY());
+		assertEquals(0.5f, p.getXnormalized(), 0);
+		assertEquals(0.5f, p.getYnormalized(), 0);
+		p.setPosition(10, 10);
+		assertEquals(10, p.getX());
+		assertEquals(10, p.getY());
+		assertEquals(1, p.getXnormalized(), 0);
+		assertEquals(1, p.getYnormalized(), 0);
+		
+		color = 0x88997744;
+		p.setValue(color);
+		assertEquals(color, p.getValue());
+		assertEquals(Pixel.getGrey(color, 4, 2, 1), p.getGrey(4, 2, 1));
+		assertEquals(Pixel.getLuminance(color), p.getLuminance());
 	}
 	
 	@Test
