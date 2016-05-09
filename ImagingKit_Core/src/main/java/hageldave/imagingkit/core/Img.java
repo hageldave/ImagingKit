@@ -797,7 +797,7 @@ public class Img implements Iterable<Pixel> {
 		
 		@Override
 		public boolean tryAdvance(final Consumer<? super Pixel> action) {
-			if(y >= finalYincl && x >= finalXexcl){
+			if(y > finalYincl || (y == finalYincl && x >= finalXexcl)){
 				return false;
 			} else {
 				action.accept(px);

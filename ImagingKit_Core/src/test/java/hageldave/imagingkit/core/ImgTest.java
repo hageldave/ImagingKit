@@ -135,6 +135,11 @@ public class ImgTest {
 		assertEquals(0, img.getValue(0, -1, Img.boundary_mode_zero));
 		assertEquals(0, img.getValue(0, 4, Img.boundary_mode_zero));
 		
+		assertEquals(0xff112233, img.getValue(-1, 0, 0xff112233));
+		assertEquals(0xff112233, img.getValue(4, 0,  0xff112233));
+		assertEquals(0xff112233, img.getValue(0, -1, 0xff112233));
+		assertEquals(0xff112233, img.getValue(0, 4,  0xff112233));
+		
 		assertEquals(0, img.getValue(-2, 0, Img.boundary_mode_repeat_edge));
 		assertEquals(3, img.getValue(3, -2, Img.boundary_mode_repeat_edge));
 		assertEquals(9, img.getValue(-10, 10, Img.boundary_mode_repeat_edge));
@@ -157,6 +162,7 @@ public class ImgTest {
 			assertEquals(img.getValue(x, y), img.getValue(-8+x, -8+y, Img.boundary_mode_mirror));
 			assertEquals(img.getValue(x, y), img.getValue(-1-x, -1-y, Img.boundary_mode_mirror));
 		}
+
 	}
 	
 	@Test
@@ -406,6 +412,43 @@ public class ImgTest {
 			}
 		}
 		
+		// area iterator
+		{
+			Img img = new Img(16, 9);
+			Iterator<Pixel> iter = img.iterator(2, 3, 10, 5);
+			while(iter.hasNext()){
+				Pixel px = iter.next();
+				px.setValue(1+px.getX()+px.getY());
+			}
+			for(int y = 0; y < 9; y++){
+				for(int x = 0; x < 16; x++){
+					if(x < 2 || x >=10+2 || y < 3 || y >= 5+3){
+						assertEquals(0, img.getValue(x, y));
+					} else {
+						assertEquals(1+x+y, img.getValue(x, y));
+					}
+				}
+			}
+			img.fill(0);
+			iter = img.iterator(2, 3, 10, 5);
+			for(int i = 0; i < 10; i++){
+				Pixel px = iter.next();
+				px.setValue(1+px.getX()+px.getY());
+			}
+			iter.forEachRemaining(px->{px.setValue(1+px.getX()+px.getY());});
+			for(int y = 0; y < 9; y++){
+				for(int x = 0; x < 16; x++){
+					if(x < 2 || x >=10+2 || y < 3 || y >= 5+3){
+						assertEquals(0, img.getValue(x, y));
+					} else {
+						assertEquals(1+x+y, img.getValue(x, y));
+					}
+				}
+			}
+			
+			JunitUtils.testException(()->{img.iterator(2,3,10,8);}, IllegalArgumentException.class);
+		}
+		
 		// spliterator
 		{
 			Img img = new Img(2000, 400);
@@ -425,6 +468,28 @@ public class ImgTest {
 			for(Spliterator<Pixel> iter: all){
 				iter.tryAdvance((px) -> {px.setValue(px.getValue()+px.getIndex());});
 				iter.forEachRemaining((px) -> {px.setValue(px.getValue()+px.getIndex());});
+			}
+			for(int i = 0; i < img.numValues(); i++){
+				assertEquals(i, img.getData()[i]);
+			}
+		}
+		{
+			Img img = new Img(200, 400);
+			Spliterator<Pixel> split = img.spliterator();
+			LinkedList<Spliterator<Pixel>> all = new LinkedList<>();
+			all.add(split);
+			int idx = 0;
+			while(idx < all.size()){
+				Spliterator<Pixel> sp = all.get(idx);
+				Spliterator<Pixel> child = sp.trySplit();
+				if(child != null){
+					all.add(child);
+				} else {
+					idx++;
+				}	
+			}
+			for(Spliterator<Pixel> iter: all){
+				while(iter.tryAdvance((px) -> {px.setValue(px.getValue()+px.getIndex());}));
 			}
 			for(int i = 0; i < img.numValues(); i++){
 				assertEquals(i, img.getData()[i]);
@@ -450,6 +515,34 @@ public class ImgTest {
 			for(Spliterator<Pixel> iter: all){
 				iter.tryAdvance((px) -> {px.setValue(px.getValue()+px.getIndex());});
 				iter.forEachRemaining((px) -> {px.setValue(px.getValue()+px.getIndex());});
+			}
+			for(Pixel px: img){
+				if(px.getX() < 40 || px.getX() >= 40+500 || px.getY() < 10 || px.getY() >= 10+300){
+					assertEquals(0, px.getValue());
+				} else {
+					assertEquals(px.getIndex(), px.getValue());
+				}
+			}
+		}
+		{
+			Img img = new Img(1023, 1023);
+			Spliterator<Pixel> split = img.spliterator(40,10,500,300);
+			LinkedList<Spliterator<Pixel>> all = new LinkedList<>();
+			all.add(split);
+			int idx = 0;
+			while(idx < all.size()){
+				Spliterator<Pixel> sp = all.get(idx);
+				Spliterator<Pixel> child = sp.trySplit();
+				if(child != null){
+					all.add(child);
+				} else {
+					idx++;
+				}
+			}
+			for(Spliterator<Pixel> iter: all){
+				while(iter.tryAdvance((px) -> {
+					px.setValue(px.getValue()+px.getIndex());
+				}));
 			}
 			for(Pixel px: img){
 				if(px.getX() < 40 || px.getX() >= 40+500 || px.getY() < 10 || px.getY() >= 10+300){
