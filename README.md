@@ -1,6 +1,7 @@
 # ImagingKit
 
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.hageldave.imagingkit/imagingkit-core/badge.svg)](http://search.maven.org/#artifactdetails|com.github.hageldave.imagingkit|imagingkit-core|1.1|jar)
+[![Build Status](https://travis-ci.org/hageldave/ImagingKit.svg?branch=master)](https://travis-ci.org/hageldave/ImagingKit)
 
 A Java library for imaging tasks that integrates well with the commonly used java.awt.image environment (especially well with TYPE_INT BufferedImages). Its goal is to make image processing more convenient and to ease performance optimization. The library is intended for images using integer typed values like 24bit RGB or 32bit ARGB.
 
