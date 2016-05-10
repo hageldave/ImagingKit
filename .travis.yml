@@ -1,5 +1,5 @@
 language: java
-script: mvn --projects ImagingKit_Core test
 jdk:
   - oraclejdk8
-
+script: 
+  mvn -pl ImagingKit_Core test
