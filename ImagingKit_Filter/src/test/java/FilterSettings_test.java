@@ -18,7 +18,7 @@ public class FilterSettings_test {
 		assertTrue(settings.containsSetting(id));
 		assertEquals(1, settings.getSettingIds().size());
 		assertEquals(5, settings.get(id));
-		assertEquals(5, settings.getAs(id, Integer.class));
+		assertEquals(5, (int)settings.getAs(id, Integer.class));
 		assertEquals(null, settings.getAs(id, String.class));
 		assertEquals("hello", settings.getAs(id, String.class, "hello"));
 		settings.clear(id);
