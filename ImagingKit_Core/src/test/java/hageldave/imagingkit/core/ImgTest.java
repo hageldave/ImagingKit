@@ -1,12 +1,15 @@
 package hageldave.imagingkit.core;
 
-import org.junit.Test;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.awt.image.BufferedImage;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Spliterator;
+
+import org.junit.Test;
 
 public class ImgTest {
 
@@ -112,6 +115,11 @@ public class ImgTest {
 		assertEquals(color, p.getValue());
 		assertEquals(Pixel.getGrey(color, 4, 2, 1), p.getGrey(4, 2, 1));
 		assertEquals(Pixel.getLuminance(color), p.getLuminance());
+	}
+	
+	@Test
+	public void misc_test(){
+		JunitUtils.testException(()->{new Img(1, 2, new int[]{0});}, IllegalArgumentException.class);
 	}
 	
 	@Test
@@ -278,6 +286,18 @@ public class ImgTest {
 			}
 		}
 		
+		target.fill(0);
+		source.copyArea(0, 0, 5, 10, target, -5, 0);
+		for(int color: target.getData()){
+			assertEquals(0, color);
+		}
+		
+		target.fill(0);
+		source.copyArea(0, 0, 5, 10, target, 0, -10);
+		for(int color: target.getData()){
+			assertEquals(0, color);
+		}
+		
 		// same width images
 		target = new Img(5, 9);
 		
@@ -318,6 +338,34 @@ public class ImgTest {
 				assertEquals(0, target.getValue(x, y));
 			}
 		}
+		
+		target.fill(0);
+		source.copyArea(0, 0, 5, 9, target, 0, -10);
+		for(int color: target.getData()){
+			assertEquals(0, color);
+		}
+		
+		// copy to new source
+		Img result = source.copyArea(0, 0, 5, 4, null, 0, 0);
+		assertEquals(5, result.getWidth());
+		assertEquals(4, result.getHeight());
+		for(int y = 0; y < result.getHeight(); y++)
+		for(int x = 0; x < result.getWidth(); x++){
+			assertEquals(source.getValue(x, y), result.getValue(x, y));
+		}
+		
+		result = source.copy();
+		for(int i = 0; i < source.numValues(); i++){
+			assertEquals(source.getData()[i], result.getData()[i]);
+		}
+		
+		// exceptions
+		JunitUtils.testException(()->{source.copyArea(0,0,0,1,null,0,0);}, IllegalArgumentException.class);
+		JunitUtils.testException(()->{source.copyArea(0,0,1,0,null,0,0);}, IllegalArgumentException.class);
+		JunitUtils.testException(()->{source.copyArea(-1,0,2,2,null,0,0);}, IllegalArgumentException.class);
+		JunitUtils.testException(()->{source.copyArea(0,-1,2,2,null,0,0);}, IllegalArgumentException.class);
+		JunitUtils.testException(()->{source.copyArea(0,0,20,2,null,0,0);}, IllegalArgumentException.class);
+		JunitUtils.testException(()->{source.copyArea(0,0,2,20,null,0,0);}, IllegalArgumentException.class);
 	}
 	
 	@Test
@@ -366,6 +414,26 @@ public class ImgTest {
 			}
 		}
 		
+		{
+			// test toBufferedImage
+			Img img = new Img(3, 3, new int[]
+					{ 1,2,3,
+					  4,5,6,
+					  7,8,9  });
+			BufferedImage bimg2 = img.toBufferedImage();
+			for(int i = 0; i < img.numValues(); i++){
+				assertEquals(img.getValue(i%3, i/3), bimg2.getRGB(i%3, i/3));
+				img.setValue(i%3, i/3, 2000-i);
+				assertNotEquals(img.getValue(i%3, i/3), bimg2.getRGB(i%3, i/3));
+			}
+		}
+		
+		{
+			// test exceptions
+			BufferedImage bimg2 = new BufferedImage(1,1,BufferedImage.TYPE_BYTE_BINARY);
+			JunitUtils.testException(()->{Img.createRemoteImg(bimg2);}, IllegalArgumentException.class);
+		}
+		
 	}
 	
 	@Test
@@ -382,6 +450,10 @@ public class ImgTest {
 			for(int i = 0; i < img.numValues(); i++){
 				assertEquals(i, img.getData()[i]);
 			}
+			
+			img.forEach_defaultimpl(px->{
+				assertEquals(px.getIndex(), px.getValue());
+			});
 		}
 		
 		{
@@ -453,6 +525,8 @@ public class ImgTest {
 		{
 			Img img = new Img(2000, 400);
 			Spliterator<Pixel> split = img.spliterator();
+			assertTrue(split.hasCharacteristics(Spliterator.SUBSIZED));
+			assertEquals(img.numValues(), split.getExactSizeIfKnown());
 			LinkedList<Spliterator<Pixel>> all = new LinkedList<>();
 			all.add(split);
 			int idx = 0;
@@ -500,6 +574,8 @@ public class ImgTest {
 		{
 			Img img = new Img(2000, 400);
 			Spliterator<Pixel> split = img.spliterator(40,10,500,300);
+			assertTrue(split.hasCharacteristics(Spliterator.SUBSIZED));
+			assertEquals(500*300, split.getExactSizeIfKnown());
 			LinkedList<Spliterator<Pixel>> all = new LinkedList<>();
 			all.add(split);
 			int idx = 0;
@@ -552,38 +628,7 @@ public class ImgTest {
 				}
 			}
 		}
-		{
-			Img img = new Img(4,4000);
-			Spliterator<Pixel> split = img.spliterator(0,0,3,4000);
-			LinkedList<Spliterator<Pixel>> all = new LinkedList<>();
-			all.add(split);
-			split.tryAdvance((px) -> {px.setValue(px.getValue()+px.getIndex());});
-			int idx = 0;
-			while(idx < all.size()){
-				Spliterator<Pixel> sp = all.get(idx);
-				sp.tryAdvance((px) -> {px.setValue(px.getValue()+px.getIndex());});
-				Spliterator<Pixel> child = sp.trySplit();
-				if(child != null){
-					all.add(child);
-				} else {
-					idx++;
-				}
-			}
-			for(Spliterator<Pixel> iter: all){
-				while(iter.tryAdvance((px) -> {
-					px.setValue(px.getValue()+px.getIndex());
-				}));
-			}
-			for(Pixel px: img){
-				if(px.getX() >= 3){
-					assertEquals(0, px.getValue());
-				} else {
-					assertEquals(px.getIndex(), px.getValue());
-				}
-			}
-		}
 
-		
 		// parallel foreach
 		{
 			Img img = new Img(3000, 2000);
@@ -625,6 +670,43 @@ public class ImgTest {
 			JunitUtils.testException(()->{
 				img.forEachParallel(0, 0, 3000,2001, (px)->{});
 			}, IllegalArgumentException.class);
+		}
+		
+		// streams
+		{
+			Img img = new Img(3000, 2000);
+			img.stream().filter(px->{return px.getX() % 2 == 0;}).forEach(px->{px.setValue(1);});
+			for(int y = 0; y < 2000; y++)
+			for(int x = 0; x < 3000; x++){
+				assertEquals((x+1)%2, img.getValue(x, y));
+			}
+			img.fill(0);
+			img.parallelStream().filter(px->{return px.getX() % 2 == 0;}).forEach(px->{px.setValue(1);});
+			for(int y = 0; y < 2000; y++)
+			for(int x = 0; x < 3000; x++){
+				assertEquals((x+1)%2, img.getValue(x, y));
+			}
+			img.fill(0);
+			img.stream(100,200,1000,1000).filter(px->{return px.getX() % 2 == 0;}).forEach(px->{px.setValue(1);});
+			for(int y = 0; y < 2000; y++)
+			for(int x = 0; x < 3000; x++){
+				if(x < 100 || y < 200 || x >=100+1000 || y >= 200+1000){
+					assertEquals(0, img.getValue(x, y));
+				} else {
+					assertEquals((x+1)%2, img.getValue(x, y));
+				}
+			}
+			img.fill(0);
+			img.parallelStream(100,200,1000,1000).filter(px->{return px.getX() % 2 == 0;}).forEach(px->{px.setValue(1);});
+			for(int y = 0; y < 2000; y++)
+			for(int x = 0; x < 3000; x++){
+				if(x < 100 || y < 200 || x >=100+1000 || y >= 200+1000){
+					assertEquals(0, img.getValue(x, y));
+				} else {
+					assertEquals((x+1)%2, img.getValue(x, y));
+				}
+			}
+			
 		}
 		
 	}

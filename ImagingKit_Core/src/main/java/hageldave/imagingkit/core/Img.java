@@ -352,11 +352,18 @@ public class Img implements Iterable<Pixel> {
 	 * @param destY area origin in destination Img (y-coordinate)
 	 * @return the destination Img
 	 * @throws IllegalArgumentException if the specified area is not within 
-	 * the bounds of this Img.
+	 * the bounds of this Img or if the size of the are is not positive.
 	 */
 	public Img copyArea(int x, int y, int w, int h, Img dest, int destX, int destY){
+		if(w <= 0 || h <= 0){
+			throw new IllegalArgumentException(String.format(
+					"specified area size is not positive! specified size w,h = [%dx%d]",
+					w,h));
+		}
 		if(x < 0 || y < 0 || x+w > getWidth() || y+h > getHeight()){
-			throw new IllegalArgumentException("specified area is not within image bounds!");
+			throw new IllegalArgumentException(String.format(
+					"specified area is not within image bounds! specified x,y = [%d,%d] w,h = [%dx%d], image dimensions are [%dx%d]", 
+					x,y,w,h,getWidth(),getHeight()));
 		}
 		if(dest == null){
 			return copyArea(x, y, w, h, new Img(w,h), 0, 0);
@@ -371,7 +378,7 @@ public class Img implements Iterable<Pixel> {
 			}
 			// limit area height to not exceed targets bounds
 			h = Math.min(h, dest.getHeight()-destY);
-			if(w > 0 && h > 0){
+			if(h > 0){
 				System.arraycopy(this.getData(), y*w, dest.getData(), destY*w, w*h);
 			}
 		} else {
@@ -441,8 +448,8 @@ public class Img implements Iterable<Pixel> {
 	 * @see #getRemoteBufferedImage()
 	 */
 	public BufferedImage toBufferedImage(){
-		BufferedImage img = BufferedImageFactory.getINT_ARGB(getDimension());
-		return toBufferedImage(img);
+		BufferedImage bimg = BufferedImageFactory.getINT_ARGB(getDimension());
+		return toBufferedImage(bimg);
 	}
 	
 	/**
@@ -454,9 +461,9 @@ public class Img implements Iterable<Pixel> {
 	 * @see #toBufferedImage()
 	 * @see #getRemoteBufferedImage()
 	 */
-	public BufferedImage toBufferedImage(BufferedImage img){
-		img.setRGB(0, 0, getWidth(), getHeight(), getData(), 0, getWidth());
-		return img;
+	public BufferedImage toBufferedImage(BufferedImage bimg){
+		bimg.setRGB(0, 0, getWidth(), getHeight(), getData(), 0, getWidth());
+		return bimg;
 	}
 	
 	/**
@@ -491,6 +498,8 @@ public class Img implements Iterable<Pixel> {
 	 * different DataBufferType is provided.
 	 * @param bimg BufferedImage with TYPE_INT DataBuffer.
 	 * @return Img sharing the BufferedImages data.
+	 * @throws IllegalArgumentException if a BufferedImage with a DataBufferType
+	 * other than {@link DataBuffer#TYPE_INT} is provided.
 	 * @see #getRemoteBufferedImage()
 	 * @see #Img(BufferedImage)
 	 */
@@ -770,8 +779,12 @@ public class Img implements Iterable<Pixel> {
 	private final class ImgAreaSpliterator implements Spliterator<Pixel> {
 		
 		final Pixel px;
+		/* start x coord and end x coord of a row */ 
 		final int startX, endXexcl;
-		int x,y, finalXexcl, finalYincl;
+		/* current coords of this spliterator */
+		int x,y; 
+		/* final coords of this spliterator */ 
+		int finalXexcl, finalYincl;
 		
 		/**
 		 * Constructs a new ImgAreaSpliterator for the specified area
@@ -850,19 +863,15 @@ public class Img implements Iterable<Pixel> {
 				
 				int newFinalX_excl = startX + (midIdx_excl%width);
 				int newFinalY_incl = this.y + midIdx_excl/width;
-				System.out.format("w=%d idx=%d mididx=%d newfinalX=%d endX=%d %n", width, idx, midIdx_excl, newFinalX_excl, endXexcl);
 				ImgAreaSpliterator split = new ImgAreaSpliterator(
-						startX, 
-						endXexcl, 
-						(newFinalX_excl < endXexcl ? 
-								newFinalX_excl:
-								startX), 
-						(newFinalX_excl < endXexcl ? 
-								newFinalY_incl:
-								newFinalY_incl+1), 
-						finalXexcl, 
-						finalYincl);
+						startX,         // start of a row
+						endXexcl,       // end of a row
+						newFinalX_excl, // x coord of new spliterator
+						newFinalY_incl, // y coord of new spliterator
+						finalXexcl,     // final x coord of new spliterator
+						finalYincl);    // final y coord of new spliterator
 				
+				// shorten this spliterator because new one takes care of the rear part
 				this.finalXexcl = newFinalX_excl;
 				this.finalYincl = newFinalY_incl;
 				
@@ -881,7 +890,7 @@ public class Img implements Iterable<Pixel> {
 		
 		@Override
 		public int characteristics() {
-			return NONNULL | SIZED | CONCURRENT | SUBSIZED;
+			return NONNULL | SIZED | CONCURRENT | SUBSIZED | IMMUTABLE;
 		}
 		
 	}
@@ -951,7 +960,7 @@ public class Img implements Iterable<Pixel> {
 
 		@Override
 		public int characteristics() {
-			return NONNULL | SIZED | CONCURRENT | SUBSIZED;
+			return NONNULL | SIZED | CONCURRENT | SUBSIZED | IMMUTABLE;
 		}
 		
 	}
