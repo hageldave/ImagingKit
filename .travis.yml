@@ -1,5 +1,8 @@
 language: java
+
+sudo: false
+
 jdk:
   - oraclejdk8
-script: 
-  mvn -pl ImagingKit_Core test
+
+script: mvn -pl :imagingkit-core clean test
