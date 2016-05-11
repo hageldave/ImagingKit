@@ -204,11 +204,6 @@ public enum ColorSpaceTransformation {
 		public int transform(int value);
 	}
 	
-	// clamps value to range 0 .. 255 (0xff)
-	static int clamp0xff(int i){
-		return Math.min(0xff, Math.max(0, i));
-	}
-	
 	// CIE L*a*b* helper class
 	private static final class LAB {
 		static final float Xn = 0.95047f;
