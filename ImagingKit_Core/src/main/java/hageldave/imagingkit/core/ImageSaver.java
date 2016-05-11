@@ -2,6 +2,7 @@ package hageldave.imagingkit.core;
 
 import java.awt.Image;
 import java.awt.image.BufferedImage;
+import java.io.Closeable;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -47,6 +48,9 @@ public class ImageSaver {
 	 * Some image file formats may require image type conversion before
 	 * saving. This method converts to type INT_RGB for jpg, jpeg and bmp, 
 	 * and to type BYTE_BINARY for wbmp.
+	 * <p>
+	 * The provided {@link OutputStream} will not be closed, this is the
+	 * responsibility of the caller.
 	 * @param image to be saved
 	 * @param os {@link OutputStream} to write image to.
 	 * @param imgFileFormat image file format. Consult {@link #getSaveableImageFileFormats()}
@@ -107,12 +111,14 @@ public class ImageSaver {
 	 * specified format.
 	 */
 	public static void saveImage(Image image, File file, String imgFileFormat){
-		FileOutputStream fos;
+		FileOutputStream fos = null;
 		try {
 			fos = new FileOutputStream(file);
 			saveImage(image, fos, imgFileFormat);
 		} catch (FileNotFoundException e) {
 			throw new ImageSaverException(e);
+		} finally {
+			closeQuietly(fos);
 		}
 	}
 	
@@ -152,6 +158,14 @@ public class ImageSaver {
 			saveImage(image, f);
 		} else {
 			throw new ImageSaverException(new IOException(String.format("provided file name denotes a directory. %s", filename)));
+		}
+	}
+	
+	private static void closeQuietly(Closeable toClose){
+		if(toClose != null){
+			try {
+				toClose.close();
+			} catch (IOException e) {/* ignore */}
 		}
 	}
 	

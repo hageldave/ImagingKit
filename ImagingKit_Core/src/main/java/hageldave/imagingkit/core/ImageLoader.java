@@ -55,8 +55,9 @@ public class ImageLoader {
 	}
 	
 	/**
-	 * Tries to load image from specified file.
-	 * @param is {@link InputStream} of the image file
+	 * Tries to load image from specified {@link InputStream}.
+	 * The InputStream is not closed, this is the responsibility of the caller.
+	 * @param is InputStream of the image
 	 * @return loaded Image.
 	 * @throws ImageLoaderException if no image could be loaded from the 
 	 * InputStream.
@@ -119,6 +120,7 @@ public class ImageLoader {
 	 * desired image type if needed. <br>
 	 * See {@link BufferedImage#BufferedImage(int, int, int)} for details on
 	 * the available image types.
+	 * The InputStream is not closed, this is the responsibility of the caller.
 	 * 
 	 * @param is {@link InputStream} of the image file
 	 * @param imageType of the resulting BufferedImage
