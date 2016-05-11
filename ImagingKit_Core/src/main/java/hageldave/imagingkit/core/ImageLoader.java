@@ -44,7 +44,11 @@ public class ImageLoader {
 	 */
 	public static BufferedImage loadImage(File file){
 		try {
-			return ImageIO.read(file);
+			BufferedImage bimg = ImageIO.read(file);
+			if(bimg == null){
+				throw new ImageLoaderException("Could not load Image! ImageIO.read() returned null.");
+			}
+			return bimg;
 		} catch (IOException e) {
 			throw new ImageLoaderException(e);
 		}
@@ -60,7 +64,11 @@ public class ImageLoader {
 	 */
 	public static BufferedImage loadImage(InputStream is){
 		try {
-			return ImageIO.read(is);
+			BufferedImage bimg = ImageIO.read(is);
+			if(bimg == null){
+				throw new ImageLoaderException("Could not load Image! ImageIO.read() returned null.");
+			}
+			return bimg;
 		} catch (IOException e) {
 			throw new ImageLoaderException(e);
 		}

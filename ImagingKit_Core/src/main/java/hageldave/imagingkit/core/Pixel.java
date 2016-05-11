@@ -511,6 +511,11 @@ public class Pixel {
 		return Pixel.getGrey(getValue(), redWeight, greenWeight, blueWeight);
 	}
 	
+	@Override
+	public String toString() {
+		return String.format("%s at %d (%d,%d)", getClass().getSimpleName(), getIndex(), getX(), getY());
+	}
+	
 
 	/* * * * * * * * * */
 	// STATIC  METHODS //

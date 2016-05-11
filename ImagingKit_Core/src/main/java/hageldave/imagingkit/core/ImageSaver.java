@@ -68,9 +68,11 @@ public class ImageSaver {
 		} else if(imgFileFormat.toLowerCase().equals("wbmp") && bImg.getType() != BufferedImage.TYPE_BYTE_BINARY){
 			image = BufferedImageFactory.get(image, BufferedImage.TYPE_BYTE_BINARY);
 		}
-
-		try {
-			ImageIO.write(bImg, imgFileFormat, os);
+		try { 
+			boolean success = ImageIO.write(bImg, imgFileFormat, os);
+			if(!success){
+				throw new ImageSaverException("Could not save Image! No appropriate writer was found.");
+			}
 		} catch (IOException e) {
 			throw new ImageSaverException(e);
 		}
