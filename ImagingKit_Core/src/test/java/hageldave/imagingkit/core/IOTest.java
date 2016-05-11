@@ -4,6 +4,13 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.FileVisitResult;
+import java.nio.file.FileVisitor;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 
 import org.junit.After;
 import org.junit.Test;
@@ -19,14 +26,32 @@ public class IOTest {
 	
 	static void deleteDir(File dir){
 		if(dir.exists()){
-			if(dir.isDirectory()){
-				for(File f: dir.listFiles((file)->{return file.isDirectory();})){
-					deleteDir(f);
+			Path start = dir.toPath();
+			FileVisitor<Path> deletor = new SimpleFileVisitor<Path>() {
+				@Override
+				public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+						throws IOException
+				{
+					Files.delete(file);
+					return FileVisitResult.CONTINUE;
 				}
-				for(File f: dir.listFiles()){
-					f.delete();
+				@Override
+				public FileVisitResult postVisitDirectory(Path dir, IOException e)
+						throws IOException
+				{
+					if (e == null) {
+						Files.delete(dir);
+						return FileVisitResult.CONTINUE;
+					} else {
+						// directory iteration failed
+						throw e;
+					}
 				}
-				dir.delete();
+			};
+			try {
+				Files.walkFileTree(start, deletor);
+			} catch (IOException e1) {
+				e1.printStackTrace();
 			}
 		}
 	}
