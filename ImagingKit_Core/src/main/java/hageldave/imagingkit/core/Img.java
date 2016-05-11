@@ -453,8 +453,8 @@ public class Img implements Iterable<Pixel> {
 	}
 	
 	/**
-	 * Copies this Img's data to the specified BufferedImage.
-	 * @param img
+	 * Copies this Img's data to the specified {@link BufferedImage}.
+	 * @param bimg the BufferedImage
 	 * @return specified BufferedImage
 	 * @throws ArrayIndexOutOfBoundsException if the provided BufferedImage
 	 * has less values than this Img.

@@ -397,7 +397,7 @@ public class Pixel {
 	 * 
 	 * @see #setARGB_fromNormalized(float, float, float, float)
 	 * @see #setRGB_fromNormalized_preserveAlpha(float, float, float)
-	 * @see #setRGB(int, int, int, int)
+	 * @see #setRGB(int, int, int)
 	 * @see #a_normalized()
 	 * @see #r_normalized()
 	 * @see #g_normalized()

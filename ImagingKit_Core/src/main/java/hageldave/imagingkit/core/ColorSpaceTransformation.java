@@ -101,8 +101,8 @@ public enum ColorSpaceTransformation {
 	 * The alpha channel (most significant 8 bits 24..31) will be preserved.
 	 * <p>
 	 * Notice that the H (hue) component is cyclic (describes an angle) and can therefore 
-	 * be kept in range using the modulo operator <code>(h%256)</code> or 
-	 * 8bit truncation <code>(h&0xff)</code> which is implemented by all of the 
+	 * be kept in range using the modulo operator {@code (h%256)} or 
+	 * 8bit truncation {@code (h&0xff)} which is implemented by all of the 
 	 * Pixel.argb or rgb methods that do not explicitly state differently 
 	 * (e.g. rgb_fast or rgb_bounded do not use truncation).
 	 * @see #HSV_2_RGB
