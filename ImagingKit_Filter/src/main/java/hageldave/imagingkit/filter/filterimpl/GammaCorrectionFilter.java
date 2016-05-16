@@ -1,5 +1,7 @@
 package hageldave.imagingkit.filter.filterimpl;
 
+import java.util.function.Consumer;
+
 import hageldave.imagingkit.core.Pixel;
 import hageldave.imagingkit.filter.PerPixelFilter;
 import hageldave.imagingkit.filter.settings.FilterSettings;
@@ -10,20 +12,22 @@ import hageldave.imagingkit.filter.settings.ValueRange;
 public class GammaCorrectionFilter extends PerPixelFilter {
 	
 	public static final String GAMMA_ID = "gamma";
-	private Double[] gamma = new Double[]{1.0};
+	private double gamma = 1.0;
 	
 	public GammaCorrectionFilter() {
-		super((px,gamma)->
-		{
-			px.setValue(applyGamma(px.getValue(), (double)gamma[0]));
-		}, new FilterSettings(new SettingConstraint[]{new SettingConstraint(
-				GAMMA_ID, ValueRange.fromNumber(0.0, (double)1500, true, false, Double.class), Double.class)}));
+		super(null, new FilterSettings(SettingConstraint
+				.createNew(GAMMA_ID)
+				.constrainValue(ValueRange.fromNumber(0.0, 1500.0, true, false, Double.class))
+				.constrainType(Double.class)
+				.buildAll()));
 	}
-
+	
 	@Override
-	protected Object[] getConfiguration(ReadOnlyFilterSettings settings) {
-		gamma[0] = settings.getAs(GAMMA_ID, Double.class, 1.0);
-		return gamma;
+	protected Consumer<Pixel> initiallyGetPerPixelAction() {
+		return (px)->
+		{
+			px.setValue(applyGamma(px.getValue(), gamma));
+		};
 	}
 	
 	public static int applyGamma(int argb, double gamma){
@@ -37,5 +41,11 @@ public class GammaCorrectionFilter extends PerPixelFilter {
 	public void setGamma(double gamma){
 		getSettings().set(GAMMA_ID, gamma);
 	}
+
+	@Override
+	protected void readSettingsBeforeApply(ReadOnlyFilterSettings settings) {
+		this.gamma = settings.getAs(GAMMA_ID, Double.class, this.gamma);
+	}
+
 
 }

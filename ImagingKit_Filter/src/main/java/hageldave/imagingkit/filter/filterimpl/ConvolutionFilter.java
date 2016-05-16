@@ -3,6 +3,7 @@ package hageldave.imagingkit.filter.filterimpl;
 import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.Pixel;
 import hageldave.imagingkit.filter.Filter;
+import hageldave.imagingkit.filter.settings.ReadOnlyFilterSettings;
 
 public class ConvolutionFilter extends Filter {
 
@@ -11,12 +12,20 @@ public class ConvolutionFilter extends Filter {
 	float[] convolutionKernel;
 	int kernelWidth;
 	int kernelHeight;
+	boolean convolveAlpha = true;
+	int boundaryMode = Img.boundary_mode_mirror;
+	
 
 	@Override
-	public void applyTo(Img img) {
-		int boundaryMode = getBoundaryMode();
+	protected void readSettingsBeforeApply(ReadOnlyFilterSettings settings) {
+		this.convolveAlpha = settings.getAs(convolveAlphaID, Boolean.class, true);
+		this.boundaryMode = settings.getAs(boundaryModeID, Integer.class, Img.boundary_mode_mirror);
+	}
+
+	@Override
+	public void doApply(Img img) {
 		Img cpy = img.copy();
-		if(convolveAlpha()){
+		if(convolveAlpha){
 		img.forEachParallel((px)->
 		{
 			int x = px.getX(); int y = px.getY();
@@ -62,14 +71,6 @@ public class ConvolutionFilter extends Filter {
 	
 	float getKernelValue(int kx, int ky){
 		return convolutionKernel[(ky-getKernelY0())*kernelWidth+(kx-getKernelX0())];
-	}
-	
-	int getBoundaryMode(){
-		return getSettings().getAs(boundaryModeID, Integer.class, Img.boundary_mode_mirror);
-	}
-	
-	boolean convolveAlpha(){
-		return getSettings().getAs(convolveAlphaID, Boolean.class, true);
 	}
 	
 	public void setConvolutionKernel(int kWidth, int kHeight, float[] kernel){
