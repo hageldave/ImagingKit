@@ -8,6 +8,7 @@ import java.awt.image.BufferedImage;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Spliterator;
+import java.util.function.Consumer;
 
 import org.junit.Test;
 
@@ -120,6 +121,7 @@ public class ImgTest {
 	@Test
 	public void misc_test(){
 		JunitUtils.testException(()->{new Img(1, 2, new int[]{0});}, IllegalArgumentException.class);
+		JunitUtils.testException(()->{new Img(10,10).setSpliteratorMinimumSplitSize(0);}, IllegalArgumentException.class);
 	}
 	
 	@Test
@@ -627,6 +629,39 @@ public class ImgTest {
 					assertEquals(px.getIndex(), px.getValue());
 				}
 			}
+		}
+		{
+			Img img = new Img(64,64);
+			if(img.getSpliteratorMinimumSplitSize() != 24)
+				img.setSpliteratorMinimumSplitSize(24);
+			Spliterator<Pixel> split = img.spliterator(2,2,50,50);
+			LinkedList<Spliterator<Pixel>> all = new LinkedList<>();
+			all.add(split);
+			int idx = 0;
+			while(idx < all.size()){
+				Spliterator<Pixel> sp = all.get(idx);
+				Spliterator<Pixel> child = sp.trySplit();
+				if(child != null){
+					all.add(child);
+				} else {
+					idx++;
+				}
+			}
+			for(Spliterator<Pixel> iter: all){
+				Consumer<Pixel> consumer = (px) -> {
+					px.setValue(px.getValue()+px.getIndex());
+				};
+				iter.tryAdvance(consumer);
+				iter.forEachRemaining(consumer);
+			}
+			for(Pixel px: img){
+				if(px.getX() < 2 || px.getX() >= 2+50 || px.getY() < 2 || px.getY() >= 2+50){
+					assertEquals(0, px.getValue());
+				} else {
+					assertEquals(px.getIndex(), px.getValue());
+				}
+			}
+			
 		}
 
 		// parallel foreach

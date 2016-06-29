@@ -837,7 +837,7 @@ public class Img implements Iterable<Pixel> {
 		 * @param height of the area
 		 * @param minSplitSize the minimum number of elements in a split
 		 */
-		ImgAreaSpliterator(int xStart, int yStart, int width, int height, int minSplitSize){
+		private ImgAreaSpliterator(int xStart, int yStart, int width, int height, int minSplitSize){
 			this(xStart, xStart+width, xStart, yStart, xStart+width, yStart+height-1, minSplitSize);
 		}
 		
@@ -849,11 +849,6 @@ public class Img implements Iterable<Pixel> {
 			this.finalXexcl = finalXexcl;
 			this.finalYincl = finalYincl;
 			this.px = Img.this.getPixel(x, y);
-			
-			if(minSplitSize < 1){
-				throw new IllegalArgumentException(
-						String.format("Minimum split size has to be above zero, specified:%d", minSplitSize));
-			}
 			this.minimumSplitSize = minSplitSize;
 		}
 		
@@ -962,16 +957,10 @@ public class Img implements Iterable<Pixel> {
 		 * @param startIndex first index of the range (inclusive)
 		 * @param endIndex last index of the range (inclusive)
 		 * @param minSplitSize minimum split size for this spliterator (minimum number of elements in a split)
-		 * @throws IllegalArgumentException if minSplitSize is below 1.
 		 */
 		private ImgSpliterator(int startIndex, int endIndex, int minSplitSize) {
 			px = new Pixel(Img.this, startIndex);
 			this.endIndex = endIndex;
-			
-			if(minSplitSize < 1){
-				throw new IllegalArgumentException(
-						String.format("Minimum split size has to be above zero, specified:%d", minSplitSize));
-			}
 			this.minimumSplitSize = minSplitSize;
 		}
 		
