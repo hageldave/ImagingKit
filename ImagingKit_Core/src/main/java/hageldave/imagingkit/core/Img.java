@@ -93,6 +93,12 @@ public class Img implements Iterable<Pixel> {
 	/** dimension of this Img */
 	private final Dimension dimension;
 	
+	/** minimum number of elements this Img's {@link Spliterator}s can be split to.
+	 * Default value is 1024.
+	 * @since 1.3
+	 */
+	private int spliteratorMinimumSplitSize = 1024;
+	
 	
 	/**
 	 * Creates a new Img of specified dimensions.
@@ -604,7 +610,7 @@ public class Img implements Iterable<Pixel> {
 	
 	@Override
 	public Spliterator<Pixel> spliterator() {
-		return new ImgSpliterator(0, numValues()-1);
+		return new ImgSpliterator(0, numValues()-1, spliteratorMinimumSplitSize);
 	}
 	
 	/**
@@ -627,7 +633,42 @@ public class Img implements Iterable<Pixel> {
 							"provided area [%d,%d][%d,%d] is not within bounds of the image [%d,%d]", 
 							xStart,yStart,width,height, getWidth(), getHeight()));
 		}
-		return new ImgAreaSpliterator(xStart,yStart,width,height);
+		return new ImgAreaSpliterator(xStart,yStart,width,height, spliteratorMinimumSplitSize);
+	}
+	
+	/**
+	 * Returns the minimum number of elements in a split of a {@link Spliterator} 
+	 * of this Img. Spliterators will only split if they contain more elements than
+	 * specified by this value. Default is 1024.
+	 * @return minimum number of elements of a Spliterator to allow for splitting.
+	 * @since 1.3
+	 */
+	public int getSpliteratorMinimumSplitSize() {
+		return spliteratorMinimumSplitSize;
+	}
+	
+	/**
+	 * Sets the minimum number of elements in a split of a {@link Spliterator} 
+	 * of this Img. Spliterators will only split if they contain more elements than
+	 * specified by this value. Default is 1024. 
+	 * <p>
+	 * It is advised that this number is
+	 * chosen carefully and with respect to the Img's size and application of the 
+	 * spliterator, as it can decrease performance of the parallelized methods
+	 * {@link #forEachParallel(Consumer)}, {@link #forEachParallel(int, int, int, int, Consumer)}
+	 * or {@link #parallelStream()} and {@link #parallelStream(int, int, int, int)}.
+	 * Low values cause a Spliterator to be split more often which will consume more
+	 * memory compared to higher values. Special applications on small Imgs using 
+	 * sophisticated consumers or stream operations may justify the use of low split sizes.
+	 * @param size number of elements
+	 * @since 1.3
+	 */
+	public void setSpliteratorMinimumSplitSize(int size) {
+		if(size < 1){
+			throw new IllegalArgumentException(
+					String.format("Minimum split size has to be above zero, specified:%d", size));
+		}
+		this.spliteratorMinimumSplitSize = size;
 	}
 	
 	/**
@@ -786,18 +827,21 @@ public class Img implements Iterable<Pixel> {
 		/* final coords of this spliterator */ 
 		int finalXexcl, finalYincl;
 		
+		final int minimumSplitSize;
+		
 		/**
 		 * Constructs a new ImgAreaSpliterator for the specified area
 		 * @param xStart left boundary of the area (inclusive)
 		 * @param yStart upper boundary of the area (inclusive)
 		 * @param width of the area
 		 * @param height of the area
+		 * @param minSplitSize the minimum number of elements in a split
 		 */
-		ImgAreaSpliterator(int xStart, int yStart, int width, int height){
-			this(xStart, xStart+width, xStart, yStart, xStart+width, yStart+height-1);
+		ImgAreaSpliterator(int xStart, int yStart, int width, int height, int minSplitSize){
+			this(xStart, xStart+width, xStart, yStart, xStart+width, yStart+height-1, minSplitSize);
 		}
 		
-		private ImgAreaSpliterator(int xStart, int endXexcl, int x, int y, int finalXexcl, int finalYincl){
+		private ImgAreaSpliterator(int xStart, int endXexcl, int x, int y, int finalXexcl, int finalYincl, int minSplitSize){
 			this.startX = xStart;
 			this.endXexcl = endXexcl;
 			this.x = x;
@@ -805,6 +849,12 @@ public class Img implements Iterable<Pixel> {
 			this.finalXexcl = finalXexcl;
 			this.finalYincl = finalYincl;
 			this.px = Img.this.getPixel(x, y);
+			
+			if(minSplitSize < 1){
+				throw new IllegalArgumentException(
+						String.format("Minimum split size has to be above zero, specified:%d", minSplitSize));
+			}
+			this.minimumSplitSize = minSplitSize;
 		}
 		
 		
@@ -858,8 +908,9 @@ public class Img implements Iterable<Pixel> {
 			int width = (this.endXexcl-this.startX);
 			int idx = this.x - this.startX;
 			int finalIdx_excl = (this.finalYincl-this.y)*width + (this.finalXexcl-startX);
-			if(finalIdx_excl-idx > 1024){
-				int midIdx_excl = idx + (finalIdx_excl-idx)/2;
+			int midIdx_excl = idx + (finalIdx_excl-idx)/2;
+			if(midIdx_excl > idx+minimumSplitSize){
+//				int midIdx_excl = idx + (finalIdx_excl-idx)/2;
 				
 				int newFinalX_excl = startX + (midIdx_excl%width);
 				int newFinalY_incl = this.y + midIdx_excl/width;
@@ -869,8 +920,9 @@ public class Img implements Iterable<Pixel> {
 						newFinalX_excl, // x coord of new spliterator
 						newFinalY_incl, // y coord of new spliterator
 						finalXexcl,     // final x coord of new spliterator
-						finalYincl);    // final y coord of new spliterator
-				
+						finalYincl,    // final y coord of new spliterator
+						minimumSplitSize);
+						
 				// shorten this spliterator because new one takes care of the rear part
 				this.finalXexcl = newFinalX_excl;
 				this.finalYincl = newFinalY_incl;
@@ -903,15 +955,24 @@ public class Img implements Iterable<Pixel> {
 		
 		final Pixel px;
 		int endIndex;
+		final int minimumSplitSize;
 		
 		/**
 		 * Constructs a new ImgSpliterator for the specified index range
 		 * @param startIndex first index of the range (inclusive)
 		 * @param endIndex last index of the range (inclusive)
+		 * @param minSplitSize minimum split size for this spliterator (minimum number of elements in a split)
+		 * @throws IllegalArgumentException if minSplitSize is below 1.
 		 */
-		ImgSpliterator(int startIndex, int endIndex) {
+		private ImgSpliterator(int startIndex, int endIndex, int minSplitSize) {
 			px = new Pixel(Img.this, startIndex);
 			this.endIndex = endIndex;
+			
+			if(minSplitSize < 1){
+				throw new IllegalArgumentException(
+						String.format("Minimum split size has to be above zero, specified:%d", minSplitSize));
+			}
+			this.minimumSplitSize = minSplitSize;
 		}
 		
 		private void setEndIndex(int endIndex) {
@@ -942,8 +1003,8 @@ public class Img implements Iterable<Pixel> {
 		public Spliterator<Pixel> trySplit() {
 			int currentIdx = Math.min(px.getIndex(), endIndex);
 			int midIdx = currentIdx + (endIndex-currentIdx)/2;
-			if(midIdx > currentIdx+1024){
-				ImgSpliterator split = new ImgSpliterator(midIdx, endIndex);
+			if(midIdx > currentIdx+minimumSplitSize){
+				ImgSpliterator split = new ImgSpliterator(midIdx, endIndex, minimumSplitSize);
 				setEndIndex(midIdx-1);
 				return split;
 			} else {

@@ -32,6 +32,8 @@ public class Performance {
 		}
 		Img imgBackup = img.copy();
 		
+		img.setSpliteratorMinimumSplitSize(Math.max(img.numValues()/512, 1024));
+		System.out.println("spliterator min size :" + img.getSpliteratorMinimumSplitSize());
 		
 		for(int i = 0; i < numLoops; i++){
 			
