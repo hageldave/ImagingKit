@@ -13,3 +13,4 @@ env:
 
 after_success:
   - mvn -P travis -pl :imagingkit-core -DrepoToken=$COVERALLSTOKEN clean test jacoco:report coveralls:report
+  - bash <(curl -s https://codecov.io/bash)
