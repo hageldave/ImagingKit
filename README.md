@@ -59,3 +59,34 @@ img.forEach(ColorSpaceTransformation.HSV_2_RGB.get());
 
 ImageSaver.saveImage(img.getRemoteBufferedImage(), "lena_hue_shift.png");
 ```
+Swing framebuffer rendering:
+```java
+Img img = new Img(160, 90); Img[] buffers = {img.copy(), img.copy()};
+BufferedImage bimg = img.getRemoteBufferedImage();
+JPanel canvas = new JPanel(){ public void paint(Graphics g) { 
+    super.paint(g); 
+    g.drawImage(bimg, 0,0,getWidth(),getHeight(), 0,0,160,90, null);
+}};
+canvas.setPreferredSize(img.getDimension());
+JFrame f = new JFrame("IMG"); f.setContentPane(canvas); 
+f.pack(); f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+SwingUtilities.invokeLater(()->{f.setVisible(true);});
+
+BiConsumer<Pixel, Long> shader = (px, time)->{
+    px.setRGB_fromNormalized(
+            px.getXnormalized(), 
+            px.getYnormalized(), 
+            (float)(0.5 + 0.5*Math.sin(time/250.0)));
+};
+
+long t = System.currentTimeMillis()+40; int buff = 0;
+while(true){
+    long now = System.currentTimeMillis();
+    Thread.sleep(Math.max(0, t-now));
+    buffers[buff].forEachParallel(px->{shader.accept(px, now);});
+    System.arraycopy(buffers[buff].getData(), 0, img.getData(), 0, img.numValues());
+    canvas.repaint();
+    t = now+40;
+    buff = (buff+1)%buffers.length;
+}
+```
