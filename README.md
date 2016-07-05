@@ -61,13 +61,14 @@ ImageSaver.saveImage(img.getRemoteBufferedImage(), "lena_hue_shift.png");
 ```
 Swing framebuffer rendering:
 ```java
-Img img = new Img(160, 90); Img[] buffers = {img.copy(), img.copy()};
-BufferedImage bimg = img.getRemoteBufferedImage();
+Img img2display = new Img(160, 90); 
+Img img2render = img2display.copy();
+BufferedImage bimg = img2display.getRemoteBufferedImage();
 JPanel canvas = new JPanel(){ public void paint(Graphics g) { 
     super.paint(g); 
     g.drawImage(bimg, 0,0,getWidth(),getHeight(), 0,0,160,90, null);
 }};
-canvas.setPreferredSize(img.getDimension());
+canvas.setPreferredSize(img2display.getDimension());
 JFrame f = new JFrame("IMG"); f.setContentPane(canvas); 
 f.pack(); f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 SwingUtilities.invokeLater(()->{f.setVisible(true);});
@@ -79,14 +80,15 @@ BiConsumer<Pixel, Long> shader = (px, time)->{
             (float)(0.5 + 0.5*Math.sin(time/250.0)));
 };
 
-long t = System.currentTimeMillis()+40; int buff = 0;
+final long fpsLimitTime = 1000/25; // 25fps
+long t = System.currentTimeMillis()+fpsLimitTime;
 while(true){
     long now = System.currentTimeMillis();
     Thread.sleep(Math.max(0, t-now));
-    buffers[buff].forEachParallel(px->{shader.accept(px, now);});
-    System.arraycopy(buffers[buff].getData(), 0, img.getData(), 0, img.numValues());
+    img2render.forEachParallel(px->{shader.accept(px, now);});
+    // copy is fast so no intermediate changes will be seen on display
+    System.arraycopy(img2render.getData(), 0, img2display.getData(), 0, img2display.numValues());
     canvas.repaint();
-    t = now+40;
-    buff = (buff+1)%buffers.length;
+    t = now+fpsLimitTime;
 }
 ```
