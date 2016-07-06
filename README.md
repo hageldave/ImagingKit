@@ -61,34 +61,36 @@ ImageSaver.saveImage(img.getRemoteBufferedImage(), "lena_hue_shift.png");
 ```
 Swing framebuffer rendering:
 ```java
-Img img2display = new Img(160, 90); 
-Img img2render = img2display.copy();
-BufferedImage bimg = img2display.getRemoteBufferedImage();
+BiConsumer<Pixel, Long> shader = (px, time)->{
+	px.setRGB(
+		(int)(px.getXnormalized()*255)+(int)((time/10)%255), 
+		(int)(px.getYnormalized()*255), 
+		(int)(px.getYnormalized()*255));		
+	ColorSpaceTransformation.HSV_2_RGB.get().accept(px);
+};
+
+Img img = new Img(160, 90); 
+BufferedImage bimg = img.getRemoteBufferedImage();
 JPanel canvas = new JPanel(){ public void paint(Graphics g) { 
-    super.paint(g); 
-    g.drawImage(bimg, 0,0,getWidth(),getHeight(), 0,0,160,90, null);
+	long now = System.currentTimeMillis();
+	img.forEachParallel(px->{shader.accept(px, now);});
+	g.drawImage(bimg, 0,0,getWidth(),getHeight(), 0,0,img.getWidth(),img.getHeight(), null);
+
+	String shaderTime = String.format("%02dms",System.currentTimeMillis()-now);
+	g.drawString(shaderTime, 2, getHeight()); g.setColor(Color.white);
+	g.drawString(shaderTime, 1, getHeight()-1);
 }};
-canvas.setPreferredSize(img2display.getDimension());
+canvas.setPreferredSize(img.getDimension());
 JFrame f = new JFrame("IMG"); f.setContentPane(canvas); 
 f.pack(); f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 SwingUtilities.invokeLater(()->{f.setVisible(true);});
 
-BiConsumer<Pixel, Long> shader = (px, time)->{
-    px.setRGB_fromNormalized(
-            px.getXnormalized(), 
-            px.getYnormalized(), 
-            (float)(0.5 + 0.5*Math.sin(time/250.0)));
-};
-
 final long fpsLimitTime = 1000/25; // 25fps
-long t = System.currentTimeMillis()+fpsLimitTime;
+long target = System.currentTimeMillis()+fpsLimitTime;
 while(true){
-    long now = System.currentTimeMillis();
-    Thread.sleep(Math.max(0, t-now));
-    img2render.forEachParallel(px->{shader.accept(px, now);});
-    // copy is fast so no intermediate changes will be seen on display
-    System.arraycopy(img2render.getData(), 0, img2display.getData(), 0, img2display.numValues());
-    canvas.repaint();
-    t = now+fpsLimitTime;
+	long now = System.currentTimeMillis();
+	canvas.repaint();
+	Thread.sleep(Math.max(0, target-now));
+	target = now+fpsLimitTime;
 }
 ```
