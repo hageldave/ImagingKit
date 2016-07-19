@@ -613,6 +613,14 @@ public class Img implements Iterable<Pixel> {
 		return new ImgSpliterator(0, numValues()-1, spliteratorMinimumSplitSize);
 	}
 	
+	public Spliterator<Pixel> rowSpliterator() {
+		return new RowSpliterator(0, getWidth(), 0, getHeight()-1, this);
+	}
+	
+	public Spliterator<Pixel> colSpliterator() {
+		return new ColSpliterator(0, getWidth()-1, 0, getHeight(), this);
+	}
+	
 	/**
 	 * Creates a {@link Spliterator} over the pixels within the specified area.
 	 * @param xStart left boundary of the area (inclusive)
@@ -770,6 +778,10 @@ public class Img implements Iterable<Pixel> {
 	 */
 	public Stream<Pixel> parallelStream() {
 		return StreamSupport.stream(spliterator(), true);
+	}
+	
+	public static Stream<Pixel> stream(Spliterator<Pixel> split, boolean parallel){
+		return StreamSupport.stream(split, parallel);
 	}
 	
 	/**
@@ -1006,6 +1018,146 @@ public class Img implements Iterable<Pixel> {
 			int currentIndex = px.getIndex();
 			int lastIndexPlusOne = endIndex+1;
 			return lastIndexPlusOne-currentIndex;
+		}
+
+		@Override
+		public int characteristics() {
+			return NONNULL | SIZED | CONCURRENT | SUBSIZED | IMMUTABLE;
+		}
+		
+	}
+	
+	private static final class RowSpliterator implements Spliterator<Pixel> {
+		
+		int startX;
+		int endXinclusive;
+		int x;
+		int y;
+		int endYinclusive;
+		Pixel px;
+		
+		public RowSpliterator(int startX, int width, int startY, int endYincl, Img img) {
+			this.startX = startX;
+			this.x = startX;
+			this.endXinclusive = startX+width-1;
+			this.y = startY;
+			this.endYinclusive = endYincl;
+			this.px = img.getPixel(x, y);
+		}
+		
+
+		@Override
+		public boolean tryAdvance(Consumer<? super Pixel> action) {
+			if(x <= endXinclusive){
+				px.setPosition(x, y);
+				x++;
+			} else if(y < endYinclusive) {
+				y++;
+				x=startX;
+				px.setPosition(x, y);
+				x++;
+			} else {
+				return false;
+			}
+			action.accept(px);
+			return true;
+		}
+		
+		@Override
+		public void forEachRemaining(Consumer<? super Pixel> action) {
+			int x_ = x;
+			for(int y_ = y; y_ <= endYinclusive; y_++){
+				for(;x_ <= endXinclusive; x_++){
+					px.setPosition(x_, y_);
+					action.accept(px);
+				}
+				x_=startX;
+			}
+		}
+
+		@Override
+		public Spliterator<Pixel> trySplit() {
+			if(this.y < endYinclusive){
+				int newY = y + 1 + (endYinclusive-y)/2;
+				RowSpliterator split = new RowSpliterator(startX, endXinclusive-startX+1, newY, endYinclusive, px.getImg());
+				this.endYinclusive = newY-1;
+				return split;
+			} else return null;
+		}
+
+		@Override
+		public long estimateSize() {
+			return (endYinclusive-y)*(endXinclusive+1-startX)+endXinclusive+1-x;
+		}
+
+		@Override
+		public int characteristics() {
+			return NONNULL | SIZED | CONCURRENT | SUBSIZED | IMMUTABLE;
+		}
+		
+	}
+	
+	private static final class ColSpliterator implements Spliterator<Pixel> {
+		
+		int startY;
+		int endXinclusive;
+		int x;
+		int y;
+		int endYinclusive;
+		Pixel px;
+		
+		public ColSpliterator(int startX, int endXincl, int startY, int height, Img img) {
+			this.startY = startY;
+			this.y = startY;
+			this.endYinclusive = startY+height-1;
+			this.x = startX;
+			this.endXinclusive = endXincl;
+			this.px = img.getPixel(x, y);
+		}
+		
+
+		@Override
+		public boolean tryAdvance(Consumer<? super Pixel> action) {
+			if(y <= endYinclusive){
+				px.setPosition(x, y);
+				y++;
+			} else if(x < endXinclusive) {
+				x++;
+				y=startY;
+				px.setPosition(x, y);
+				y++;
+			} else {
+				return false;
+			}
+			action.accept(px);
+			return true;
+		}
+		
+		@Override
+		public void forEachRemaining(Consumer<? super Pixel> action) {
+			int y_ = y;
+			for(int x_ = x; x_ <= endXinclusive; x_++){
+				for(;y_ <= endYinclusive; y_++){
+					px.setPosition(x_, y_);
+					action.accept(px);
+				}
+				y_=startY;
+			}
+		}
+
+		@Override
+		public Spliterator<Pixel> trySplit() {
+			if(this.x < endXinclusive){
+				int newX = x + 1 + (endXinclusive-x)/2;
+				ColSpliterator split = new ColSpliterator(newX, endXinclusive, startY, endYinclusive-startY+1, px.getImg());
+				this.endXinclusive = newX-1;
+				return split;
+			} else return null;
+		}
+
+		@Override
+		public long estimateSize() {
+			return (endXinclusive-x)*(endYinclusive+1-startY)+endYinclusive+1-y;
 		}
 
 		@Override
