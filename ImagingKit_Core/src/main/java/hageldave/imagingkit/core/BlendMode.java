@@ -58,12 +58,16 @@ public enum BlendMode {
 
 	public static int blend(int bottomRGBA, int topRGBA, float visibility, BlendFunction func){
 		int temp = 0;
+		
 		float a = Math.min(visibility*(temp=a(topRGBA)) + a(bottomRGBA),0xff);
-		visibility = Math.max(visibility-(1-(temp/255.0f)), 0);
+		
+		visibility *= (temp/255.0f);
 		float oneMinusVis = 1-visibility;
+		
 		float r = visibility*func.blend(temp=r(bottomRGBA), r(topRGBA)) + temp*oneMinusVis;
 		float g = visibility*func.blend(temp=g(bottomRGBA), g(topRGBA)) + temp*oneMinusVis;
 		float b = visibility*func.blend(temp=b(bottomRGBA), b(topRGBA)) + temp*oneMinusVis;
+		
 		return argb_fast((int)a, (int)r, (int)g, (int)b);
 	}
 	
