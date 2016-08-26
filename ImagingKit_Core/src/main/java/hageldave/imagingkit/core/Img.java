@@ -765,7 +765,7 @@ public class Img implements Iterable<Pixel> {
 	 * @since 1.2
 	 */
 	public Stream<Pixel> stream() {
-		return StreamSupport.stream(spliterator(), false);
+		return Img.stream(spliterator(), false);
 	}
 	
 	/**
@@ -777,7 +777,7 @@ public class Img implements Iterable<Pixel> {
 	 * @since 1.2
 	 */
 	public Stream<Pixel> parallelStream() {
-		return StreamSupport.stream(spliterator(), true);
+		return Img.stream(spliterator(), true);
 	}
 	
 	public static Stream<Pixel> stream(Spliterator<Pixel> split, boolean parallel){

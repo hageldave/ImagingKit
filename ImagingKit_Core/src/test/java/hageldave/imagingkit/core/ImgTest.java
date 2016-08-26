@@ -8,6 +8,7 @@ import java.awt.image.BufferedImage;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Spliterator;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
 import org.junit.Test;
@@ -440,9 +441,30 @@ public class ImgTest {
 	
 	@Test
 	public void iterable_test(){
+		BiFunction<Integer, Integer, Img> stdAlloc = (w,h)->{return new Img(w,h);};
+		iterable_test(stdAlloc);
+		
+		BiFunction<Integer, Integer, Img> rowsplitAlloc = (w,h)->{return new Img(w,h){
+			@Override
+			public Spliterator<Pixel> spliterator() {
+				return this.rowSpliterator();
+			}
+		};};
+		iterable_test(rowsplitAlloc);
+		
+		BiFunction<Integer, Integer, Img> colsplitAlloc = (w,h)->{return new Img(w,h){
+			@Override
+			public Spliterator<Pixel> spliterator() {
+				return this.colSpliterator();
+			}
+		};};
+		iterable_test(colsplitAlloc);
+	}
+	
+	private void iterable_test(BiFunction<Integer, Integer, Img> imgAlloc){
 		// iterator
 		{
-			Img img = new Img(16,9);
+			Img img = imgAlloc.apply(16,9);
 			int idx = 0;
 			for(Pixel p: img){
 				p.setValue(p.getValue()+idx);
@@ -459,7 +481,7 @@ public class ImgTest {
 		}
 		
 		{
-			Img img = new Img(16,9);
+			Img img = imgAlloc.apply(16,9);
 			img.iterator().forEachRemaining((px)->{px.setValue(px.getValue()+px.getIndex());});
 			for(int i = 0; i < img.numValues(); i++){
 				assertEquals(i, img.getData()[i]);
@@ -467,7 +489,7 @@ public class ImgTest {
 		}
 		
 		{
-			Img img = new Img(16,9);
+			Img img = imgAlloc.apply(16,9);
 			Iterator<Pixel> it = img.iterator();
 			while(it.hasNext()){
 				Pixel px = it.next();
@@ -479,7 +501,7 @@ public class ImgTest {
 		}
 		
 		{
-			Img img = new Img(16,9);
+			Img img = imgAlloc.apply(16,9);
 			img.forEach((px)->{px.setValue(px.getIndex());});
 			for(int i = 0; i < img.numValues(); i++){
 				assertEquals(i, img.getData()[i]);
@@ -488,7 +510,7 @@ public class ImgTest {
 		
 		// area iterator
 		{
-			Img img = new Img(16, 9);
+			Img img = imgAlloc.apply(16, 9);
 			Iterator<Pixel> iter = img.iterator(2, 3, 10, 5);
 			while(iter.hasNext()){
 				Pixel px = iter.next();
@@ -525,7 +547,7 @@ public class ImgTest {
 		
 		// spliterator
 		{
-			Img img = new Img(2000, 400);
+			Img img = imgAlloc.apply(2000, 400);
 			Spliterator<Pixel> split = img.spliterator();
 			assertTrue(split.hasCharacteristics(Spliterator.SUBSIZED));
 			assertEquals(img.numValues(), split.getExactSizeIfKnown());
@@ -550,7 +572,7 @@ public class ImgTest {
 			}
 		}
 		{
-			Img img = new Img(200, 400);
+			Img img = imgAlloc.apply(200, 400);
 			Spliterator<Pixel> split = img.spliterator();
 			LinkedList<Spliterator<Pixel>> all = new LinkedList<>();
 			all.add(split);
@@ -574,7 +596,7 @@ public class ImgTest {
 		
 		// area spliterator
 		{
-			Img img = new Img(2000, 400);
+			Img img = imgAlloc.apply(2000, 400);
 			Spliterator<Pixel> split = img.spliterator(40,10,500,300);
 			assertTrue(split.hasCharacteristics(Spliterator.SUBSIZED));
 			assertEquals(500*300, split.getExactSizeIfKnown());
@@ -603,7 +625,7 @@ public class ImgTest {
 			}
 		}
 		{
-			Img img = new Img(1023, 1023);
+			Img img = imgAlloc.apply(1023, 1023);
 			Spliterator<Pixel> split = img.spliterator(40,10,500,300);
 			LinkedList<Spliterator<Pixel>> all = new LinkedList<>();
 			all.add(split);
@@ -631,7 +653,7 @@ public class ImgTest {
 			}
 		}
 		{
-			Img img = new Img(64,64);
+			Img img = imgAlloc.apply(64,64);
 			if(img.getSpliteratorMinimumSplitSize() != 24)
 				img.setSpliteratorMinimumSplitSize(24);
 			Spliterator<Pixel> split = img.spliterator(2,2,50,50);
@@ -666,7 +688,7 @@ public class ImgTest {
 
 		// parallel foreach
 		{
-			Img img = new Img(3000, 2000);
+			Img img = imgAlloc.apply(3000, 2000);
 			img.forEachParallel( (px)->{px.setValue(px.getIndex());} );
 			for(int i = 0; i < img.numValues(); i++){
 				assertEquals(i, img.getData()[i]);
@@ -675,7 +697,7 @@ public class ImgTest {
 		
 		// foreach area
 		{
-			Img img = new Img(2000,400);
+			Img img = imgAlloc.apply(2000,400);
 			img.forEach(40, 80, 500, 100, (px)->{px.setValue(px.getValue()+px.getIndex());});
 			for(int i = 0; i < img.numValues(); i++){
 				int x = i % img.getWidth(); x-=40;
@@ -690,7 +712,7 @@ public class ImgTest {
 		
 		// parallel foreach area
 		{
-			Img img = new Img(3000,2000);
+			Img img = imgAlloc.apply(3000,2000);
 			img.forEachParallel(40, 80, 1000, 500, (px)->{px.setValue(px.getValue()+px.getIndex());});
 			for(int i = 0; i < img.numValues(); i++){
 				int x = i % img.getWidth(); x-=40;
@@ -709,7 +731,7 @@ public class ImgTest {
 		
 		// streams
 		{
-			Img img = new Img(3000, 2000);
+			Img img = imgAlloc.apply(3000, 2000);
 			img.stream().filter(px->{return px.getX() % 2 == 0;}).forEach(px->{px.setValue(1);});
 			for(int y = 0; y < 2000; y++)
 			for(int x = 0; x < 3000; x++){
