@@ -55,6 +55,16 @@ public enum BlendMode {
 	public static interface BlendFunction {
 		public int blend(int bottom, int top);
 	}
+	
+	public static int blend(int bottomRGB, int topRGB, BlendFunction func){
+		return rgb_fast(func.blend(r(bottomRGB), r(topRGB)), 
+						func.blend(g(bottomRGB), g(topRGB)),
+						func.blend(b(bottomRGB), b(topRGB)));
+	}
+	
+	public static int blend(int bottomRGBA, int topRGBA, BlendMode mode){
+		return blend(bottomRGBA, topRGBA, mode.blendFunction);
+	}
 
 	public static int blend(int bottomRGBA, int topRGBA, float visibility, BlendFunction func){
 		int temp = 0;
@@ -88,4 +98,4 @@ public enum BlendMode {
 	}
 	
 }
-*/
+/**/
