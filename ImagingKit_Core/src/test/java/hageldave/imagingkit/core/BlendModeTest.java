@@ -1,7 +1,6 @@
 //package hageldave.imagingkit.core;
 //
 //import static org.junit.Assert.assertEquals;
-//import static org.junit.Assert.assertNotEquals;
 //import static org.junit.Assert.assertTrue;
 //import org.junit.Test;
 //
@@ -9,21 +8,52 @@
 //
 //	@Test
 //	public void testFunctions(){
-//		/* input values range from 0 - 255, output values also have to satisfy that property */
 //		for(BlendMode mode: BlendMode.values()){
+//			/* input values range from 0 to 255, output values also have to satisfy that property */
 //			for(int a = 0; a < 0xff; a++){
 //				for(int b = 0; b < 0xff; b++){
-//					assertEquals(String.format("not 8bit: a=%d b=%d mode:%s", a,b,mode.name()), 0xff, mode.blendFunction.blend(a, b) | 0xff);
-//					float[] visibilities = {0.999f, 0.8f, 2/3.0f, 0.5f, (float)(1/Math.PI), 0.2f, 0.001f};
-//					int alpha = 0xff000000;
-//					for(float vis: visibilities){
-//						assertEquals(String.format("not 8bit: a=%d b=%d v:%f mode:%s", a,b,vis,mode.name()), 0xff, BlendMode.blend(a, b, vis, mode) | 0xff);
-//					}
-//					assertEquals(String.format("visibility 1 not equal to raw blendfunction. a=%d b=%d mode:%s", a,b,mode.name()), mode.blendFunction.blend(a, b), BlendMode.blend(alpha|a, alpha|b, 1, mode));
-//					assertEquals(String.format("visibility 0 not equal to bottom color. a=%d b=%d mode:%s", a,b,mode.name()), a, BlendMode.blend(alpha|a, alpha|b, 0, mode));
+//					assertEquals(String.format("not 8bit: a=%d b=%d mode:%s", a,b,mode.name()), 
+//							0xff, 
+//							mode.blendFunction.blend(a, b) | 0xff);
 //				}
-//			}
+//			}			
 //		}
+//	}
+//	
+//	@Test
+//	public void testOpacityThings(){
+//		int opaque = 0xff000000;
+//		int semi = 0x88000000;
+//		assertEquals("not top color", 
+//				opaque|0xaa, 
+//				BlendMode.blend(opaque|0xff, opaque|0xaa, BlendMode.NORMAL));
+//		assertEquals("not same result with visibility 1", 
+//				BlendMode.blend(opaque|0xff, opaque|0xaa, BlendMode.NORMAL), 
+//				BlendMode.blend(opaque|0xff, opaque|0xaa, 1,BlendMode.NORMAL));
+//		assertEquals("not bottom color with visibility 0",
+//				opaque|0xff, 
+//				BlendMode.blend(opaque|0xff, opaque|0xaa, 0,BlendMode.NORMAL));
+//		assertEquals("not bottom color with transparent top color at visibility 1",
+//				opaque|0xff,
+//				BlendMode.blend(opaque|0xff, 0|0xaa, 1, BlendMode.NORMAL));
+//		assertTrue("not brighter than darker color at visibility 0.5", 
+//				Pixel.getLuminance(opaque|0x44) < 
+//				Pixel.getLuminance(BlendMode.blend(opaque|0x44, opaque|0xff, 0.5f, BlendMode.NORMAL)));
+//		assertTrue("not darker than brighter color at visibility 0.5", 
+//				Pixel.getLuminance(opaque|0xff) > 
+//				Pixel.getLuminance(BlendMode.blend(opaque|0x44, opaque|0xff, 0.5f, BlendMode.NORMAL)));
+//		assertTrue("not brighter than darker color with 88 opacity", 
+//				Pixel.getLuminance(opaque|0x44) < 
+//				Pixel.getLuminance(BlendMode.blend(opaque|0x44, semi|0xff, 1, BlendMode.NORMAL)));
+//		assertTrue("not darker than brighter color with 88 opacity", 
+//				Pixel.getLuminance(opaque|0xff) > 
+//				Pixel.getLuminance(BlendMode.blend(opaque|0x44, semi|0xff, 1, BlendMode.NORMAL)));
+//		
+//	}
+//	
+//	@Test
+//	public void testConsumers() {
+//		
 //	}
 //	
 //}
