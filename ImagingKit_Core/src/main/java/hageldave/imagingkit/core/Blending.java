@@ -35,10 +35,10 @@ import hageldave.imagingkit.core.Img;
  * channel methods:
  * <pre>
  * {@code
- * int bottomRGBA = 0x8844FF11;
- * int topRGBA =    0xFF118899;
+ * int bottomARGB = 0x8844FF11;
+ * int topARGB =    0xFF118899;
  * float opacity = 0.7f;
- * int blendRGBA = Blending.blend(bottomRGBA, topRGBA, opacity, Blending.DODGE);
+ * int blendARGB = Blending.blend(bottomARGB, topARGB, opacity, Blending.DODGE);
  * 	
  * int channel1 = 0xBB;
  * int channel2 = 0x7F;
@@ -77,7 +77,7 @@ public enum Blending {
 		this.blendFunction = func;
 	}
 
-	/** RGBA blending with visibility and alpha value consideration */
+	/** ARGB blending with visibility and alpha value consideration */
 	public Consumer<Pixel> getBlendingWith(Img topImg, int xTop, int yTop, float visibility){
 		return blending(topImg, xTop, yTop, visibility, blendFunction);
 	}
@@ -121,23 +121,23 @@ public enum Blending {
 		return blend(bottomRGB, topRGB, mode.blendFunction);
 	}
 
-	public static int blend(int bottomRGBA, int topRGBA, float visibility, BlendFunction func){
+	public static int blend(int bottomARGB, int topARGB, float visibility, BlendFunction func){
 		int temp = 0;
 		
-		float a = Math.min(visibility*(temp=a(topRGBA)) + a(bottomRGBA),0xff);
+		float a = Math.min(visibility*(temp=a(topARGB)) + a(bottomARGB),0xff);
 		
 		visibility *= (temp/255.0f);
 		float oneMinusVis = 1-visibility;
 		
-		float r = visibility*func.blend(temp=r(bottomRGBA), r(topRGBA)) + temp*oneMinusVis;
-		float g = visibility*func.blend(temp=g(bottomRGBA), g(topRGBA)) + temp*oneMinusVis;
-		float b = visibility*func.blend(temp=b(bottomRGBA), b(topRGBA)) + temp*oneMinusVis;
+		float r = visibility*func.blend(temp=r(bottomARGB), r(topARGB)) + temp*oneMinusVis;
+		float g = visibility*func.blend(temp=g(bottomARGB), g(topARGB)) + temp*oneMinusVis;
+		float b = visibility*func.blend(temp=b(bottomARGB), b(topARGB)) + temp*oneMinusVis;
 		
 		return argb_fast((int)a, (int)r, (int)g, (int)b);
 	}
 	
-	public static int blend(int bottomRGBA, int topRGBA, float visibility, Blending mode){
-		return blend(bottomRGBA, topRGBA, visibility, mode.blendFunction);
+	public static int blend(int bottomARGB, int topARGB, float visibility, Blending mode){
+		return blend(bottomARGB, topARGB, visibility, mode.blendFunction);
 	}
 	
 	public static Consumer<Pixel> blending(Img top, int xTop, int yTop, float visibility, BlendFunction func){
@@ -162,23 +162,6 @@ public enum Blending {
 				px.setValue(blend(px.getValue(), top.getValue(x, y), func));
 			}
 		};
-	}
-	
-	
-	public static void main(String[] args) {
-		Img bottom, top;
-		bottom = (top = new Img(10, 10)).copy();
-		int x = 4; int y = 0;
-		bottom.forEach(Blending.DIFFERENCE.getBlendingWith(top, x, y));
-		
-		int bottomRGBA = 0x8844FF11;
-		int topRGBA =    0xFF118899;
-		float opacity = 0.7f;
-		int blendRGBA = Blending.blend(bottomRGBA, topRGBA, opacity, Blending.DODGE);
-		
-		int channel1 = 0xBB;
-		int channel2 = 0x7F;
-		int channelBlend = Blending.SCREEN.blendFunction.blend(channel1, channel2);
 	}
 	
 }
