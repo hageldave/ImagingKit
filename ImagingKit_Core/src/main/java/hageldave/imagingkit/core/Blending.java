@@ -6,7 +6,7 @@ import java.util.function.Consumer;
 
 import hageldave.imagingkit.core.Img;
 
-public enum BlendMode {
+public enum Blending {
 	
 	NORMAL(		(a,b) -> b ),
 	AVERAGE( 	(a,b) -> ((a+b)>>1) ),
@@ -28,7 +28,7 @@ public enum BlendMode {
 	
 	public final BlendFunction blendFunction;
 	
-	private BlendMode(BlendFunction func) {
+	private Blending(BlendFunction func) {
 		this.blendFunction = func;
 	}
 
@@ -63,7 +63,7 @@ public enum BlendMode {
 						func.blend(b(bottomRGB), b(topRGB)));
 	}
 	
-	public static int blend(int bottomRGB, int topRGB, BlendMode mode){
+	public static int blend(int bottomRGB, int topRGB, Blending mode){
 		return blend(bottomRGB, topRGB, mode.blendFunction);
 	}
 
@@ -82,7 +82,7 @@ public enum BlendMode {
 		return argb_fast((int)a, (int)r, (int)g, (int)b);
 	}
 	
-	public static int blend(int bottomRGBA, int topRGBA, float visibility, BlendMode mode){
+	public static int blend(int bottomRGBA, int topRGBA, float visibility, Blending mode){
 		return blend(bottomRGBA, topRGBA, visibility, mode.blendFunction);
 	}
 	
