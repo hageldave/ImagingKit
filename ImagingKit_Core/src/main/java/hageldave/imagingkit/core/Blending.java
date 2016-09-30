@@ -6,6 +6,49 @@ import java.util.function.Consumer;
 
 import hageldave.imagingkit.core.Img;
 
+/**
+ * This Enum class provides a variation of different blending functions to
+ * blend a bottom and top value (pixels). It also provides methods to calculate
+ * the blend of two colors with additional transparency specification 
+ * (see {@link #blend(int, int, float, Blending)}), as well as ready to use 
+ * Consumers for blending two {@link Img}s 
+ * (see {@link #getBlendingWith(Img, float)}).
+ * <p>
+ * Here's a short example on how to blend two images using the Blending class:
+ * <pre>
+ * {@code
+ * Img bottom, top;
+ * ... initialize images ...
+ * bottom.forEach(Blending.AVERAGE.getBlendingWith(top));
+ * }</pre>
+ * You can also specify the offset of the top image on the bottom image:
+ * <pre>
+ * {@code
+ * Img bottom, top;
+ * ... initialize images ...
+ * int x = 3;  // horizontal offset
+ * int y = -5; // vertical offset 
+ * bottom.forEach(Blending.DIFFERENCE.getBlendingWith(top, x, y));
+ * }</pre>
+ * If you do not rely on the Img class or only need to blend two single colors
+ * you may omit this level of abstraction and use the per color or 
+ * channel methods:
+ * <pre>
+ * {@code
+ * int bottomRGBA = 0x8844FF11;
+ * int topRGBA =    0xFF118899;
+ * float opacity = 0.7f;
+ * int blendRGBA = Blending.blend(bottomRGBA, topRGBA, opacity, Blending.DODGE);
+ * 	
+ * int channel1 = 0xBB;
+ * int channel2 = 0x7F;
+ * int channelBlend = Blending.SCREEN.blendFunction.blend(channel1, channel2);
+ * }</pre>
+ * 
+ * 
+ * @author hageldave
+ * @since 1.3
+ */
 public enum Blending {
 	
 	NORMAL(		(a,b) -> b ),
@@ -26,8 +69,10 @@ public enum Blending {
 		
 	////// ATTRIBUTES / METHODS //////
 	
+	/** This blending's blend function */
 	public final BlendFunction blendFunction;
 	
+	/** Enum Constructor */
 	private Blending(BlendFunction func) {
 		this.blendFunction = func;
 	}
@@ -53,7 +98,16 @@ public enum Blending {
 	
 	////// STATIC //////
 	
+	/** Interface providing the {@link #blend(int, int)} method */
 	public static interface BlendFunction {
+		/**
+		 * Calculates the blended value of two 8bit values 
+		 * (e.g. red, green or blue channel values).
+		 * The resulting value is also 8bit.
+		 * @param bottom value
+		 * @param top value
+		 * @return blended value
+		 */
 		public int blend(int bottom, int top);
 	}
 	
@@ -108,6 +162,23 @@ public enum Blending {
 				px.setValue(blend(px.getValue(), top.getValue(x, y), func));
 			}
 		};
+	}
+	
+	
+	public static void main(String[] args) {
+		Img bottom, top;
+		bottom = (top = new Img(10, 10)).copy();
+		int x = 4; int y = 0;
+		bottom.forEach(Blending.DIFFERENCE.getBlendingWith(top, x, y));
+		
+		int bottomRGBA = 0x8844FF11;
+		int topRGBA =    0xFF118899;
+		float opacity = 0.7f;
+		int blendRGBA = Blending.blend(bottomRGBA, topRGBA, opacity, Blending.DODGE);
+		
+		int channel1 = 0xBB;
+		int channel2 = 0x7F;
+		int channelBlend = Blending.SCREEN.blendFunction.blend(channel1, channel2);
 	}
 	
 }
