@@ -89,14 +89,14 @@ public class BlendModeTest {
 		});
 		imgB.fill(opaqueBlack);
 		// test visibility (transparency)
-		imgB.forEach(Blending.NORMAL.getBlendingWith(imgT, 0.5f));
+		imgB.forEach(Blending.NORMAL.getAlphaBlendingWith(imgT, 0.5f));
 		for(int c: imgB.getData()){
 			assertTrue(c != opaqueBlack && c != opaqueWhite);
 		}
 		imgB.fill(opaqueBlack);
 		// test visibility and positive and negative offset
-		imgB.forEach(Blending.NORMAL.getBlendingWith(imgT, -5, -5, 0.5f));
-		imgB.forEach(Blending.NORMAL.getBlendingWith(imgT,  5,  5, 0.5f));
+		imgB.forEach(Blending.NORMAL.getAlphaBlendingWith(imgT, -5, -5, 0.5f));
+		imgB.forEach(Blending.NORMAL.getAlphaBlendingWith(imgT,  5,  5, 0.5f));
 		imgB.forEach(px->{
 			if(px.getX() < 5 && px.getY() < 5){
 				assertTrue(px.getValue() != opaqueBlack && px.getValue() != opaqueWhite);
