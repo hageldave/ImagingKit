@@ -48,6 +48,9 @@ public class BlendModeTest {
 		assertTrue("not darker than brighter color with 88 opacity", 
 				Pixel.getLuminance(opaque|0xff) > 
 				Pixel.getLuminance(Blending.blend(opaque|0x44, semi|0xff, 1, Blending.NORMAL)));
+		assertEquals("alpha not preserved",
+				semi|0x67,
+				Blending.blend(semi|0x34, opaque|0x67, Blending.NORMAL));
 		
 	}
 	

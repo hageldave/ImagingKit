@@ -573,7 +573,7 @@ public class Pixel {
 	 * @see #b(int)
 	 */
 	public static final int rgb_bounded(final int r, final int g, final int b){
-		return argb_fast(0xff, 
+		return rgb_fast( 
 				r > 255 ? 255: r < 0 ? 0:r, 
 				g > 255 ? 255: g < 0 ? 0:g,
 				b > 255 ? 255: b < 0 ? 0:b);
@@ -599,7 +599,7 @@ public class Pixel {
 	 * @see #b(int)
 	 */
 	public static final int rgb(final int r, final int g, final int b){
-		return argb(0xff, r, g, b);
+		return rgb_fast(r & 0xff, g & 0xff, b & 0xff);
 	}
 
 	/**
@@ -623,7 +623,7 @@ public class Pixel {
 	 * @see #b(int)
 	 */
 	public static final int rgb_fast(final int r, final int g, final int b){
-		return argb_fast(0xff, r, g, b);
+		return 0xff000000|(r<<16)|(g<<8)|b;
 	}
 
 	/**

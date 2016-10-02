@@ -358,7 +358,7 @@ public class Img implements Iterable<Pixel> {
 	 * @param destY area origin in destination Img (y-coordinate)
 	 * @return the destination Img
 	 * @throws IllegalArgumentException if the specified area is not within 
-	 * the bounds of this Img or if the size of the are is not positive.
+	 * the bounds of this Img or if the size of the area is not positive.
 	 */
 	public Img copyArea(int x, int y, int w, int h, Img dest, int destX, int destY){
 		if(w <= 0 || h <= 0){

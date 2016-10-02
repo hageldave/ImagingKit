@@ -192,9 +192,10 @@ public enum Blending {
 	}
 	
 	public static int blend(int bottomRGB, int topRGB, BlendFunction func){
-		return rgb_fast(func.blend(r(bottomRGB), r(topRGB)), 
+		return (0xff000000 & bottomRGB)|(0x00ffffff & rgb_fast( // this line is alpha preservation
+						func.blend(r(bottomRGB), r(topRGB)), 
 						func.blend(g(bottomRGB), g(topRGB)),
-						func.blend(b(bottomRGB), b(topRGB)));
+						func.blend(b(bottomRGB), b(topRGB))));
 	}
 	
 	public static int blend(int bottomRGB, int topRGB, Blending mode){
