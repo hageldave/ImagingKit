@@ -63,7 +63,8 @@ public class ImageFrame extends JFrame {
 		
 		@Override
 		public void paint(Graphics painter) {
-			super.paint(painter);
+			painter.setColor(getBackground());
+			painter.fillRect(0, 0, getWidth(), getHeight());
 			if(img != null){
 				if(clickPoint == null){
 					double imgRatio = img.getWidth(OBS_WIDTHHEIGHT)*1.0/img.getHeight(OBS_WIDTHHEIGHT);
@@ -74,7 +75,7 @@ public class ImageFrame extends JFrame {
 						int y = (this.getHeight()-height)/2;
 						painter.drawImage(img, 0, y, this.getWidth(), y+height, 0, 0, img.getWidth(OBS_WIDTHHEIGHT), img.getHeight(OBS_WIDTHHEIGHT), OBS_ALLBITS);
 					} else {
-						// image heigher than panel
+						// image higher than panel
 						int width = (int) (this.getHeight()*imgRatio);
 						int x = (this.getWidth()-width)/2;
 						painter.drawImage(img, x, 0, x+width, this.getHeight(), 0, 0, img.getWidth(OBS_WIDTHHEIGHT), img.getHeight(OBS_WIDTHHEIGHT), OBS_ALLBITS);
@@ -127,6 +128,10 @@ public class ImageFrame extends JFrame {
 				frame.setVisible(true);
 			}
 		});
+	}
+	
+	public ImagePanel getPanel() {
+		return panel;
 	}
 	
 	public static void display(final Img img){
