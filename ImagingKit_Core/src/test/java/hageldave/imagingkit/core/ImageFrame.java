@@ -49,7 +49,7 @@ public class ImageFrame extends JFrame {
 					}
 				}
 			});
-			this.setBackground(new Color(0x888888));
+			this.setBackground(Color.darkGray);
 		}
 		
 		public void setImg(Image img) {
@@ -99,7 +99,6 @@ public class ImageFrame extends JFrame {
 	public ImageFrame() {
 		this.setDefaultCloseOperation(EXIT_ON_CLOSE);
 		this.panel = new ImagePanel();
-		this.panel.setBackground(Color.magenta);
 		this.getContentPane().add(this.panel);
 		this.setMinimumSize(new Dimension(300,300));
 		this.pack();

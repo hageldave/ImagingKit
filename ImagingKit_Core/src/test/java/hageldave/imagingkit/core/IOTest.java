@@ -5,6 +5,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
 import java.nio.file.Files;
@@ -87,6 +88,12 @@ public class IOTest {
 			for(Pixel p: loaded){
 				assertEquals(0xff000000 | p.getIndex(), p.getValue());
 			}
+			String url = filePath2URL(filepath);
+			loaded = ImageLoader.loadImgFromURL(url);
+			assertEquals(img.getDimension(), loaded.getDimension());
+			for(Pixel p: loaded){
+				assertEquals(0xff000000 | p.getIndex(), p.getValue());
+			}
 		}
 		
 		{// save String format load String
@@ -113,6 +120,11 @@ public class IOTest {
 					new ByteArrayInputStream(out.toByteArray()), BufferedImage.TYPE_INT_ARGB);
 			Img loaded = Img.createRemoteImg(bimg);
 			
+			assertEquals(img.getDimension(), loaded.getDimension());
+			for(Pixel p: loaded){
+				assertEquals(p.toString(), img.getValue(p.getX(), p.getY()), p.getValue());
+			}
+			loaded = ImageLoader.loadImg(new ByteArrayInputStream(out.toByteArray()));
 			assertEquals(img.getDimension(), loaded.getDimension());
 			for(Pixel p: loaded){
 				assertEquals(p.toString(), img.getValue(p.getX(), p.getY()), p.getValue());
@@ -177,11 +189,19 @@ public class IOTest {
 				ByteArrayInputStream instream_nonsense = new ByteArrayInputStream(new byte[]{0,0,0,0,0});
 				ImageLoader.loadImage(instream_nonsense);
 			}, ImageLoaderException.class);
+			JunitUtils.testException(()->{
+				ImageLoader.loadImgFromURL("malf'&{ormedU ]R:L");
+			}, ImageLoaderException.class);
+			JunitUtils.testException(()->{
+				ImageLoader.loadImgFromURL("http://github.com/hageldave/doesnotexist/");
+			}, ImageLoaderException.class);
 		}
 		
 		{// for coverage (methods only delegate to java api)
 			assertNotNull(ImageSaver.getSaveableImageFileFormats());
 			assertNotNull(ImageLoader.getLoadableImageFileFormats());
+			assertNotNull(new ImageLoaderException("msg", new ImageLoaderException()));
+			assertNotNull(new ImageSaverException("msg", new ImageSaverException()));
 		}
 	}
 	
@@ -196,5 +216,13 @@ public class IOTest {
 	@After
 	public void cleanup(){
 		deleteTestDir();
+	}
+	
+	static String filePath2URL(String filepath){
+		try {
+			return new File(filepath).toURI().toURL().toExternalForm();
+		} catch (MalformedURLException e) {
+			throw new RuntimeException(e);
+		}
 	}
 }

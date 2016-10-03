@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 
 import javax.imageio.ImageIO;
 
@@ -88,11 +89,10 @@ public class ImageLoader {
 	 */
 	public static BufferedImage loadImage(File file, int imageType){
 		BufferedImage img = loadImage(file);
-		if(img != null && img.getType() != imageType){
-			return BufferedImageFactory.get(img, imageType);
-		} else {
-			return img;
+		if(img.getType() != imageType){
+			img = BufferedImageFactory.get(img, imageType);
 		}
+		return img;
 	}
 	
 	/**
@@ -108,11 +108,10 @@ public class ImageLoader {
 	 */
 	public static BufferedImage loadImage(String fileName, int imageType){
 		BufferedImage img = loadImage(fileName);
-		if(img != null && img.getType() != imageType){
-			return BufferedImageFactory.get(img, imageType);
-		} else {
-			return img;
+		if(img.getType() != imageType){
+			img = BufferedImageFactory.get(img, imageType);
 		}
+		return img;
 	}
 	
 	/**
@@ -131,10 +130,24 @@ public class ImageLoader {
 	 */
 	public static BufferedImage loadImage(InputStream is, int imageType){
 		BufferedImage img = loadImage(is);
-		if(img != null && img.getType() != imageType){
-			return BufferedImageFactory.get(img, imageType);
-		} else {
-			return img;
+		if(img.getType() != imageType){
+			img = BufferedImageFactory.get(img, imageType);
+		}
+		return img;
+	}
+	
+	//TODO: javadoc
+	public static Img loadImg(InputStream is){
+		return Img.createRemoteImg(loadImage(is, BufferedImage.TYPE_INT_ARGB));
+	}
+	
+	//TODO: javadoc
+	public static Img loadImgFromURL(String urlspec) {
+		try{
+			URL url = new URL(urlspec);
+			return loadImg(url.openStream());
+		} catch (IOException e){
+			throw new ImageLoaderException(e);
 		}
 	}
 	
