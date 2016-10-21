@@ -29,25 +29,25 @@ public class BlendModeTest {
 				Blending.blend(opaque|0xff, opaque|0xaa, Blending.NORMAL));
 		assertEquals("not same result with visibility 1", 
 				Blending.blend(opaque|0xff, opaque|0xaa, Blending.NORMAL), 
-				Blending.blend(opaque|0xff, opaque|0xaa, 1,Blending.NORMAL));
+				Blending.alphaBlend(opaque|0xff, opaque|0xaa, 1,Blending.NORMAL));
 		assertEquals("not bottom color with visibility 0",
 				opaque|0xff, 
-				Blending.blend(opaque|0xff, opaque|0xaa, 0,Blending.NORMAL));
+				Blending.alphaBlend(opaque|0xff, opaque|0xaa, 0,Blending.NORMAL));
 		assertEquals("not bottom color with transparent top color at visibility 1",
 				opaque|0xff,
-				Blending.blend(opaque|0xff, 0|0xaa, 1, Blending.NORMAL));
+				Blending.alphaBlend(opaque|0xff, 0|0xaa, 1, Blending.NORMAL));
 		assertTrue("not brighter than darker color at visibility 0.5", 
 				Pixel.getLuminance(opaque|0x44) < 
-				Pixel.getLuminance(Blending.blend(opaque|0x44, opaque|0xff, 0.5f, Blending.NORMAL)));
+				Pixel.getLuminance(Blending.alphaBlend(opaque|0x44, opaque|0xff, 0.5f, Blending.NORMAL)));
 		assertTrue("not darker than brighter color at visibility 0.5", 
 				Pixel.getLuminance(opaque|0xff) > 
-				Pixel.getLuminance(Blending.blend(opaque|0x44, opaque|0xff, 0.5f, Blending.NORMAL)));
+				Pixel.getLuminance(Blending.alphaBlend(opaque|0x44, opaque|0xff, 0.5f, Blending.NORMAL)));
 		assertTrue("not brighter than darker color with 88 opacity", 
 				Pixel.getLuminance(opaque|0x44) < 
-				Pixel.getLuminance(Blending.blend(opaque|0x44, semi|0xff, 1, Blending.NORMAL)));
+				Pixel.getLuminance(Blending.alphaBlend(opaque|0x44, semi|0xff, 1, Blending.NORMAL)));
 		assertTrue("not darker than brighter color with 88 opacity", 
 				Pixel.getLuminance(opaque|0xff) > 
-				Pixel.getLuminance(Blending.blend(opaque|0x44, semi|0xff, 1, Blending.NORMAL)));
+				Pixel.getLuminance(Blending.alphaBlend(opaque|0x44, semi|0xff, 1, Blending.NORMAL)));
 		assertEquals("alpha not preserved",
 				semi|0x67,
 				Blending.blend(semi|0x34, opaque|0x67, Blending.NORMAL));
