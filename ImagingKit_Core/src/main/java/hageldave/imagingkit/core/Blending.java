@@ -84,14 +84,14 @@ public enum Blending {
 	 * f(a,b) = 2*a*b            for a < 1/2
 	 * f(a,b) = 1-2*(1-a)*(1-b)  else
 	 * a,b in [0,1]
-	 * </pre>																*/
+	 * </pre>															*/
 	OVERLAY(	(a,b) -> a < 128 ? (a*b)>>7 : 0xff-(((0xff-a)*(0xff-b))>>7) ),
 	
 	/** Blend function:<pre>
 	 * f(a,b) = 2*a*b            for b < 1/2
 	 * f(a,b) = 1-2*(1-a)*(1-b)  else
 	 * a,b in [0,1]
-	 * </pre>																*/
+	 * </pre>															*/
 	HARDLIGHT(	(a,b) -> b < 128 ? (a*b)>>7 : 0xff-(((0xff-a)*(0xff-b))>>7) ),
 	
 	/** Blend function: (1-a)*multiply(a,b)+a*screen(a,b)<br>a,b in [0,1]*/
@@ -140,10 +140,11 @@ public enum Blending {
 	 * @see #getBlendingWith(Img)
 	 */
 	public Consumer<Pixel> getAlphaBlendingWith(Img topImg, int xTopOffset, int yTopOffset, float opacity){
-		return blending(topImg, xTopOffset, yTopOffset, opacity, blendFunction);
+		return alphaBlendingWith(topImg, xTopOffset, yTopOffset, opacity, blendFunction);
 	}
 
-	/** Returns the {@code Consumer<Pixel>} for blending with the specified top
+	/** 
+	 * Returns the {@code Consumer<Pixel>} for blending with the specified top
 	 * Img. The top image will be set off to the specified point on the target.
 	 * Both images are treated as fully opaque regardless of their alpha values.
 	 * <br><b>
@@ -167,7 +168,7 @@ public enum Blending {
 	 * @see #getAlphaBlendingWith(Img, float)
 	 */
 	public Consumer<Pixel> getBlendingWith(Img topImg, int xTopOffset, int yTopOffset){
-		return blending(topImg, xTopOffset, yTopOffset, blendFunction);
+		return blendingWith(topImg, xTopOffset, yTopOffset, blendFunction);
 	}
 
 	/**
@@ -185,6 +186,7 @@ public enum Blending {
 	 * "shine through" the blend influencing the final color by a factor of 0.75.
 	 * See also the RGB blending version without opacity consideration 
 	 * {@link #getBlendingWith(Img, int, int)}.
+	 * 
 	 * @param topImg top image of the blending (consumer is applied to bottom)
 	 * @param opacity of the blended color over the bottom color
 	 * @return Consumer to apply to bottom Img that will perform the specified
@@ -230,6 +232,7 @@ public enum Blending {
 		 * Calculates the blended value of two 8bit values 
 		 * (e.g. red, green or blue channel values).
 		 * The resulting value is also 8bit.
+		 * 
 		 * @param bottom value
 		 * @param top value
 		 * @return blended value
@@ -273,6 +276,8 @@ public enum Blending {
 	 * @return blended RGB or ARGB value
 	 * 
 	 * @see #blend(int, int, BlendFunction)
+	 * @see #alphaBlend(int, int, float, Blending)
+	 * @see #alphaBlend(int, int, float, BlendFunction)
 	 */
 	public static int blend(int bottomRGB, int topRGB, Blending mode){
 		return blend(bottomRGB, topRGB, mode.blendFunction);
@@ -287,11 +292,16 @@ public enum Blending {
 	 * pair of bottom and top color (RGB not alpha).
 	 * The resulting alpha value is the sum of the bottom alpha and the blends alpha
 	 * (top alpha times specified blend opacity).
+	 * 
 	 * @param bottomARGB bottom color (least significant 8 bits are b channel)
 	 * @param topARGB top color (least significant 8 bits are b channel)
 	 * @param opacity factor for the resulting blend over the bottom color
 	 * @param func blend function
 	 * @return blended ARGB value
+	 * 
+	 * @see #alphaBlend(int, int, float, Blending)
+	 * @see #blend(int, int, BlendFunction)
+	 * @see #blend(int, int, Blending)
 	 */
 	public static int alphaBlend(int bottomARGB, int topARGB, float opacity, BlendFunction func){
 		int temp = 0;
@@ -308,30 +318,106 @@ public enum Blending {
 		return argb_fast((int)a, (int)r, (int)g, (int)b);
 	}
 	
-	public static int alphaBlend(int bottomARGB, int topARGB, float opacity, Blending mode){
-		return alphaBlend(bottomARGB, topARGB, opacity, mode.blendFunction);
+	/**
+	 * Blends two RGBA values according to the specified {@link Blending} with
+	 * the specified opacity factor. The opacity multiplied with the top pixel's
+	 * opacity (alpha value) defines how strongly the blended color will occlude
+	 * the bottom color (1 for complete occlusion, 0 for full transparency).
+	 * The specified blend function will be applied to each color channel
+	 * pair of bottom and top color (RGB not alpha).
+	 * The resulting alpha value is the sum of the bottom alpha and the blends alpha
+	 * (top alpha times specified blend opacity).
+	 * 
+	 * @param bottomARGB bottom color (least significant 8 bits are b channel)
+	 * @param topARGB top color (least significant 8 bits are b channel)
+	 * @param opacity factor for the resulting blend over the bottom color
+	 * @param blending the blend function 
+	 * @return blended ARGB value
+	 * 
+	 * @see #alphaBlend(int, int, float, BlendFunction)
+	 * @see #blend(int, int, Blending)
+	 * @see #blend(int, int, BlendFunction)
+	 */
+	public static int alphaBlend(int bottomARGB, int topARGB, float opacity, Blending blending){
+		return alphaBlend(bottomARGB, topARGB, opacity, blending.blendFunction);
 	}
 	
-	public static Consumer<Pixel> blending(Img top, int xTop, int yTop, float opacity, BlendFunction func){
+	/**
+	 * Returns the {@code Consumer<Pixel>} for blending with the specified top 
+	 * Img according to the specified {@link BlendFunction}. 
+	 * The top image will be set off to the specified point on the target.
+	 * The specified opacity defines how strongly the blended color will occlude
+	 * the bottom color (default value is 1 for complete occlusion).
+	 * <br><b>
+	 * This consumer will apply an ARGB blending, respecting the pixels alpha
+	 * (opacity) values. 
+	 * </b> 
+	 * This means that not only the specified blend opacity is considered but 
+	 * also the individual opacity of the pixel. E.g. if the blend opacity
+	 * is 0.5 and the top pixel's opacity is also 0.5 (a=128) the effective
+	 * occlusion strength of the blend is 0.5*0.5=0.25 and the bottom color will 
+	 * "shine through" the blend influencing the final color by a factor of 0.75.
+	 * See also the RGB blending version without opacity consideration 
+	 * {@link #blendingWith(Img, int, int, BlendFunction)}.
+	 * 
+	 * @param topImg top image of the blending (consumer is applied to bottom)
+	 * @param xTopOffset horizontal offset of the top image on the bottom
+	 * @param yTopOffset vertical offset of the top image on the bottom
+	 * @param opacity of the blended color over the bottom color
+	 * @param func function to be used for blending
+	 * @return Consumer to apply to bottom Img that will perform the specified
+	 * blending. {@code bottomImg.forEach(blendingConsumer);}
+	 * 
+	 * @see #blendingWith(Img, int, int, BlendFunction)
+	 * @see #getAlphaBlendingWith(Img, int, int, float)
+	 * @see #getAlphaBlendingWith(Img, float)
+	 */
+	public static Consumer<Pixel> alphaBlendingWith(Img topImg, int xTopOffset, int yTopOffset, float opacity, BlendFunction func){
 		return (px)->
 		{
-			int x = px.getX()-xTop;
-			int y = px.getY()-yTop;
+			int x = px.getX()-xTopOffset;
+			int y = px.getY()-yTopOffset;
 			
-			if(x >= 0 && y >= 0 && x < top.getWidth() && y < top.getHeight()){
-				px.setValue(alphaBlend(px.getValue(), top.getValue(x, y), opacity, func));
+			if(x >= 0 && y >= 0 && x < topImg.getWidth() && y < topImg.getHeight()){
+				px.setValue(alphaBlend(px.getValue(), topImg.getValue(x, y), opacity, func));
 			}
 		};
 	}
 	
-	public static Consumer<Pixel> blending(Img top, int xTop, int yTop, BlendFunction func){
+	/**
+	 * Returns the {@code Consumer<Pixel>} for blending with the specified top
+	 * Img according to the specified blend function. 
+	 * The top image will be set off to the specified point on the target.
+	 * Both images are treated as fully opaque regardless of their alpha values.
+	 * <br><b>
+	 * This consumer will apply an RGB blending, ignoring the pixels alpha
+	 * values, the bottom image's alpha values however will be preserved.
+	 * </b>
+	 * This means that only the RGB values of the pixels are taken into account,
+	 * the result is therefore fully dependent on this blend function. 
+	 * See also the ARGB alpha blending version which respects pixels alpha values
+	 * as well as an additional global opacity parameter 
+	 * {@link #alphaBlendingWith(Img, int, int, float, BlendFunction)}
+	 * 
+	 * @param topImg top image of the blending (consumer is applied to bottom)
+	 * @param xTopOffset horizontal offset of the top image on the bottom
+	 * @param yTopOffset vertical offset of the top image on the bottom
+	 * @param func function to be used for blending
+	 * @return Consumer to apply to bottom Img that will perform the specified
+	 * blending. {@code bottomImg.forEach(blendingConsumer);}
+	 * 
+	 * @see #alphaBlendingWith(Img, int, int, float, BlendFunction)
+	 * @see #getBlendingWith(Img, int, int)
+	 * @see #getBlendingWith(Img)
+	 */
+	public static Consumer<Pixel> blendingWith(Img topImg, int xTopOffset, int yTopOffset, BlendFunction func){
 		return (px)->
 		{
-			int x = px.getX()-xTop;
-			int y = px.getY()-yTop;
+			int x = px.getX()-xTopOffset;
+			int y = px.getY()-yTopOffset;
 			
-			if(x >= 0 && y >= 0 && x < top.getWidth() && y < top.getHeight()){
-				px.setValue(blend(px.getValue(), top.getValue(x, y), func));
+			if(x >= 0 && y >= 0 && x < topImg.getWidth() && y < topImg.getHeight()){
+				px.setValue(blend(px.getValue(), topImg.getValue(x, y), func));
 			}
 		};
 	}
