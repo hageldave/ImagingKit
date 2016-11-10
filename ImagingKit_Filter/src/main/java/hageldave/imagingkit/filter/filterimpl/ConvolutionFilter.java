@@ -14,7 +14,7 @@ public class ConvolutionFilter extends Filter {
 	int kernelHeight;
 	boolean convolveAlpha = true;
 	int boundaryMode = Img.boundary_mode_mirror;
-	
+
 
 	@Override
 	protected void readSettingsBeforeApply(ReadOnlyFilterSettings settings) {
@@ -26,22 +26,22 @@ public class ConvolutionFilter extends Filter {
 	public void doApply(Img img) {
 		Img cpy = img.copy();
 		if(convolveAlpha){
-		img.forEachParallel((px)->
-		{
-			int x = px.getX(); int y = px.getY();
-			float a, r, g, b; 
-			a = r = g = b = 0;
-			for(int ky = getKernelY0(); ky < getKernelY0()+kernelHeight; ky++){
-				for(int kx = getKernelX0(); kx < getKernelX0()+kernelWidth; kx++){
-					int value = cpy.getValue(x+kx, y+ky, boundaryMode);
-					a += Pixel.a(value)*getKernelValue(kx, ky);
-					r += Pixel.r(value)*getKernelValue(kx, ky);
-					g += Pixel.g(value)*getKernelValue(kx, ky);
-					b += Pixel.b(value)*getKernelValue(kx, ky);
+			img.forEachParallel((px)->
+			{
+				int x = px.getX(); int y = px.getY();
+				float a, r, g, b; 
+				a = r = g = b = 0;
+				for(int ky = getKernelY0(); ky < getKernelY0()+kernelHeight; ky++){
+					for(int kx = getKernelX0(); kx < getKernelX0()+kernelWidth; kx++){
+						int value = cpy.getValue(x+kx, y+ky, boundaryMode);
+						a += Pixel.a(value)*getKernelValue(kx, ky);
+						r += Pixel.r(value)*getKernelValue(kx, ky);
+						g += Pixel.g(value)*getKernelValue(kx, ky);
+						b += Pixel.b(value)*getKernelValue(kx, ky);
+					}
 				}
-			}
-			px.setValue(Pixel.argb_bounded((int)a, (int)r, (int)g, (int)b));
-		});
+				px.setValue(Pixel.argb_bounded((int)a, (int)r, (int)g, (int)b));
+			});
 		} else {
 			img.forEachParallel((px)->
 			{
@@ -60,25 +60,25 @@ public class ConvolutionFilter extends Filter {
 			});
 		}
 	}
-	
+
 	int getKernelX0(){
 		return -kernelWidth/2;
 	}
-	
+
 	int getKernelY0(){
 		return -kernelHeight/2;
 	}
-	
+
 	float getKernelValue(int kx, int ky){
 		return convolutionKernel[(ky-getKernelY0())*kernelWidth+(kx-getKernelX0())];
 	}
-	
+
 	public void setConvolutionKernel(int kWidth, int kHeight, float[] kernel){
 		this.convolutionKernel = kernel;
 		this.kernelWidth = kWidth;
 		this.kernelHeight = kHeight;
 	}
-	
+
 	public void normalizeConvolutionKernel(){
 		float sum = 0;
 		for(int y = 0; y < kernelHeight; y++)
@@ -91,6 +91,21 @@ public class ConvolutionFilter extends Filter {
 				}
 		}
 	}
-	
-	
+
+	public String kernelToString(){
+		StringBuilder sb = new StringBuilder();
+		for(int y = 0; y < kernelHeight; y++){
+			sb.append("[");
+			for(int x = 0; x < kernelWidth; x++){
+				float k = convolutionKernel[y*kernelWidth+x];
+				sb.append(String.format(" %.3f ", k));
+			}
+			sb.append("]");
+			if(y < kernelHeight-1)
+				sb.append("\n");
+		}
+		
+		return sb.toString();
+	}
+
 }
