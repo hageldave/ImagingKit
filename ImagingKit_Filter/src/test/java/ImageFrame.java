@@ -1,10 +1,13 @@
 
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.Point;
+import java.awt.Stroke;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
@@ -12,7 +15,9 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
+import hageldave.imagingkit.core.ColorSpaceTransformation;
 import hageldave.imagingkit.core.Img;
+import hageldave.imagingkit.core.Pixel;
 
 import static hageldave.imagingkit.core.TheImageObserver.*;
 
@@ -67,6 +72,10 @@ public class ImageFrame extends JFrame {
 		public void paint(Graphics painter) {
 			painter.setColor(getBackground());
 			painter.fillRect(0, 0, getWidth(), getHeight());
+			
+			painter.setColor(getCheckColor(getBackground()));
+			drawCheckerBoard(painter);
+			
 			if(img != null){
 				if(clickPoint == null){
 					double imgRatio = img.getWidth(OBS_WIDTHHEIGHT)*1.0/img.getHeight(OBS_WIDTHHEIGHT);
@@ -95,6 +104,34 @@ public class ImageFrame extends JFrame {
 			}
 		}
 		
+		private void drawCheckerBoard(Graphics painter) {
+			int checkSize = 10;
+			int halfCheckSize = checkSize/2;
+			Graphics2D g2d = (Graphics2D) painter;
+			float[] dash = {0,checkSize*2};
+			Stroke checker = new BasicStroke(checkSize, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_BEVEL, 1, dash, 0);
+			Stroke backup = g2d.getStroke();
+			g2d.setStroke(checker);
+			int width = this.getWidth()+checkSize;
+			int height = this.getHeight()+checkSize;
+			for(int i = halfCheckSize; i < height; i+=checkSize*2){
+				g2d.drawLine(halfCheckSize, i, width, i);
+				g2d.drawLine(checkSize+halfCheckSize, i+checkSize, width, i+checkSize);
+				
+			}
+			g2d.setStroke(backup);
+		}
+		
+		private static Color getCheckColor(Color c){
+			int rgb = c.getRGB();
+			int hsv = ColorSpaceTransformation.RGB_2_HSV.transform(rgb);
+			int h = Pixel.r(hsv);
+			int s = Pixel.g(hsv);
+			int v = Pixel.b(hsv);
+			hsv = Pixel.rgb_fast(0, 0, v < 128 ? 0:255);
+			return new Color(ColorSpaceTransformation.HSV_2_RGB.transform(hsv));
+		}
+		
 	}
 	
 	ImagePanel panel;
@@ -120,24 +157,25 @@ public class ImageFrame extends JFrame {
 		this.panel.setBackground(color);
 	}
 	
-	public static void display(final Image img){
+	public static ImageFrame display(final Image img){
+		ImageFrame frame = new ImageFrame();
 		SwingUtilities.invokeLater( new Runnable() {
 			
 			@Override
 			public void run() {
-				ImageFrame frame = new ImageFrame();
 				frame.setImg(img);
 				frame.setVisible(true);
 			}
 		});
+		return frame;
 	}
 	
 	public ImagePanel getPanel() {
 		return panel;
 	}
 	
-	public static void display(final Img img){
-		display(img.getRemoteBufferedImage());
+	public static ImageFrame display(final Img img){
+		return display(img.getRemoteBufferedImage());
 	}
 
 }
