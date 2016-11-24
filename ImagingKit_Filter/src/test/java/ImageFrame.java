@@ -29,6 +29,7 @@ public class ImageFrame extends JFrame {
 		
 		Image img = null;
 		Point clickPoint = null;
+		boolean useCheckerboardBackground = false;
 		
 		public ImagePanel() {
 			this.addMouseListener(new MouseAdapter() {
@@ -59,6 +60,14 @@ public class ImageFrame extends JFrame {
 			this.setBackground(Color.darkGray);
 		}
 		
+		public void enableCheckerboardBackground(boolean useCheckerboardBackground) {
+			this.useCheckerboardBackground = useCheckerboardBackground;
+		}
+		
+		public boolean isCheckerboardBackgroundEnabled() {
+			return useCheckerboardBackground;
+		}
+		
 		public void setImg(Image img) {
 			this.img = img;
 			this.repaint();
@@ -70,11 +79,13 @@ public class ImageFrame extends JFrame {
 		
 		@Override
 		public void paint(Graphics painter) {
-			painter.setColor(getBackground());
-			painter.fillRect(0, 0, getWidth(), getHeight());
+			if(useCheckerboardBackground){
+				drawCheckerBoard(painter);
+			} else {
+				painter.setColor(getBackground());
+				painter.fillRect(0, 0, getWidth(), getHeight());
+			}
 			
-			painter.setColor(getCheckColor(getBackground()));
-			drawCheckerBoard(painter);
 			
 			if(img != null){
 				if(clickPoint == null){
@@ -99,12 +110,42 @@ public class ImageFrame extends JFrame {
 					int imgX = (int) (relX*imgW);
 					int imgY = (int) (relY*imgH);
 					
-					painter.drawImage(img, 0, 0, this.getWidth(), this.getHeight(), imgX-this.getWidth()/2, imgY-this.getHeight()/2, imgX+this.getWidth()-(this.getWidth()/2), imgY+this.getHeight()-(this.getHeight()/2), OBS_ALLBITS);
+					int dx1,dy1,dx2,dy2, sx1,sy1,sx2,sy2;
+					dx1 = dy1 = 0;
+					dx2 = this.getWidth();
+					dy2 = this.getHeight();
+					
+					sx1 = imgX-this.getWidth()/2;
+					sy1 = imgY-this.getHeight()/2;
+					sx2 = imgX+this.getWidth()-(this.getWidth()/2);
+					sy2 = imgY+this.getHeight()-(this.getHeight()/2);
+					
+					if(sx1 < 0){
+						dx1-=sx1; sx1=0;
+					}
+					if(sy1 < 0){
+						dy1-=sy1; sy1=0;
+					}
+					if(sx2 > imgW){
+						dx2-=(sx2-imgW); sx2=imgW;
+					}
+					if(sy2 > imgH){
+						dy2-=(sy2-imgH); sy2=imgH;
+					}
+					
+					painter.drawImage(img, 
+							dx1, dy1, dx2, dy2, 
+							sx1, sy1, sx2, sy2, 
+							OBS_ALLBITS);
 				}
 			}
 		}
 		
 		private void drawCheckerBoard(Graphics painter) {
+			painter.setColor(Color.darkGray);
+			painter.fillRect(0, 0, getWidth(), getHeight());
+			painter.setColor(Color.lightGray);
+			
 			int checkSize = 10;
 			int halfCheckSize = checkSize/2;
 			Graphics2D g2d = (Graphics2D) painter;
@@ -120,16 +161,6 @@ public class ImageFrame extends JFrame {
 				
 			}
 			g2d.setStroke(backup);
-		}
-		
-		private static Color getCheckColor(Color c){
-			int rgb = c.getRGB();
-			int hsv = ColorSpaceTransformation.RGB_2_HSV.transform(rgb);
-			int h = Pixel.r(hsv);
-			int s = Pixel.g(hsv);
-			int v = Pixel.b(hsv);
-			hsv = Pixel.rgb_fast(0, 0, v < 128 ? 0:255);
-			return new Color(ColorSpaceTransformation.HSV_2_RGB.transform(hsv));
 		}
 		
 	}
