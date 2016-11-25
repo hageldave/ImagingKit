@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -766,6 +767,22 @@ public class ImgTest {
 			
 		}
 		
+	}
+	
+	@Test
+	public void graphics_test(){
+		Img img = new Img(400, 400);
+		img.draw(g->{
+			g.setColor(new Color(0xffff0000));
+			g.drawLine(0, 0, 400, 400);
+		});
+		img.forEach(px->{
+			if(px.getX() == px.getY()){
+				assertEquals(0xffff0000, px.getValue());
+			} else {
+				assertEquals(0, px.getValue());
+			}
+		});
 	}
 	
 	

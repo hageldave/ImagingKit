@@ -1,6 +1,7 @@
 package hageldave.imagingkit.core;
 
 import java.awt.Dimension;
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBuffer;
 import java.awt.image.DataBufferInt;
@@ -821,6 +822,16 @@ public class Img implements Iterable<Pixel> {
 	 */
 	public Stream<Pixel> parallelStream(final int xStart, final int yStart, final int width, final int height){
 		return StreamSupport.stream(spliterator(xStart, yStart, width, height), true);
+	}
+	
+	public Graphics2D createGraphics(){
+		return getRemoteBufferedImage().createGraphics();
+	}
+	
+	public void draw(Consumer<Graphics2D> drawInstructions){
+		Graphics2D g2d = createGraphics();
+		drawInstructions.accept(g2d);
+		g2d.dispose();
 	}
 	
 	

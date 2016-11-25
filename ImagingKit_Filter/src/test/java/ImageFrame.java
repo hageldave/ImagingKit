@@ -15,9 +15,7 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
-import hageldave.imagingkit.core.ColorSpaceTransformation;
 import hageldave.imagingkit.core.Img;
-import hageldave.imagingkit.core.Pixel;
 
 import static hageldave.imagingkit.core.TheImageObserver.*;
 
