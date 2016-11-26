@@ -772,7 +772,7 @@ public class ImgTest {
 	@Test
 	public void graphics_test(){
 		Img img = new Img(400, 400);
-		img.draw(g->{
+		img.paint(g->{
 			g.setColor(new Color(0xffff0000));
 			g.drawLine(0, 0, 400, 400);
 		});

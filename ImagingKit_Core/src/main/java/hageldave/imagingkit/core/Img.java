@@ -781,8 +781,34 @@ public class Img implements Iterable<Pixel> {
 		return Img.stream(spliterator(), true);
 	}
 	
-	public static Stream<Pixel> stream(Spliterator<Pixel> split, boolean parallel){
-		return StreamSupport.stream(split, parallel);
+	/**
+	 * Returns a {@code Stream<Pixel>} for the specified {@code Spliterator<Pixel>}.
+	 * This is just a wrapper method arround {@link StreamSupport#stream(Spliterator, boolean)}
+	 * mainly used as syntactic sugar for the use with the non default Spliterators 
+	 * ({@link #rowSpliterator()} and {@link #colSpliterator()}. When the default spliterator
+	 * of the Img is sufficient the non-static {@link #stream()} can be used.
+	 * <p>
+	 * For example (horizontal edge detection in parallel using forward difference):
+	 * <pre>
+	 * {@code
+	 * Img myImg = ...;
+	 * Img.stream(myImg.rowSpliterator(), true).forEach( px -> {
+	 *     int next = px.getImg().getValue(px.getX()+1, px.getY(), Img.boundary_mode_repeat_edge);
+	 *     int forwardDiff = Math.abs( Pixel.getLuminance(next) - px.getLuminance() );
+	 *     px.setRGB(forwardDiff, forwardDiff, forwardDiff);
+	 * });
+	 * }
+	 * </pre>
+	 * @param spliterator Spliterator of Img to be streamed
+	 * @param parallel whether parallel or sequential stream is returned
+	 * @return a new sequential or parallel pixel stream.
+	 * 
+	 * @see #stream()
+	 * @see #parallelStream()
+	 * @since 1.3
+	 */
+	public static Stream<Pixel> stream(Spliterator<Pixel> spliterator, boolean parallel){
+		return StreamSupport.stream(spliterator, parallel);
 	}
 	
 	/**
@@ -824,13 +850,38 @@ public class Img implements Iterable<Pixel> {
 		return StreamSupport.stream(spliterator(xStart, yStart, width, height), true);
 	}
 	
+	/**
+	 * Creates a {@link Graphics2D}, which can be used to draw into this Img.
+	 * @return Graphics2D object to draw into this image.
+	 * @see #paint(Consumer)
+	 * @since 1.3
+	 */
 	public Graphics2D createGraphics(){
 		return getRemoteBufferedImage().createGraphics();
 	}
 	
-	public void draw(Consumer<Graphics2D> drawInstructions){
+	/**
+	 * Uses the specified paintInstructions to draw into this Img.
+	 * This method will pass a {@link Graphics2D} object of this Img to the 
+	 * specified {@link Consumer}. The {@link Consumer#accept(Object)} method 
+	 * can then draw into this Image. When the accept method return, the
+	 * Graphics2D object is disposed.
+	 * <p>
+	 * For example (using lambda expression for Consumers accept method):
+	 * <pre>
+	 * {@code
+	 * Img img = new Img(100, 100);
+	 * img.paint( g2d -> { g2d.drawLine(0, 0, 100, 100); } );
+	 * }
+	 * </pre>
+	 * @param paintInstructions to be executed on a this Graphics2D object
+	 * of this Img.
+	 * @see #createGraphics()
+	 * @since 1.3
+	 */
+	public void paint(Consumer<Graphics2D> paintInstructions){
 		Graphics2D g2d = createGraphics();
-		drawInstructions.accept(g2d);
+		paintInstructions.accept(g2d);
 		g2d.dispose();
 	}
 	
