@@ -614,10 +614,36 @@ public class Img implements Iterable<Pixel> {
 		return new ImgSpliterator(0, numValues()-1, spliteratorMinimumSplitSize);
 	}
 	
+	/**
+	 * Creates a {@link Spliterator} that guarantees that each split will
+	 * at least cover an entire row of the Img. It also guarantes that each
+	 * row will be iterated starting at the least index of that row
+	 * (e.g.starts at index 0 then continues with index 1, then 2, until
+	 * the end of the row, then continuing with the next row).
+	 * This Spliterator iterates in row-major order.
+	 * @return Spliterator that splits at beginning of rows.
+	 * @see #colSpliterator()
+	 * @see #spliterator()
+	 * @see #stream(Spliterator, boolean)
+	 * @since 1.3
+	 */
 	public Spliterator<Pixel> rowSpliterator() {
 		return new RowSpliterator(0, getWidth(), 0, getHeight()-1, this);
 	}
 	
+	/**
+	 * Creates a {@link Spliterator} that guarantees that each split will
+	 * at least cover an entire column of the Img. It also guarantes that each
+	 * column will be iterated starting at the least index of that column
+	 * (e.g.starts at index 0 then continues with index 1, then 2, until
+	 * the end of the column, then continuing with the next column).
+	 * This Spliterator iterates in column-major order.
+	 * @return Spliterator that splits at beginning of columns.
+	 * @see #rowSpliterator()
+	 * @see #spliterator()
+	 * @see #stream(Spliterator, boolean)
+	 * @since 1.3
+	 */
 	public Spliterator<Pixel> colSpliterator() {
 		return new ColSpliterator(0, getWidth()-1, 0, getHeight(), this);
 	}
