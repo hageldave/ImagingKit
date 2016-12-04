@@ -136,16 +136,37 @@ public class ImageLoader {
 		return img;
 	}
 	
-	//TODO: javadoc
+	/**
+	 * Tries to load an Img from the specified {@link InputStream}.
+	 * The image color model will be ARGB.
+	 * The InputStream is not closed after the image was read,
+	 * this is the responsibility of the caller.
+	 * @param is {@link InputStream} of the image file
+	 * @return loaded Img
+	 * @throws ImageLoaderException if no image could be loaded from the 
+	 * InputStream.
+	 * @since 1.3
+	 */
 	public static Img loadImg(InputStream is){
 		return Img.createRemoteImg(loadImage(is, BufferedImage.TYPE_INT_ARGB));
 	}
 	
-	//TODO: javadoc
+	/**
+	 * Tries to load an Img from the specified url 
+	 * (e.g. "file:///home/user1/myimage.png" or "http://mywebsite.org/myimage.png").
+	 * The image color model will be ARGB.
+	 * @param urlspec the String to parse as a {@link URL}.
+	 * @return loaded Img.
+	 * @throws ImageLoaderException if no image could be loaded from the 
+	 * specified url.
+	 * @since 1.3
+	 */
 	public static Img loadImgFromURL(String urlspec) {
 		try{
 			URL url = new URL(urlspec);
-			return loadImg(url.openStream());
+			try(InputStream is = url.openStream()){
+				return loadImg(is);
+			}
 		} catch (IOException e){
 			throw new ImageLoaderException(e);
 		}
