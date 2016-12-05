@@ -138,7 +138,7 @@ public class Img implements Iterable<Pixel> {
 	 * @param width of the Img
 	 * @param height of the Img
 	 * @param data values (pixels) that will be used as the content of this Img
-	 * @throw IllegalArgumentException when the number of pixels of this Img 
+	 * @throws IllegalArgumentException when the number of pixels of this Img 
 	 * resulting from width*height does not match the number of provided data values.
 	 */
 	public Img(int width, int height, int[] data){
@@ -150,7 +150,7 @@ public class Img implements Iterable<Pixel> {
 	 * Provided data array will be used as this images data.
 	 * @param dim extend of the image (width and height)
 	 * @param data values (pixels) that will be used as the content of this Img
-	 * @throw IllegalArgumentException when the number of pixels of this Img 
+	 * @throws IllegalArgumentException when the number of pixels of this Img 
 	 * resulting from width*height does not match the number of provided data values.
 	 */
 	public Img(Dimension dim, int[] data){
@@ -440,7 +440,7 @@ public class Img implements Iterable<Pixel> {
 	
 	/**
 	 * Fills the whole image with the specified value.
-	 * @param value
+	 * @param value for filling image
 	 */
 	public void fill(final int value){
 		Arrays.fill(getData(), value);
