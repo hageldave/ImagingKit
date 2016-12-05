@@ -27,7 +27,7 @@ public class ImageSaver {
 	/**
 	 * returns if specified image format supports rgb values only. This means
 	 * argb values probably need conversion beforehand.
-	 * @param imgFormat
+	 * @param imgFormat the file format e.g. jpg or png
 	 * @return true if format only supports rgb values
 	 */
 	public static boolean isFormatRGBOnly(String imgFormat){

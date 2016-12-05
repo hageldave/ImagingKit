@@ -25,7 +25,7 @@ public class Pixel {
 	 * of specified Img at specified index.
 	 * <p>
 	 * No bounds checks are performed for index.
-	 * @param img
+	 * @param img the Img this pixel corresponds to
 	 * @param index of the value in the images data array
 	 * @see #Pixel(Img, int, int)
 	 * @see Img#getPixel()
@@ -41,9 +41,9 @@ public class Pixel {
 	 * of specified Img at specified position.
 	 * <p>
 	 * No bounds checks are performed for x and y
-	 * @param img
-	 * @param x
-	 * @param y
+	 * @param img the Img this pixel corresponds to
+	 * @param x coordinate
+	 * @param y coordinate
 	 * @see #Pixel(Img, int)
 	 * @see Img#getPixel()
 	 * @see Img#getPixel(int, int)
@@ -62,7 +62,7 @@ public class Pixel {
 	/**
 	 * Sets the index of the Img value this Pixel references.
 	 * No bounds checks are performed.
-	 * @param index
+	 * @param index corresponding to the position of the image's data array.
 	 * @see #setPosition(int, int)
 	 * @see #getIndex()
 	 */
@@ -73,8 +73,8 @@ public class Pixel {
 	/**
 	 * Sets the position of the Img value this Pixel references.
 	 * No bounds checks are performed.
-	 * @param x
-	 * @param y
+	 * @param x coordinate
+	 * @param y coordinate
 	 * @see #setIndex(int)
 	 * @see #getX()
 	 * @see #getY()
@@ -141,7 +141,7 @@ public class Pixel {
 	 * If the position of this pixel is not in bounds of the Img the value for
 	 * a different position may be set or an ArrayIndexOutOfBoundsException 
 	 * may be thrown.
-	 * @param pixelValue
+	 * @param pixelValue to be set e.g. 0xff0000ff for blue.
 	 * @throws ArrayIndexOutOfBoundsException if this Pixel's index is not in 
 	 * range of the Img's data array.
 	 * @see #setARGB(int, int, int, int)
@@ -496,9 +496,9 @@ public class Pixel {
 	
 	/**
 	 * Calculates the grey value of this pixel using specified weights.
-	 * @param redWeight
-	 * @param greenWeight
-	 * @param blueWeight
+	 * @param redWeight weight for red channel
+	 * @param greenWeight weight for green channel
+	 * @param blueWeight weight for blue channel
 	 * @return grey value of pixel for specified weights
 	 * @throws ArithmeticException divide by zero if the weights sum up to 0.
 	 * @throws ArrayIndexOutOfBoundsException if this Pixel's index is not in 
@@ -542,9 +542,9 @@ public class Pixel {
 	 * When using weights with same signs, the value is within [0..255]. When
 	 * weights have mixed signs the resulting value is unbounded.
 	 * @param color RGB(24bit) or ARGB(32bit) value 
-	 * @param redWeight
-	 * @param greenWeight
-	 * @param blueWeight
+	 * @param redWeight weight for red channel
+	 * @param greenWeight weight for green channel
+	 * @param blueWeight weight for blue channel
 	 * @return weighted grey value (8bit) of RGB color value for non-negative weights.
 	 * @throws ArithmeticException divide by zero if the weights sum up to 0.
 	 * @see #getLuminance(int)
@@ -866,8 +866,8 @@ public class Pixel {
 	 * From a performance point of view this method is not optimal. A custom
 	 * method tailored to the specific packing task will certainly be superior.
 	 * 
-	 * @param bitsPerChannel
-	 * @param channels
+	 * @param bitsPerChannel number of bits per channel
+	 * @param channels value for each channel (varargs)
 	 * @return packed channel values
 	 * @see #ch(int, int, int)
 	 */
@@ -892,9 +892,9 @@ public class Pixel {
 	 * From a performance point of view this method is not optimal. A custom
 	 * method tailored to the specific extraction task will probably be superior.
 	 * 
-	 * @param color
-	 * @param startBit
-	 * @param numBits
+	 * @param color from which a channel should be extracted
+	 * @param startBit starting bit of the channel
+	 * @param numBits number of bits of the channel
 	 * @return channel value
 	 * @see #combineCh(int, int...) combineCh(int, int...)
 	 */

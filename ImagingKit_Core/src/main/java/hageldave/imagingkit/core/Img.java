@@ -104,8 +104,8 @@ public class Img implements Iterable<Pixel> {
 	/**
 	 * Creates a new Img of specified dimensions.
 	 * Values are initialized to 0.
-	 * @param width
-	 * @param height
+	 * @param width of the Img
+	 * @param height of the Img
 	 */
 	public Img(int width, int height){
 		this(new Dimension(width, height));
@@ -114,7 +114,7 @@ public class Img implements Iterable<Pixel> {
 	/**
 	 * Creates a new Img of specified Dimension.
 	 * Values are initilaized to 0.
-	 * @param dimension
+	 * @param dimension extend of the Img (width and height)
 	 */
 	public Img(Dimension dimension){
 		this.data = new int[dimension.width*dimension.height];
@@ -124,7 +124,7 @@ public class Img implements Iterable<Pixel> {
 	/**
 	 * Creates a new Img of same dimensions as provided BufferedImage.
 	 * Values are copied from argument Image
-	 * @param bimg
+	 * @param bimg the BufferedImage 
 	 * @see #createRemoteImg(BufferedImage)
 	 */
 	public Img(BufferedImage bimg){
@@ -135,9 +135,11 @@ public class Img implements Iterable<Pixel> {
 	/**
 	 * Creates a new Img of specified dimensions.
 	 * Provided data array will be used as this images data.
-	 * @param width
-	 * @param height
-	 * @param data
+	 * @param width of the Img
+	 * @param height of the Img
+	 * @param data values (pixels) that will be used as the content of this Img
+	 * @throw IllegalArgumentException when the number of pixels of this Img 
+	 * resulting from width*height does not match the number of provided data values.
 	 */
 	public Img(int width, int height, int[] data){
 		this(new Dimension(width, height), data);
@@ -146,8 +148,10 @@ public class Img implements Iterable<Pixel> {
 	/**
 	 * Creates a new Img of specified dimensions.
 	 * Provided data array will be used as this images data.
-	 * @param dim
-	 * @param data
+	 * @param dim extend of the image (width and height)
+	 * @param data values (pixels) that will be used as the content of this Img
+	 * @throw IllegalArgumentException when the number of pixels of this Img 
+	 * resulting from width*height does not match the number of provided data values.
 	 */
 	public Img(Dimension dim, int[] data){
 		if(dim.width*dim.height != data.length){
@@ -197,8 +201,8 @@ public class Img implements Iterable<Pixel> {
 	 * No bounds checks will be performed, positions outside of this
 	 * image's dimension can either result in a value for a different position
 	 * or an ArrayIndexOutOfBoundsException.
-	 * @param x
-	 * @param y
+	 * @param x coordinate
+	 * @param y coordinate
 	 * @return value for specified position
 	 * @throws ArrayIndexOutOfBoundsException if resulting index from x and y
 	 * is not within the data arrays bounds.
@@ -235,9 +239,9 @@ public class Img implements Iterable<Pixel> {
 	 * to use opaque colors (0xff000000 - 0xffffffff) and transparent colors 
 	 * above 0x0000000f which will not collide with one of the boundary modes 
 	 * (number of boundary modes is limited to 16 for the future).
-	 * @param x
-	 * @param y
-	 * @param boundaryMode
+	 * @param x coordinate
+	 * @param y coordinate
+	 * @param boundaryMode one of the boundary modes e.g. boundary_mode_mirror
 	 * @return value at specified position or a value depending on the
 	 * boundary mode for out of bounds positions.
 	 */
@@ -280,8 +284,8 @@ public class Img implements Iterable<Pixel> {
 	 * <p>
 	 * An ArrayIndexOutOfBoundsException may be thrown for x and y greater than 1 
 	 * or less than 0.
-	 * @param xNormalized
-	 * @param yNormalized
+	 * @param xNormalized coordinate within [0,1]
+	 * @param yNormalized coordinate within [0,1]
 	 * @throws ArrayIndexOutOfBoundsException when a resulting index is out of 
 	 * the data array's bounds, which can only happen for x and y values less 
 	 * than 0 or greater than 1.
@@ -330,8 +334,8 @@ public class Img implements Iterable<Pixel> {
 	 * <p>
 	 * You can also use <code>for(Pixel px: img){...}</code> syntax or the 
 	 * {@link #forEach(Consumer)} method to iterate this image.
-	 * @param x
-	 * @param y
+	 * @param x coordinate
+	 * @param y coordinate 
 	 * @return a Pixel object for this Img at {x,y}.
 	 * @see #getValue(int, int)
 	 */
@@ -423,9 +427,9 @@ public class Img implements Iterable<Pixel> {
 	 * No bounds checks will be performed, positions outside of this
 	 * images dimension can either result in a value for a different position
 	 * or an ArrayIndexOutOfBoundsException.
-	 * @param x
-	 * @param y
-	 * @param value
+	 * @param x coordinate
+	 * @param y coordinate
+	 * @param value to be set at specified position. e.g. 0xff0000ff for blue color
 	 * @throws ArrayIndexOutOfBoundsException if resulting index from x and y
 	 * is not within the data arrays bounds.
 	 * @see #getValue(int, int)
@@ -711,7 +715,7 @@ public class Img implements Iterable<Pixel> {
 	 * This Img's {@link #spliterator()} is used to parallelize the workload.
 	 * As the threaded execution comes with a certain overhead it is only
 	 * suitable for more sophisticated consumer actions and large Images (1MP+) 
-	 * @param action
+	 * @param action to be performed on each pixel
 	 * @see #forEach(Consumer action)
 	 */
 	public void forEachParallel(final Consumer<? super Pixel> action) {

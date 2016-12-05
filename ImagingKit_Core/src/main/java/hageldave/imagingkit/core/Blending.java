@@ -80,18 +80,18 @@ public enum Blending {
 	/** Blend function: f(a,b) = a<sup>2</sup>/(1-b) <br> a,b in [0,1]	*/
 	REFLECT(	(a,b) -> Math.min(a*a / Math.max(0xff-b, 1), 0xff) ),
 	
-	/** Blend function:<pre>
+	/** Blend function:<pre>{@code
 	 * f(a,b) = 2*a*b            for a < 1/2
 	 * f(a,b) = 1-2*(1-a)*(1-b)  else
 	 * a,b in [0,1]
-	 * </pre>															*/
+	 * }</pre>															*/
 	OVERLAY(	(a,b) -> a < 128 ? (a*b)>>7 : 0xff-(((0xff-a)*(0xff-b))>>7) ),
 	
-	/** Blend function:<pre>
+	/** Blend function:<pre>{@code
 	 * f(a,b) = 2*a*b            for b < 1/2
 	 * f(a,b) = 1-2*(1-a)*(1-b)  else
 	 * a,b in [0,1]
-	 * </pre>															*/
+	 * }</pre>															*/
 	HARDLIGHT(	(a,b) -> b < 128 ? (a*b)>>7 : 0xff-(((0xff-a)*(0xff-b))>>7) ),
 	
 	/** Blend function: (1-a)*multiply(a,b)+a*screen(a,b)<br>a,b in [0,1]*/
@@ -210,8 +210,6 @@ public enum Blending {
 	 * {@link #getAlphaBlendingWith(Img, int, int, float)}
 	 * 
 	 * @param topImg top image of the blending (consumer is applied to bottom)
-	 * @param xTopOffset horizontal offset of the top image on the bottom
-	 * @param yTopOffset vertical offset of the top image on the bottom
 	 * @return Consumer to apply to bottom Img that will perform the specified
 	 * blending. {@code bottomImg.forEach(blendingConsumer);}
 	 * 
@@ -272,15 +270,15 @@ public enum Blending {
 	 * 
 	 * @param bottomRGB bottom color RGB or ARGB (least significant 8 bits are b channel)
 	 * @param topRGB top color RGB or ARGB (least significant 8 bits are b channel)
-	 * @param func blend function to be used
+	 * @param blending blend function to be used
 	 * @return blended RGB or ARGB value
 	 * 
 	 * @see #blend(int, int, BlendFunction)
 	 * @see #alphaBlend(int, int, float, Blending)
 	 * @see #alphaBlend(int, int, float, BlendFunction)
 	 */
-	public static int blend(int bottomRGB, int topRGB, Blending mode){
-		return blend(bottomRGB, topRGB, mode.blendFunction);
+	public static int blend(int bottomRGB, int topRGB, Blending blending){
+		return blend(bottomRGB, topRGB, blending.blendFunction);
 	}
 
 	/**

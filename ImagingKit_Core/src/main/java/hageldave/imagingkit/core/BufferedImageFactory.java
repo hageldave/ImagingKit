@@ -12,7 +12,7 @@ public class BufferedImageFactory {
 
 	/**
 	 * shortcut for get(img, BufferedImage.TYPE_INT_ARGB).
-	 * @param img
+	 * @param img to be copied to BufferedImage of type INT_ARGB
 	 * @return a BufferedImage copy of the provided Image
 	 */
 	public static BufferedImage getINT_ARGB(Image img){
