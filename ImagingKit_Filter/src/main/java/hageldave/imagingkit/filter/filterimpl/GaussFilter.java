@@ -26,7 +26,10 @@ public class GaussFilter extends ConvolutionFilter {
 	}
 	
 	public int calcKernelSize() {
-		return 1+(int)Math.ceil(getStd())*4;
+		// 3times standard deviation to both sides 
+		// will cover over 99% of gaussian bell
+		// 2times will cover about 95%
+		return 1+(int)Math.round(getStd()*3)*2;
 	}
 	
 	static double calcGaussAt(double a, double b, int x){

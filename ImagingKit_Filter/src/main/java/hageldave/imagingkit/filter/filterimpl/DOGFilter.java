@@ -26,7 +26,7 @@ public class DOGFilter extends ConvolutionFilter {
 	}
 	
 	public int calcKernelSize() {
-		return 1+(int)Math.ceil(getStd2())*4;
+		return 1+(int)Math.ceil(getStd2())*6;
 	}
 	
 	float[] calcConvolutionKernel() {
