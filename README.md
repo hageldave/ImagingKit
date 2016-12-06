@@ -58,6 +58,19 @@ img.forEachParallel((pixel) -> {
 });
 ImageSaver.saveImage(buffimg,"myimage_grayscale.png");
 ```
+Draw into image (using java.awt.Graphics2D):
+```java
+Img img = new Img(400, 300);
+img.fill(0xff000000);
+img.paint(g2d -> {
+	g2d.setColor(Color.white);
+	String helloWorld = "Hello World";
+	int textWidth = g2d.getFontMetrics().stringWidth(helloWorld);
+	g2d.drawString(helloWorld, img.getWidth()/2-textWidth/2, img.getHeight()/2);
+	g2d.drawLine(0, img.getHeight()/2+4, img.getWidth(), img.getHeight()/2+4);
+});
+ImageSaver.saveImage(img.getRemoteBufferedImage(), "hello_world.png");
+```
 Fancy polar color thing:
 ```java
 Img img = new Img(1024, 1024);
