@@ -25,6 +25,9 @@ public class ImageFrame extends JFrame {
 
 	public static class ImagePanel extends JPanel{
 		
+		static final Color checkerColor1 = new Color(0x999999);
+		static final Color checkerColor2 = new Color(0x666666);
+		
 		Image img = null;
 		Point clickPoint = null;
 		boolean useCheckerboardBackground = false;
@@ -140,11 +143,11 @@ public class ImageFrame extends JFrame {
 		}
 		
 		private void drawCheckerBoard(Graphics painter) {
-			painter.setColor(Color.darkGray);
+			painter.setColor(checkerColor1);
 			painter.fillRect(0, 0, getWidth(), getHeight());
-			painter.setColor(Color.lightGray);
+			painter.setColor(checkerColor2);
 			
-			int checkSize = 10;
+			final int checkSize = 8;
 			int halfCheckSize = checkSize/2;
 			Graphics2D g2d = (Graphics2D) painter;
 			float[] dash = {0,checkSize*2};
