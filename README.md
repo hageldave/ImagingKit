@@ -91,9 +91,7 @@ ImageSaver.saveImage(img.getRemoteBufferedImage(), "polar_colors.png");
 ```
 Shifting hue (using color space transformation):
 ```java
-URL lenaURL = new URL("http://sipi.usc.edu/database/preview/misc/4.2.04.png");
-BufferedImage lenaBImg = ImageLoader.loadImage(lenaURL.openStream(), BufferedImage.TYPE_INT_ARGB);
-Img img = Img.createRemoteImg(lenaBImg);
+Img img = ImageLoader.loadImgFromURL("http://sipi.usc.edu/database/preview/misc/4.2.04.png");
 
 img.forEach(ColorSpaceTransformation.RGB_2_HSV.get());
 int hueShift = (int)((360-30) * (256.0f/360.0f));
