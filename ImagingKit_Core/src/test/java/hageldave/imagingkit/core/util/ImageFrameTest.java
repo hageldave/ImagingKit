@@ -8,7 +8,12 @@ import hageldave.imagingkit.core.util.ImageFrame.ImagePanel;
 import static org.junit.Assert.*;
 
 import java.awt.Color;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 import java.util.LinkedList;
+
+import javax.swing.SwingUtilities;
 
 public class ImageFrameTest {
 
@@ -27,7 +32,7 @@ public class ImageFrameTest {
 			assertEquals(0xff445544, imgGraphics.getData()[i]);
 		}
 		
-		panel.enableCheckerboardBackground(true);
+		panel.enableCheckerboardBackground(!panel.isCheckerboardBackgroundEnabled());
 		imgGraphics.paint(g2d->panel.paint(g2d));
 		LinkedList<Integer> colors = new LinkedList<>();
 		imgGraphics.forEach(px->{if(!colors.contains(px.getLuminance())){colors.add(px.getLuminance());}});
@@ -47,7 +52,52 @@ public class ImageFrameTest {
 		imgGraphics = new Img(panel.getSize());
 		imgGraphics.paint(g2d->panel.paint(g2d));
 		
+		// Simulate Mouse Events
+		panel.setSize(160, 160);
 		
+		MouseListener[] mouseListeners = panel.getMouseListeners();
+		MouseMotionListener[] motionListeners = panel.getMouseMotionListeners();
+		
+		assertTrue(mouseListeners.length > 0 && motionListeners.length > 0);
+		
+		for(MouseMotionListener m: motionListeners){
+			m.mouseDragged(new MouseEvent(panel, 0, 0, 0, 0, 0, 1, false, MouseEvent.BUTTON1));
+			m.mouseDragged(new MouseEvent(panel, 0, 0, 0, 0, 0, 1, false, MouseEvent.BUTTON2));
+			m.mouseDragged(new MouseEvent(panel, 0, 0, 0, 0, 0, 1, false, MouseEvent.BUTTON3));
+		}
+		
+		int x = -20;
+		int y = -20;
+		for(MouseListener m: mouseListeners){
+			m.mousePressed(new MouseEvent(panel, 0, 0, 0, x, y, 1, false, MouseEvent.BUTTON1));
+			m.mousePressed(new MouseEvent(panel, 0, 0, 0, x, y, 1, false, MouseEvent.BUTTON2));
+			m.mousePressed(new MouseEvent(panel, 0, 0, 0, x, y, 1, false, MouseEvent.BUTTON3));
+		}
+		imgGraphics.paint(g2d->panel.paint(g2d));
+		
+		x = 100;
+		y = 100;
+		for(MouseMotionListener m: motionListeners){
+			m.mouseDragged(new MouseEvent(panel, 0, 0, 0, x, y, 1, false, MouseEvent.BUTTON1));
+			m.mouseDragged(new MouseEvent(panel, 0, 0, 0, x, y, 1, false, MouseEvent.BUTTON2));
+			m.mouseDragged(new MouseEvent(panel, 0, 0, 0, x, y, 1, false, MouseEvent.BUTTON3));
+		}
+		imgGraphics.paint(g2d->panel.paint(g2d));
+		
+		x = 200;
+		y = 200;
+		for(MouseMotionListener m: motionListeners){
+			m.mouseDragged(new MouseEvent(panel, 0, 0, 0, x, y, 1, false, MouseEvent.BUTTON1));
+			m.mouseDragged(new MouseEvent(panel, 0, 0, 0, x, y, 1, false, MouseEvent.BUTTON2));
+			m.mouseDragged(new MouseEvent(panel, 0, 0, 0, x, y, 1, false, MouseEvent.BUTTON3));
+		}
+		imgGraphics.paint(g2d->panel.paint(g2d));
+		
+		for(MouseListener m: mouseListeners){
+			m.mouseReleased(new MouseEvent(panel, 0, 0, 0, 0, 0, 1, false, MouseEvent.BUTTON1));
+			m.mouseReleased(new MouseEvent(panel, 0, 0, 0, 0, 0, 1, false, MouseEvent.BUTTON2));
+			m.mouseReleased(new MouseEvent(panel, 0, 0, 0, 0, 0, 1, false, MouseEvent.BUTTON3));
+		}
 		
 	}
 	

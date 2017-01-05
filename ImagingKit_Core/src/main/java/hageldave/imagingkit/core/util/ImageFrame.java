@@ -36,14 +36,14 @@ public class ImageFrame extends JFrame {
 			this.addMouseListener(new MouseAdapter() {
 				@Override
 				public void mousePressed(MouseEvent e) {
-					if(e.getButton() == MouseEvent.BUTTON1){
+					if(SwingUtilities.isLeftMouseButton(e)){
 						ImagePanel.this.clickPoint = e.getPoint();
 						ImagePanel.this.repaint();
 					}
 				}
 				@Override
 				public void mouseReleased(MouseEvent e) {
-					if(e.getButton() == MouseEvent.BUTTON1){
+					if(SwingUtilities.isLeftMouseButton(e)){
 						ImagePanel.this.clickPoint = null;
 						ImagePanel.this.repaint();
 					}
@@ -202,12 +202,12 @@ public class ImageFrame extends JFrame {
 		return frame;
 	}
 	
-	public ImagePanel getPanel() {
-		return panel;
-	}
-	
 	public static ImageFrame display(final Img img){
 		return display(img.getRemoteBufferedImage());
+	}
+	
+	public ImagePanel getPanel() {
+		return panel;
 	}
 
 }
