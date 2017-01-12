@@ -9,11 +9,11 @@ import hageldave.imagingkit.core.Pixel;
 
 public class PixelConvertingSpliterator<T> implements Spliterator<T> {
 	
-	final Spliterator<Pixel> delegate;
-	final T element;
-	final Supplier<T> elementInitializer;
-	final BiConsumer<Pixel, T> fromPixelConverter;
-	final BiConsumer<T, Pixel> toPixelConverter;
+	protected final Spliterator<Pixel> delegate;
+	protected final T element;
+	protected final Supplier<T> elementInitializer;
+	protected final BiConsumer<Pixel, T> fromPixelConverter;
+	protected final BiConsumer<T, Pixel> toPixelConverter;
 	
 	public PixelConvertingSpliterator(Spliterator<Pixel> delegate, Supplier<T> elementInitializer, BiConsumer<Pixel, T> fromPixelConverter, BiConsumer<T, Pixel> toPixelConverter) {
 		this.delegate=delegate;
