@@ -166,6 +166,10 @@ public class ImageFrame extends JFrame {
 		
 	}
 	
+	////////////////////////////////////////////
+	////// ImageFrame members and methods //////
+	////////////////////////////////////////////
+	
 	ImagePanel panel;
 	
 	public ImageFrame() {
@@ -185,19 +189,11 @@ public class ImageFrame extends JFrame {
 		this.setImg(img.getRemoteBufferedImage());
 	}
 	
-	public void setPanelBGColor(Color color){
-		this.panel.setBackground(color);
-	}
-	
 	public static ImageFrame display(final Image img){
 		ImageFrame frame = new ImageFrame();
-		SwingUtilities.invokeLater( new Runnable() {
-			
-			@Override
-			public void run() {
-				frame.setImg(img);
-				frame.setVisible(true);
-			}
+		SwingUtilities.invokeLater( () -> {
+			frame.setImg(img);
+			frame.setVisible(true);
 		});
 		return frame;
 	}

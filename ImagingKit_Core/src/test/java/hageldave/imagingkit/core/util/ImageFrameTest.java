@@ -101,4 +101,18 @@ public class ImageFrameTest {
 		
 	}
 	
+	@Test
+	public void imageFrameTest() {
+		Img img1 = new Img(1, 1);
+		Img img2 = new Img(2, 2);
+		
+		ImageFrame frame = ImageFrame.display(img1);
+		
+		Thread.yield();
+		
+		frame.setImg(img2);
+		frame.getPanel().setBackground(Color.cyan);
+		frame.dispose();
+	}
+	
 }
