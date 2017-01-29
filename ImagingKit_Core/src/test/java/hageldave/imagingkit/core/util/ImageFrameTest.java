@@ -3,7 +3,6 @@ package hageldave.imagingkit.core.util;
 import org.junit.Test;
 
 import hageldave.imagingkit.core.Img;
-import hageldave.imagingkit.core.util.ImageFrame.ImagePanel;
 
 import static org.junit.Assert.*;
 
@@ -12,8 +11,6 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.util.LinkedList;
-
-import javax.swing.SwingUtilities;
 
 public class ImageFrameTest {
 
