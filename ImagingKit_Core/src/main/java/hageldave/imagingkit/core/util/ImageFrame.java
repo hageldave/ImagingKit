@@ -18,6 +18,8 @@ import static hageldave.imagingkit.core.TheImageObserver.*;
  * <p>
  * Use the static method {@link #display(Image)} or {@link #display(Img)}
  * to quickly obtain an ImageFrame that displays the specified image.
+ * <p>
+ * Use {@link #getPanel()} to access the frame's ImagePanel.
  * 
  * @author hageldave
  * @since 1.4
@@ -87,7 +89,17 @@ public class ImageFrame extends JFrame {
 		this.setImage(img.getRemoteBufferedImage());
 	}
 	
-
+	/**
+	 * Displays the specified image in a new ImageFrame instance.
+	 * <p>
+	 * Creates a new ImageFrame, sets the specified image, and schedules a
+	 * call to <tt>setVisible(true)</tt> on the AWT event dispatching thread.
+	 * @param img to be displayed
+	 * @return the frame that displays the image.
+	 * 
+	 * @see #display(Img)
+	 * @since 1.4
+	 */
 	public static ImageFrame display(final Image img){
 		ImageFrame frame = new ImageFrame().useDefaultSettings();
 		SwingUtilities.invokeLater( () -> {
@@ -97,11 +109,26 @@ public class ImageFrame extends JFrame {
 		return frame;
 	}
 	
-
+	/**
+	 * Displays the specified image in a new ImageFrame instance.
+	 * <p>
+	 * Creates a new ImageFrame, sets the specified image, and schedules a
+	 * call to <tt>setVisible(true)</tt> on the AWT event dispatching thread.
+	 * @param img to be displayed
+	 * @return the frame that displays the image.
+	 * 
+	 * @see #display(Image)
+	 * @since 1.4
+	 */
 	public static ImageFrame display(final Img img){
 		return display(img.getRemoteBufferedImage());
 	}
 	
+	/**
+	 * Returns the {@link ImagePanel} of this frame.
+	 * @return the image panel
+	 * @since 1.4
+	 */
 	public ImagePanel getPanel() {
 		return panel;
 	}
