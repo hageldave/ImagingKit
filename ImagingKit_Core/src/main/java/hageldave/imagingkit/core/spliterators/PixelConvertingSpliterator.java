@@ -15,7 +15,12 @@ public class PixelConvertingSpliterator<T> implements Spliterator<T> {
 	protected final BiConsumer<Pixel, T> fromPixelConverter;
 	protected final BiConsumer<T, Pixel> toPixelConverter;
 	
-	public PixelConvertingSpliterator(Spliterator<Pixel> delegate, Supplier<T> elementInitializer, BiConsumer<Pixel, T> fromPixelConverter, BiConsumer<T, Pixel> toPixelConverter) {
+	public PixelConvertingSpliterator(
+			Spliterator<Pixel> delegate, 
+			Supplier<T> elementInitializer, 
+			BiConsumer<Pixel, T> fromPixelConverter, 
+			BiConsumer<T, Pixel> toPixelConverter) 
+	{
 		this.delegate=delegate;
 		this.element = elementInitializer.get();
 		this.elementInitializer = elementInitializer;
