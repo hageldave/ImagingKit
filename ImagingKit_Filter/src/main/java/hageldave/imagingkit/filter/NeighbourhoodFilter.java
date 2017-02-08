@@ -1,17 +1,15 @@
 package hageldave.imagingkit.filter;
 
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.Pixel;
 
-public interface NeighbourhoodFilter extends Filter, BiConsumer<Pixel, Img> {
+public interface NeighbourhoodFilter extends Filter {
 	
-	@Override
 	public void accept(Pixel px, Img copy);
 	
-	public default Consumer<Pixel> accept(Img copy)
+	public default Consumer<Pixel> consumer(Img copy)
 		{return px->this.accept(px, copy);}
 
 	
@@ -27,22 +25,28 @@ public interface NeighbourhoodFilter extends Filter, BiConsumer<Pixel, Img> {
 		
 		if(parallelPreferred){
 			if(x == 0 && y == 0 && width == img.getWidth() && height == img.getHeight())
-				img.forEach(accept(copy));
+				img.forEach(consumer(copy));
 			else
-				img.forEach(x, y, width, height, accept(copy));
+				img.forEach(x, y, width, height, consumer(copy));
 		} else {
 			if(x == 0 && y == 0 && width == img.getWidth() && height == img.getHeight())
-				img.forEachParallel(accept(copy));
+				img.forEachParallel(consumer(copy));
 			else
-				img.forEachParallel(x, y, width, height, accept(copy));
+				img.forEachParallel(x, y, width, height, consumer(copy));
 		}
 	}
 	
 	public default NeighbourhoodFilter followedBy(NeighbourhoodFilter nextFilter){
 		return new NeighbourhoodFilter() {
+			
 			@Override
 			public void accept(Pixel px, Img copy) {
-				NeighbourhoodFilter.this.accept(px, copy);
+				throw new UnsupportedOperationException(
+						"Calls to accept(Pixel,Img) are not supported by a chained "
+						+ getClass().getSimpleName() 
+						+ " created from followedBy("
+						+ getClass().getSimpleName()
+						+")");
 			}
 			
 			@Override
@@ -60,16 +64,19 @@ public interface NeighbourhoodFilter extends Filter, BiConsumer<Pixel, Img> {
 			
 			@Override
 			public void accept(Pixel px, Img copy) {
-				NeighbourhoodFilter.this.accept(px,copy);
-				nextFilter.accept(px);
+				throw new UnsupportedOperationException(
+						"Calls to accept(Pixel,Img) are not supported by a chained "
+						+ getClass().getSimpleName() 
+						+ " created from followedBy("
+						+ PerPixelFilter.class.getSimpleName()
+						+")");
 			}
 			
 			@Override
 			public void applyTo(Img img, Img copy, boolean parallelPreferred, int x, int y, int width, int height) {
 				NeighbourhoodFilter.this.applyTo(img, copy, parallelPreferred, x, y, width, height);
+				nextFilter.applyTo(img, parallelPreferred, x, y, width, height);
 			}
 		};
 	}
-	
-	// TODO: use protected static applyTo(biconsumer,img,copy,parallel,...) method for following
 }

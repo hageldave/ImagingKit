@@ -5,24 +5,27 @@ import java.util.function.Consumer;
 import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.Pixel;
 
-public interface PerPixelFilter extends Filter, Consumer<Pixel> {
+public interface PerPixelFilter extends Filter {
 
-	@Override
+	
 	public void accept(Pixel px);
+	
+	public default Consumer<Pixel> consumer()
+		{return px->this.accept(px);}
 
 	@Override
 	public default void applyTo(Img img, boolean parallelPreferred, int x, int y, int width, int height) {
 		System.out.println("PerPixelFilter.applyTo()");
 		if(parallelPreferred){
 			if(x == 0 && y == 0 && width == img.getWidth() && height == img.getHeight())
-				img.forEach(this);
+				img.forEach(consumer());
 			else
-				img.forEach(x, y, width, height, this);
+				img.forEach(x, y, width, height, consumer());
 		} else {
 			if(x == 0 && y == 0 && width == img.getWidth() && height == img.getHeight())
-				img.forEachParallel(this);
+				img.forEachParallel(consumer());
 			else
-				img.forEachParallel(x, y, width, height, this);
+				img.forEachParallel(x, y, width, height, consumer());
 		}
 	}
 	
@@ -34,7 +37,12 @@ public interface PerPixelFilter extends Filter, Consumer<Pixel> {
 		return new NeighbourhoodFilter() {
 			@Override
 			public void accept(Pixel px, Img copy) {
-				nextFilter.accept(px, copy);
+				throw new UnsupportedOperationException(
+						"Calls to accept(Pixel,Img) are not supported by a chained "
+						+ NeighbourhoodFilter.class.getSimpleName() 
+						+ " created from followedBy("
+						+ NeighbourhoodFilter.class.getSimpleName()
+						+")");
 			}
 			
 			@Override
@@ -42,7 +50,7 @@ public interface PerPixelFilter extends Filter, Consumer<Pixel> {
 				System.out.println("PerPixelFilter.followedBy(...).new NeighbourhoodFilter() {...}.applyTo()");
 				PerPixelFilter.this.applyTo(img, parallelPreferred, x, y, width, height);
 				System.arraycopy(img.getData(), 0, copy.getData(), 0, img.numValues());
-				NeighbourhoodFilter.super.applyTo(img, copy, parallelPreferred, x, y, width, height);
+				nextFilter.applyTo(img, copy, parallelPreferred, x, y, width, height);
 			}
 		};
 	}
