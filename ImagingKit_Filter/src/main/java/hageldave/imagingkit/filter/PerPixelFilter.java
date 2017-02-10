@@ -6,7 +6,7 @@ import java.util.function.Consumer;
 import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.Pixel;
 
-public interface PerPixelFilter extends Filter {
+public interface PerPixelFilter extends ImgFilter {
 
 	
 	public Consumer<Pixel> consumer();
@@ -27,13 +27,13 @@ public interface PerPixelFilter extends Filter {
 	}
 	
 	@Override
-	public default Filter followedBy(Filter nextFilter) {
-		if(nextFilter instanceof NeighbourhoodFilter)
-			return followedBy((NeighbourhoodFilter)nextFilter);
+	public default ImgFilter followedBy(ImgFilter nextFilter) {
+		if(nextFilter instanceof NeighborhoodFilter)
+			return followedBy((NeighborhoodFilter)nextFilter);
 		if(nextFilter instanceof PerPixelFilter)
 			return followedBy((PerPixelFilter)nextFilter);
 		else
-			return Filter.super.followedBy(nextFilter);
+			return ImgFilter.super.followedBy(nextFilter);
 	}
 	
 	public default PerPixelFilter followedBy(PerPixelFilter nextFilter) {
@@ -41,16 +41,16 @@ public interface PerPixelFilter extends Filter {
 		return () -> this.consumer().andThen(nextFilter.consumer())::accept;
 	}
 	
-	public default NeighbourhoodFilter followedBy(NeighbourhoodFilter nextFilter) {
+	public default NeighborhoodFilter followedBy(NeighborhoodFilter nextFilter) {
 		Objects.requireNonNull(nextFilter);
-		return new NeighbourhoodFilter() {
+		return new NeighborhoodFilter() {
 			@Override
 			public Consumer<Pixel> consumer(Img copy) {
 				throw new UnsupportedOperationException(
 						"Calls to consumer(Img) are not supported by a chained "
-						+ NeighbourhoodFilter.class.getSimpleName() 
+						+ NeighborhoodFilter.class.getSimpleName() 
 						+ " created from followedBy("
-						+ NeighbourhoodFilter.class.getSimpleName()
+						+ NeighborhoodFilter.class.getSimpleName()
 						+")");
 			}
 			

@@ -4,9 +4,9 @@ import java.util.function.Consumer;
 
 import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.Pixel;
-import hageldave.imagingkit.filter.NeighbourhoodFilter;
+import hageldave.imagingkit.filter.NeighborhoodFilter;
 
-public class ConvolutionFilter implements NeighbourhoodFilter {
+public class ConvolutionFilter implements NeighborhoodFilter {
 	
 	float[] convolutionKernel;
 	int kernelWidth;

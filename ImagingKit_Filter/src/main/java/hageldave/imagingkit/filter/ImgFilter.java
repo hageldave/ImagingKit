@@ -4,7 +4,7 @@ import java.util.Objects;
 
 import hageldave.imagingkit.core.Img;
 
-public interface Filter {
+public interface ImgFilter {
 	
 	public default void applyTo(Img img)
 		{applyTo(img, false);}
@@ -17,12 +17,12 @@ public interface Filter {
 	
 	public void applyTo(Img img, boolean parallelPreferred, int x, int y, int width, int height);
 	
-	public default Filter followedBy(Filter nextFilter){
+	public default ImgFilter followedBy(ImgFilter nextFilter){
 		Objects.requireNonNull(nextFilter);
-		return new Filter() {
+		return new ImgFilter() {
 			@Override
 			public void applyTo(Img img, boolean parallelPreferred, int x, int y, int width, int height) {
-				Filter.this.applyTo(img, parallelPreferred, x, y, width, height);
+				ImgFilter.this.applyTo(img, parallelPreferred, x, y, width, height);
 				nextFilter.applyTo(img, parallelPreferred, x, y, width, height);
 			}
 		};

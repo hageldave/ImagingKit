@@ -7,7 +7,7 @@ import java.util.function.Consumer;
 import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.Pixel;
 
-public interface NeighbourhoodFilter extends Filter {
+public interface NeighborhoodFilter extends ImgFilter {
 	
 	public Consumer<Pixel> consumer(Img copy);
 
@@ -35,18 +35,18 @@ public interface NeighbourhoodFilter extends Filter {
 	}
 	
 	@Override
-	public default Filter followedBy(Filter nextFilter) {
-		if(nextFilter instanceof NeighbourhoodFilter)
-			return followedBy((NeighbourhoodFilter)nextFilter);
+	public default ImgFilter followedBy(ImgFilter nextFilter) {
+		if(nextFilter instanceof NeighborhoodFilter)
+			return followedBy((NeighborhoodFilter)nextFilter);
 		if(nextFilter instanceof PerPixelFilter)
 			return followedBy((PerPixelFilter)nextFilter);
 		else
-			return Filter.super.followedBy(nextFilter);
+			return ImgFilter.super.followedBy(nextFilter);
 	}
 	
-	public default NeighbourhoodFilter followedBy(NeighbourhoodFilter nextFilter){
+	public default NeighborhoodFilter followedBy(NeighborhoodFilter nextFilter){
 		Objects.requireNonNull(nextFilter);
-		return new NeighbourhoodFilter() {
+		return new NeighborhoodFilter() {
 			
 			@Override
 			public Consumer<Pixel> consumer(Img copy){
@@ -60,16 +60,16 @@ public interface NeighbourhoodFilter extends Filter {
 			
 			@Override
 			public void applyTo(Img img, Img copy, boolean parallelPreferred, int x, int y, int width, int height) {
-				NeighbourhoodFilter.this.applyTo(img, copy, parallelPreferred, x, y, width, height);
+				NeighborhoodFilter.this.applyTo(img, copy, parallelPreferred, x, y, width, height);
 				System.arraycopy(img.getData(), 0, copy.getData(), 0, img.numValues());
 				nextFilter.applyTo(img, copy, parallelPreferred, x, y, width, height);
 			}
 		};
 	}
 	
-	public default NeighbourhoodFilter followedBy(PerPixelFilter nextFilter){
+	public default NeighborhoodFilter followedBy(PerPixelFilter nextFilter){
 		Objects.requireNonNull(nextFilter);
-		return new NeighbourhoodFilter() {
+		return new NeighborhoodFilter() {
 			@Override
 			public Consumer<Pixel> consumer(Img copy){
 				throw new UnsupportedOperationException(
@@ -82,13 +82,13 @@ public interface NeighbourhoodFilter extends Filter {
 			
 			@Override
 			public void applyTo(Img img, Img copy, boolean parallelPreferred, int x, int y, int width, int height) {
-				NeighbourhoodFilter.this.applyTo(img, copy, parallelPreferred, x, y, width, height);
+				NeighborhoodFilter.this.applyTo(img, copy, parallelPreferred, x, y, width, height);
 				nextFilter.applyTo(img, parallelPreferred, x, y, width, height);
 			}
 		};
 	}
 	
-	public static NeighbourhoodFilter fromConsumer(BiConsumer<Pixel, Img> consumer){
+	public static NeighborhoodFilter fromConsumer(BiConsumer<Pixel, Img> consumer){
 		Objects.requireNonNull(consumer);
 		return copy->{return px->consumer.accept(px, copy);};
 	}
