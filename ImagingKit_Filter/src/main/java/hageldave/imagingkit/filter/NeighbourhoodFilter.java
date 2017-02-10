@@ -1,5 +1,7 @@
 package hageldave.imagingkit.filter;
 
+import java.util.Objects;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import hageldave.imagingkit.core.Img;
@@ -7,10 +9,7 @@ import hageldave.imagingkit.core.Pixel;
 
 public interface NeighbourhoodFilter extends Filter {
 	
-	public void accept(Pixel px, Img copy);
-	
-	public default Consumer<Pixel> consumer(Img copy)
-		{return px->this.accept(px, copy);}
+	public Consumer<Pixel> consumer(Img copy);
 
 	
 	@Override
@@ -18,7 +17,6 @@ public interface NeighbourhoodFilter extends Filter {
 		{applyTo(img, new Img(img.getDimension()), parallelPreferred, x,y,width,height);}
 	
 	public default void applyTo(Img img, Img copy, boolean parallelPreferred, int x, int y, int width, int height) {
-		System.out.println("NeighbourhoodFilter.applyTo()");
 		assert(img.getDimension().equals(copy.getDimension()));
 		
 		System.arraycopy(img.getData(), 0, copy.getData(), 0, img.numValues());
@@ -36,13 +34,24 @@ public interface NeighbourhoodFilter extends Filter {
 		}
 	}
 	
+	@Override
+	public default Filter followedBy(Filter nextFilter) {
+		if(nextFilter instanceof NeighbourhoodFilter)
+			return followedBy((NeighbourhoodFilter)nextFilter);
+		if(nextFilter instanceof PerPixelFilter)
+			return followedBy((PerPixelFilter)nextFilter);
+		else
+			return Filter.super.followedBy(nextFilter);
+	}
+	
 	public default NeighbourhoodFilter followedBy(NeighbourhoodFilter nextFilter){
+		Objects.requireNonNull(nextFilter);
 		return new NeighbourhoodFilter() {
 			
 			@Override
-			public void accept(Pixel px, Img copy) {
+			public Consumer<Pixel> consumer(Img copy){
 				throw new UnsupportedOperationException(
-						"Calls to accept(Pixel,Img) are not supported by a chained "
+						"Calls to consumer(Img) are not supported by a chained "
 						+ getClass().getSimpleName() 
 						+ " created from followedBy("
 						+ getClass().getSimpleName()
@@ -51,7 +60,6 @@ public interface NeighbourhoodFilter extends Filter {
 			
 			@Override
 			public void applyTo(Img img, Img copy, boolean parallelPreferred, int x, int y, int width, int height) {
-				System.out.println("NeighbourhoodFilter.followedBy(...).new NeighbourhoodFilter() {...}.applyTo()");
 				NeighbourhoodFilter.this.applyTo(img, copy, parallelPreferred, x, y, width, height);
 				System.arraycopy(img.getData(), 0, copy.getData(), 0, img.numValues());
 				nextFilter.applyTo(img, copy, parallelPreferred, x, y, width, height);
@@ -60,12 +68,12 @@ public interface NeighbourhoodFilter extends Filter {
 	}
 	
 	public default NeighbourhoodFilter followedBy(PerPixelFilter nextFilter){
+		Objects.requireNonNull(nextFilter);
 		return new NeighbourhoodFilter() {
-			
 			@Override
-			public void accept(Pixel px, Img copy) {
+			public Consumer<Pixel> consumer(Img copy){
 				throw new UnsupportedOperationException(
-						"Calls to accept(Pixel,Img) are not supported by a chained "
+						"Calls to consumer(Img) are not supported by a chained "
 						+ getClass().getSimpleName() 
 						+ " created from followedBy("
 						+ PerPixelFilter.class.getSimpleName()
@@ -78,5 +86,10 @@ public interface NeighbourhoodFilter extends Filter {
 				nextFilter.applyTo(img, parallelPreferred, x, y, width, height);
 			}
 		};
+	}
+	
+	public static NeighbourhoodFilter fromConsumer(BiConsumer<Pixel, Img> consumer){
+		Objects.requireNonNull(consumer);
+		return copy->{return px->consumer.accept(px, copy);};
 	}
 }

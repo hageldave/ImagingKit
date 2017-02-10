@@ -8,17 +8,19 @@ public class GaussFilter extends ConvolutionFilter {
 		calcAndSetKernel();
 	}
 	
-	public void setVariance(double variance) {
+	public GaussFilter setVariance(double variance) {
 		setStd(Math.sqrt(variance));
+		return this;
 	}
 	
 	public double getVariance() {
 		return std*std;
 	}
 	
-	public void setStd(double std) {
+	public GaussFilter setStd(double std) {
 		this.std = std;
 		calcAndSetKernel();
+		return this;
 	}
 	
 	public double getStd() {
