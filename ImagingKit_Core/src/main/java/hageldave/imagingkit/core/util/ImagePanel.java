@@ -21,7 +21,7 @@ import hageldave.imagingkit.core.Img;
 /**
  * Panel for displaying Images.
  * The panel behaves as follows:
- * <li> 
+ * <ul><li> 
  * When not clicked, the Image is scaled to fit the panel's size. The aspect 
  * ratio is preserved and the image is centered inside the panel.
  * </li><li> 
@@ -29,7 +29,7 @@ import hageldave.imagingkit.core.Img;
  * actual size (depending on the panel's size this shrinks or magnifies the 
  * images). In case of magnification, the focus point will be the click point
  * in the 'scale to fit view' on the image.
- * </li>
+ * </li></ul>
  * 
  * @author hageldave
  * @since 1.4
