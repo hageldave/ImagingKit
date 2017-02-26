@@ -14,32 +14,17 @@ So far the *ImagingKit-Core* artifact of the library is available through the ma
 </dependency>
 ```
 
-As this library aims at convenience and ease of use let's see some grayscale conversion implementations:
+As this library aims at convenience and ease of use, look at this code snippet for grayscale conversion as a teaser:
 ```java
-Img img = getMyColorfulImg();
-
-// native approach
-int[] argb_data = img.getData();
-for(int i = 0; i < argb_data.length; i++){
-    int color = argb_data[i];
-    int grey = (r(color) + g(color) + b(color)) / 3;
-    argb_data[i] = argb(255, grey, grey, grey);
-}
-
-// iterable approach
+Img img = ImageLoader.loadImgFromURL("file:///home/pictures/rainbow.jpg");
 for(Pixel px: img){
     int grey = (px.r() + px.g() + px.b()) / 3;
     px.setRGB(grey, grey, grey);
 }
-
-// lambda approach (takes Consumer<Pixel> as argument)
-img.forEach( px -> {
-    int grey = (px.r()*3 + px.g()*6 + px.b()) / 10;
-    px.setRGB(grey, grey, grey);
-});
-
-// streaming approach (in parallel)
-img.parallelStream().filter( px -> px.getX() % 2 == 0).forEach( px -> {
+```
+And now for the parallel processing part:
+```java
+img.parallelStream().forEach( px -> {
     int grey = px.getLuminance();
     px.setRGB(grey, grey, grey);
 });
