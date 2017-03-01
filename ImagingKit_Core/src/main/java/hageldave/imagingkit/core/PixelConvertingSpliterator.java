@@ -189,8 +189,8 @@ public class PixelConvertingSpliterator<T> implements Spliterator<T> {
 			px.setRGB_fromNormalized_preserveAlpha(
 					// clamp values between zero and one
 					Math.min(1, Math.max(0, array[0])), 
-					Math.min(1, Math.max(0, array[0])), 
-					Math.min(1, Math.max(0, array[0])));
+					Math.min(1, Math.max(0, array[1])), 
+					Math.min(1, Math.max(0, array[2])));
 		};
 		PixelConvertingSpliterator<float[]> arraySpliterator = new PixelConvertingSpliterator<>(
 				pixelSpliterator, 
