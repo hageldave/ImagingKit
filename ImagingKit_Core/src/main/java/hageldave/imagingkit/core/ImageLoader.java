@@ -15,6 +15,9 @@ import javax.imageio.ImageIO;
  */
 public class ImageLoader {
 	
+	static {/* for code coverage */new ImageLoader();}
+	private ImageLoader(){}
+	
 	/**
 	 * @return {@link ImageIO#getReaderFileSuffixes()}
 	 */

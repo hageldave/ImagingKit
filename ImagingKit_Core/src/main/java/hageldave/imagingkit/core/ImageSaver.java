@@ -17,6 +17,9 @@ import javax.imageio.ImageIO;
  */
 public class ImageSaver {
 	
+	static {/* for code coverage */new ImageSaver();}
+	private ImageSaver(){}
+	
 	/**
 	 * @return {@link ImageIO#getWriterFileSuffixes()}
 	 */

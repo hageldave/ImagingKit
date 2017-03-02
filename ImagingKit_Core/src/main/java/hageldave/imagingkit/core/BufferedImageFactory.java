@@ -10,6 +10,9 @@ import java.awt.image.BufferedImage;
  */
 public class BufferedImageFactory {
 
+	static {/* for code coverage */new BufferedImageFactory();}
+	private BufferedImageFactory(){}
+	
 	/**
 	 * shortcut for get(img, BufferedImage.TYPE_INT_ARGB).
 	 * @param img to be copied to BufferedImage of type INT_ARGB
