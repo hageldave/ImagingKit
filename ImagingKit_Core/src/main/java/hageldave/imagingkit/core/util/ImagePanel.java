@@ -290,7 +290,7 @@ public class ImagePanel extends JPanel{
 	
 	/**
 	 * Draws the checkerboard background to the specified graphics context.
-	 * @param g graphics context to draw on
+	 * @param g2d graphics context to draw on
 	 * @since 1.4
 	 */
 	protected void drawCheckerBoard(Graphics2D g2d) {
