@@ -11,7 +11,7 @@
 	<artifactId>imagingkit-core</artifactId>
 	<name>ImagingKit-Core</name>
 	<groupId>com.github.hageldave.imagingkit</groupId>
-	<version>1.4</version>
+	<version>1.5-SNAPSHOT</version>
 	<url>https://github.com/hageldave/ImagingKit</url>
 	<description>The ImagingKit-Core artifact provides the core classes of the ImagingKit framework.</description>
 	
