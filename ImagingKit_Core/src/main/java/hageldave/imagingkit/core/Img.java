@@ -67,31 +67,42 @@ import java.util.stream.StreamSupport;
  * }</pre>
  * 
  * @author hageldave
+ * @since 1.0
  */
 public class Img implements Iterable<Pixel> {
 	
 	/** boundary mode that will return 0 for out of bounds positions.
-	 * @see #getValue(int, int, int) */
+	 * @see #getValue(int, int, int) 
+	 * @since 1.0 
+	 */
 	public static final int boundary_mode_zero = 0;
 	
 	/** boundary mode that will repeat the the edge of of an Img for out of 
 	 * bounds positions.
-	 * @see #getValue(int, int, int) */
+	 * @see #getValue(int, int, int) 
+	 * @since 1.0
+	 */
 	public static final int boundary_mode_repeat_edge = 1;
 	
 	/** boundary mode that will repeat the Img for out of bounds positions.
-	 * @see #getValue(int, int, int) */
+	 * @see #getValue(int, int, int) 
+	 * @since 1.0
+	 */
 	public static final int boundary_mode_repeat_image = 2;
 	
 	/** boundary mode that will mirror the Img for out of bounds positions
-	 * @see #getValue(int, int, int) */
+	 * @see #getValue(int, int, int) 
+	 * @since 1.0
+	 */
 	public static final int boundary_mode_mirror = 3;
 	
 	
-	/** data array of this Img containing a value for each pixel in row major order */
+	/** data array of this Img containing a value for each pixel in row major order 
+	 * @since 1.0 */
 	private final int[] data;
 	
-	/** dimension of this Img */
+	/** dimension of this Img 
+	 * @since 1.0 */
 	private final Dimension dimension;
 	
 	/** minimum number of elements this Img's {@link Spliterator}s can be split to.
@@ -106,6 +117,7 @@ public class Img implements Iterable<Pixel> {
 	 * Values are initialized to 0.
 	 * @param width of the Img
 	 * @param height of the Img
+	 * @since 1.0
 	 */
 	public Img(int width, int height){
 		this(new Dimension(width, height));
@@ -115,6 +127,7 @@ public class Img implements Iterable<Pixel> {
 	 * Creates a new Img of specified Dimension.
 	 * Values are initilaized to 0.
 	 * @param dimension extend of the Img (width and height)
+	 * @since 1.0
 	 */
 	public Img(Dimension dimension){
 		this.data = new int[dimension.width*dimension.height];
@@ -126,6 +139,7 @@ public class Img implements Iterable<Pixel> {
 	 * Values are copied from argument Image
 	 * @param bimg the BufferedImage 
 	 * @see #createRemoteImg(BufferedImage)
+	 * @since 1.0
 	 */
 	public Img(BufferedImage bimg){
 		this(bimg.getWidth(), bimg.getHeight());
@@ -140,6 +154,7 @@ public class Img implements Iterable<Pixel> {
 	 * @param data values (pixels) that will be used as the content of this Img
 	 * @throws IllegalArgumentException when the number of pixels of this Img 
 	 * resulting from width*height does not match the number of provided data values.
+	 * @since 1.0
 	 */
 	public Img(int width, int height, int[] data){
 		this(new Dimension(width, height), data);
@@ -152,6 +167,7 @@ public class Img implements Iterable<Pixel> {
 	 * @param data values (pixels) that will be used as the content of this Img
 	 * @throws IllegalArgumentException when the number of pixels of this Img 
 	 * resulting from width*height does not match the number of provided data values.
+	 * @since 1.0
 	 */
 	public Img(Dimension dim, int[] data){
 		if(dim.width*dim.height != data.length){
@@ -163,6 +179,7 @@ public class Img implements Iterable<Pixel> {
 	
 	/**
 	 * @return dimension of this Img
+	 * @since 1.0
 	 */
 	public Dimension getDimension() {
 		return new Dimension(dimension);
@@ -170,6 +187,7 @@ public class Img implements Iterable<Pixel> {
 	
 	/**
 	 * @return width of this Img
+	 * @since 1.0
 	 */
 	public int getWidth(){
 		return dimension.width;
@@ -177,6 +195,7 @@ public class Img implements Iterable<Pixel> {
 	
 	/**
 	 * @return height of this Img
+	 * @since 1.0
 	 */
 	public int getHeight(){
 		return dimension.height;
@@ -184,6 +203,7 @@ public class Img implements Iterable<Pixel> {
 	
 	/**
 	 * @return number of values (pixels) of this Img
+	 * @since 1.0
 	 */
 	public int numValues(){
 		return getWidth()*getHeight();
@@ -191,6 +211,7 @@ public class Img implements Iterable<Pixel> {
 	
 	/**
 	 * @return data array of this Img
+	 * @since 1.0
 	 */
 	public int[] getData() {
 		return data;
@@ -209,6 +230,7 @@ public class Img implements Iterable<Pixel> {
 	 * @see #getValue(int, int, int)
 	 * @see #getPixel(int, int)
 	 * @see #setValue(int, int, int)
+	 * @since 1.0
 	 */
 	public int getValue(final int x, final int y){
 		return this.data[y*dimension.width + x];
@@ -244,6 +266,7 @@ public class Img implements Iterable<Pixel> {
 	 * @param boundaryMode one of the boundary modes e.g. boundary_mode_mirror
 	 * @return value at specified position or a value depending on the
 	 * boundary mode for out of bounds positions.
+	 * @since 1.0
 	 */
 	public int getValue(int x, int y, final int boundaryMode){
 		if(x < 0 || y < 0 || x >= dimension.width || y >= dimension.height){
@@ -290,6 +313,7 @@ public class Img implements Iterable<Pixel> {
 	 * the data array's bounds, which can only happen for x and y values less 
 	 * than 0 or greater than 1.
 	 * @return bilinearly interpolated ARGB value.
+	 * @since 1.0
 	 */
 	public int interpolateARGB(final float xNormalized, final float yNormalized){
 		float xF = xNormalized * (getWidth()-1);
@@ -318,6 +342,7 @@ public class Img implements Iterable<Pixel> {
 	/**
 	 * Creates a new Pixel object for this Img with position {0,0}.
 	 * @return a Pixel object for this Img.
+	 * @since 1.0
 	 */
 	public Pixel getPixel(){
 		return new Pixel(this, 0);
@@ -338,6 +363,7 @@ public class Img implements Iterable<Pixel> {
 	 * @param y coordinate 
 	 * @return a Pixel object for this Img at {x,y}.
 	 * @see #getValue(int, int)
+	 * @since 1.0
 	 */
 	public Pixel getPixel(int x, int y){
 		return new Pixel(this, x,y);
@@ -364,6 +390,7 @@ public class Img implements Iterable<Pixel> {
 	 * @return the destination Img
 	 * @throws IllegalArgumentException if the specified area is not within 
 	 * the bounds of this Img or if the size of the area is not positive.
+	 * @since 1.0
 	 */
 	public Img copyArea(int x, int y, int w, int h, Img dest, int destX, int destY){
 		if(w <= 0 || h <= 0){
@@ -433,6 +460,7 @@ public class Img implements Iterable<Pixel> {
 	 * @throws ArrayIndexOutOfBoundsException if resulting index from x and y
 	 * is not within the data arrays bounds.
 	 * @see #getValue(int, int)
+	 * @since 1.0
 	 */
 	public void setValue(final int x, final int y, final int value){
 		this.data[y*dimension.width + x] = value;
@@ -441,6 +469,7 @@ public class Img implements Iterable<Pixel> {
 	/**
 	 * Fills the whole image with the specified value.
 	 * @param value for filling image
+	 * @since 1.0
 	 */
 	public void fill(final int value){
 		Arrays.fill(getData(), value);
@@ -448,6 +477,7 @@ public class Img implements Iterable<Pixel> {
 	
 	/**
 	 * @return a deep copy of this Img.
+	 * @since 1.0
 	 */
 	public Img copy(){
 		return new Img(getDimension(), Arrays.copyOf(getData(), getData().length));
@@ -457,6 +487,7 @@ public class Img implements Iterable<Pixel> {
 	 * @return a BufferedImage of type INT_ARGB with this Img's data copied to it.
 	 * @see #toBufferedImage(BufferedImage)
 	 * @see #getRemoteBufferedImage()
+	 * @since 1.0
 	 */
 	public BufferedImage toBufferedImage(){
 		BufferedImage bimg = BufferedImageFactory.getINT_ARGB(getDimension());
@@ -471,6 +502,7 @@ public class Img implements Iterable<Pixel> {
 	 * has less values than this Img.
 	 * @see #toBufferedImage()
 	 * @see #getRemoteBufferedImage()
+	 * @since 1.0
 	 */
 	public BufferedImage toBufferedImage(BufferedImage bimg){
 		bimg.setRGB(0, 0, getWidth(), getHeight(), getData(), 0, getWidth());
@@ -485,6 +517,7 @@ public class Img implements Iterable<Pixel> {
 	 * @return BufferedImage sharing this Img's data.
 	 * @see #createRemoteImg(BufferedImage)
 	 * @see #toBufferedImage()
+	 * @since 1.0
 	 */
 	public BufferedImage getRemoteBufferedImage(){
 		DirectColorModel cm = new DirectColorModel(32,
@@ -513,6 +546,7 @@ public class Img implements Iterable<Pixel> {
 	 * other than {@link DataBuffer#TYPE_INT} is provided.
 	 * @see #getRemoteBufferedImage()
 	 * @see #Img(BufferedImage)
+	 * @since 1.0
 	 */
 	public static Img createRemoteImg(BufferedImage bimg){
 		int type = bimg.getRaster().getDataBuffer().getDataType();
@@ -717,6 +751,7 @@ public class Img implements Iterable<Pixel> {
 	 * suitable for more sophisticated consumer actions and large Images (1MP+) 
 	 * @param action to be performed on each pixel
 	 * @see #forEach(Consumer action)
+	 * @since 1.0
 	 */
 	public void forEachParallel(final Consumer<? super Pixel> action) {
 		ParallelForEachExecutor exec = new ParallelForEachExecutor(null, spliterator(), action);
@@ -746,6 +781,7 @@ public class Img implements Iterable<Pixel> {
 	
 	/**
 	 * @see #forEachParallel(Consumer action)
+	 * @since 1.0
 	 */
 	@Override
 	public void forEach(final Consumer<? super Pixel> action) {
@@ -782,6 +818,7 @@ public class Img implements Iterable<Pixel> {
 	/** default implementation of {@link Iterable#forEach(Consumer)} <br>
 	 * only for performance test purposes as it is slower than the
 	 * {@link Img#forEach(Consumer)} implementation
+	 * @since 1.0
 	 */
 	void forEach_defaultimpl(final Consumer<? super Pixel> action) {
 		Iterable.super.forEach(action);
@@ -940,6 +977,7 @@ public class Img implements Iterable<Pixel> {
 		 * @param width of the area
 		 * @param height of the area
 		 * @param minSplitSize the minimum number of elements in a split
+		 * @since 1.1
 		 */
 		private ImgAreaSpliterator(int xStart, int yStart, int width, int height, int minSplitSize){
 			this(xStart, xStart+width, xStart, yStart, xStart+width, yStart+height-1, minSplitSize);
@@ -1049,6 +1087,7 @@ public class Img implements Iterable<Pixel> {
 	/**
 	 * Spliterator class for Img
 	 * @author hageldave
+	 * @since 1.0
 	 */
 	private final class ImgSpliterator implements Spliterator<Pixel> {
 		
@@ -1061,6 +1100,7 @@ public class Img implements Iterable<Pixel> {
 		 * @param startIndex first index of the range (inclusive)
 		 * @param endIndex last index of the range (inclusive)
 		 * @param minSplitSize minimum split size for this spliterator (minimum number of elements in a split)
+		 * @since 1.0
 		 */
 		private ImgSpliterator(int startIndex, int endIndex, int minSplitSize) {
 			px = new Pixel(Img.this, startIndex);
@@ -1119,6 +1159,12 @@ public class Img implements Iterable<Pixel> {
 		
 	}
 	
+	/**
+	 * Special Spliterator which guarantees that each split will cover at least
+	 * an entire row of the image.
+	 * @author hageldave
+	 * @since 1.3
+	 */
 	private static final class RowSpliterator implements Spliterator<Pixel> {
 		
 		int startX;
@@ -1189,6 +1235,13 @@ public class Img implements Iterable<Pixel> {
 		
 	}
 	
+	
+	/**
+	 * Special Spliterator which guarantees that each split will cover at least
+	 * an entire column of the image.
+	 * @author hageldave
+	 * @since 1.3
+	 */
 	private static final class ColSpliterator implements Spliterator<Pixel> {
 		
 		int startY;
@@ -1264,6 +1317,7 @@ public class Img implements Iterable<Pixel> {
 	 * Pixel Spliterator. Used to realise multithreaded forEach loop.
 	 * @author hageldave
 	 * @see Img#forEachParallel(Consumer)
+	 * @since 1.0
 	 */
 	private final static class ParallelForEachExecutor extends CountedCompleter<Void> {
 		private static final long serialVersionUID = 1L;

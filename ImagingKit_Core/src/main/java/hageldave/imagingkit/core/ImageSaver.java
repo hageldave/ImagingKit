@@ -14,6 +14,7 @@ import javax.imageio.ImageIO;
 /**
  * Class providing convenience methods for saving Images to file.
  * @author hageldave
+ * @since 1.0
  */
 public class ImageSaver {
 	
@@ -22,6 +23,7 @@ public class ImageSaver {
 	
 	/**
 	 * @return {@link ImageIO#getWriterFileSuffixes()}
+	 * @since 1.0
 	 */
 	public static String[] getSaveableImageFileFormats(){
 		return ImageIO.getWriterFileSuffixes();
@@ -32,6 +34,7 @@ public class ImageSaver {
 	 * argb values probably need conversion beforehand.
 	 * @param imgFormat the file format e.g. jpg or png
 	 * @return true if format only supports rgb values
+	 * @since 1.0
 	 */
 	public static boolean isFormatRGBOnly(String imgFormat){
 		switch (imgFormat.toLowerCase()) {
@@ -92,7 +95,8 @@ public class ImageSaver {
 	 * @param imgFileFormat image file format. Consult {@link #getSaveableImageFileFormats()}
 	 * @throws ImageSaverException if an IOException occured during 
 	 * the process, the provided filename path does refer to a directory or no 
-	 * appropriate writer could be found for specified format. 
+	 * appropriate writer could be found for specified format.
+	 * @since 1.0 
 	 */
 	public static void saveImage(Image image, String filename, String imgFileFormat){
 		File f = new File(filename);
@@ -112,6 +116,7 @@ public class ImageSaver {
 	 * the process, no OutputStream could be created due to a 
 	 * FileNotFoundException or no appropriate writer could be found for 
 	 * specified format.
+	 * @since 1.0
 	 */
 	public static void saveImage(Image image, File file, String imgFileFormat){
 		FileOutputStream fos = null;
@@ -133,6 +138,7 @@ public class ImageSaver {
 	 * @throws ImageSaverException if an IOException occured during 
 	 * the process, the filename does not contain a dot to get the filetype
 	 * or no appropriate writer could be found for specified format.
+	 * @since 1.0
 	 */
 	public static void saveImage(Image image, File file){
 		// get file ending
@@ -154,6 +160,7 @@ public class ImageSaver {
 	 * the process, the filename does not contain a dot to get the filetype,
 	 * the provided filename path does refer to a directory, 
 	 * or no appropriate writer could be found for specified format.
+	 * @since 1.0
 	 */
 	public static void saveImage(Image image, String filename){
 		File f = new File(filename);

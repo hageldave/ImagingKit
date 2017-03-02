@@ -7,6 +7,7 @@ import java.awt.image.BufferedImage;
 /**
  * Class providing convenience methods for converting Images to BufferedImages.
  * @author hageldave
+ * @since 1.0
  */
 public class BufferedImageFactory {
 
@@ -17,6 +18,7 @@ public class BufferedImageFactory {
 	 * shortcut for get(img, BufferedImage.TYPE_INT_ARGB).
 	 * @param img to be copied to BufferedImage of type INT_ARGB
 	 * @return a BufferedImage copy of the provided Image
+	 * @since 1.0
 	 */
 	public static BufferedImage getINT_ARGB(Image img){
 		return get(img, BufferedImage.TYPE_INT_ARGB);
@@ -30,6 +32,7 @@ public class BufferedImageFactory {
 	 * {@link BufferedImage#BufferedImage(int, int, int)} for details on the
 	 * available imgTypes.
 	 * @return a BufferedImage copy of the provided Image
+	 * @since 1.0
 	 */
 	public static BufferedImage get(Image img, int imgType){
 		BufferedImage bimg = new BufferedImage(img.getWidth(TheImageObserver.OBS_WIDTHHEIGHT), img.getHeight(TheImageObserver.OBS_WIDTHHEIGHT), imgType);
@@ -44,6 +47,7 @@ public class BufferedImageFactory {
 	 * Instancing method for BufferedImage of type {@link BufferedImage#TYPE_INT_ARGB}
 	 * @param d dimension of the created BufferedImage
 	 * @return a new BufferedImage of specified dimension and type TYPE_INT_ARGB
+	 * @since 1.0
 	 */
 	public static BufferedImage getINT_ARGB(Dimension d){
 		return getINT_ARGB(d.width, d.height);
@@ -54,6 +58,7 @@ public class BufferedImageFactory {
 	 * @param width of the created BufferedImage
 	 * @param height of the created BufferedImage
 	 * @return a new BufferedImage of specified dimension and type TYPE_INT_ARGB
+	 * @since 1.0
 	 */
 	public static BufferedImage getINT_ARGB(int width, int height){
 		return new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);

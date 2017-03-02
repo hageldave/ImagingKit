@@ -12,6 +12,7 @@ import javax.imageio.ImageIO;
 /**
  * Class providing convenience methods for loading Images with {@link ImageIO}.
  * @author hageldave
+ * @since 1.0
  */
 public class ImageLoader {
 	
@@ -20,6 +21,7 @@ public class ImageLoader {
 	
 	/**
 	 * @return {@link ImageIO#getReaderFileSuffixes()}
+	 * @since 1.0
 	 */
 	public static String[] getLoadableImageFileFormats(){
 		return ImageIO.getReaderFileSuffixes();
@@ -31,6 +33,7 @@ public class ImageLoader {
 	 * @return loaded Image.
 	 * @throws ImageLoaderException if the file does not exist or cannot be 
 	 * loaded.
+	 * @since 1.0
 	 */
 	public static BufferedImage loadImage(String fileName){
 		File f = new File(fileName);
@@ -45,6 +48,7 @@ public class ImageLoader {
 	 * @param file the image file
 	 * @return loaded Image.
 	 * @throws ImageLoaderException if no image could be loaded from the file.
+	 * @since 1.0
 	 */
 	public static BufferedImage loadImage(File file){
 		try {
@@ -89,6 +93,7 @@ public class ImageLoader {
 	 * @param imageType of the resulting BufferedImage
 	 * @return loaded Image.
 	 * @throws ImageLoaderException if no image could be loaded from the file.
+	 * @since 1.0
 	 */
 	public static BufferedImage loadImage(File file, int imageType){
 		BufferedImage img = loadImage(file);
@@ -108,6 +113,7 @@ public class ImageLoader {
 	 * @param imageType of the resulting BufferedImage
 	 * @return loaded Image.
 	 * @throws ImageLoaderException if no image could be loaded from the file.
+	 * @since 1.0
 	 */
 	public static BufferedImage loadImage(String fileName, int imageType){
 		BufferedImage img = loadImage(fileName);

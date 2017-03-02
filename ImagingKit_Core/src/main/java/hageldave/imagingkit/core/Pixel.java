@@ -12,12 +12,15 @@ package hageldave.imagingkit.core;
  * or {@link #a(int)}, {@link #r(int)}, {@link #g(int)}, {@link #b(int)}.
  * 
  * @author hageldave
+ * @since 1.0
  */
 public class Pixel {
-	/** Img this pixel belongs to */
+	/** Img this pixel belongs to 
+	 * @since 1.0 */
 	private final Img img;
 	
-	/** index of the value this pixel references */
+	/** index of the value this pixel references 
+	 * @since 1.0 */
 	private int index;
 	
 	/**
@@ -30,6 +33,7 @@ public class Pixel {
 	 * @see #Pixel(Img, int, int)
 	 * @see Img#getPixel()
 	 * @see Img#getPixel(int, int)
+	 * @since 1.0
 	 */
 	public Pixel(Img img, int index) {
 		this.img = img;
@@ -47,6 +51,7 @@ public class Pixel {
 	 * @see #Pixel(Img, int)
 	 * @see Img#getPixel()
 	 * @see Img#getPixel(int, int)
+	 * @since 1.0
 	 */
 	public Pixel(Img img, int x, int y) {
 		this(img, y*img.getWidth()+x);
@@ -54,6 +59,7 @@ public class Pixel {
 	
 	/**
 	 * @return the Img this Pixel belongs to.
+	 * @since 1.0
 	 */
 	public Img getImg() {
 		return img;
@@ -65,6 +71,7 @@ public class Pixel {
 	 * @param index corresponding to the position of the image's data array.
 	 * @see #setPosition(int, int)
 	 * @see #getIndex()
+	 * @since 1.0
 	 */
 	public void setIndex(int index) {
 		this.index = index;
@@ -78,6 +85,7 @@ public class Pixel {
 	 * @see #setIndex(int)
 	 * @see #getX()
 	 * @see #getY()
+	 * @since 1.0
 	 */
 	public void setPosition(int x, int y) {
 		this.index = y*img.getWidth()+x;
@@ -85,6 +93,7 @@ public class Pixel {
 	
 	/**
 	 * @return the index of the Img value this Pixel references.
+	 * @since 1.0
 	 */
 	public int getIndex() {
 		return index;
@@ -95,6 +104,7 @@ public class Pixel {
 	 * @see #getY()
 	 * @see #getIndex()
 	 * @see #setPosition(int, int)
+	 * @since 1.0
 	 */
 	public int getX() {
 		return index % img.getWidth();
@@ -105,6 +115,7 @@ public class Pixel {
 	 * @see #getX()
 	 * @see #getIndex()
 	 * @see #setPosition(int, int)
+	 * @since 1.0
 	 */
 	public int getY() {
 		return index / img.getWidth();
@@ -148,6 +159,7 @@ public class Pixel {
 	 * @see #setRGB(int, int, int)
 	 * @see #getValue()
 	 * @see Img#setValue(int, int, int)
+	 * @since 1.0
 	 */
 	public void setValue(int pixelValue){
 		this.img.getData()[index] = pixelValue;
@@ -169,6 +181,7 @@ public class Pixel {
 	 * @see #b()
 	 * @see #setValue(int)
 	 * @see Img#getValue(int, int)
+	 * @since 1.0
 	 */
 	public int getValue(){
 		return this.img.getData()[index];
@@ -186,6 +199,7 @@ public class Pixel {
 	 * @see #setRGB(int, int, int)
 	 * @see #setARGB(int, int, int, int)
 	 * @see #getValue()
+	 * @since 1.0
 	 */
 	public int a(){
 		return Pixel.a(getValue());
@@ -203,6 +217,7 @@ public class Pixel {
 	 * @see #setRGB(int, int, int)
 	 * @see #setARGB(int, int, int, int)
 	 * @see #getValue()
+	 * @since 1.0
 	 */
 	public int r(){
 		return Pixel.r(getValue());
@@ -220,6 +235,7 @@ public class Pixel {
 	 * @see #setRGB(int, int, int)
 	 * @see #setARGB(int, int, int, int)
 	 * @see #getValue()
+	 * @since 1.0
 	 */
 	public int g(){
 		return Pixel.g(getValue());
@@ -237,6 +253,7 @@ public class Pixel {
 	 * @see #setRGB(int, int, int)
 	 * @see #setARGB(int, int, int, int)
 	 * @see #getValue()
+	 * @since 1.0
 	 */
 	public int b(){
 		return Pixel.b(getValue());
@@ -321,6 +338,7 @@ public class Pixel {
 	 * @see #argb_bounded(int, int, int, int)
 	 * @see #argb_fast(int, int, int, int)
 	 * @see #setValue(int)
+	 * @since 1.0
 	 */
 	public void setARGB(int a, int r, int g, int b){
 		setValue(Pixel.argb(a, r, g, b));
@@ -340,6 +358,7 @@ public class Pixel {
 	 * @see #argb_bounded(int, int, int, int)
 	 * @see #argb_fast(int, int, int, int)
 	 * @see #setValue(int)
+	 * @since 1.0
 	 */
 	public void setRGB(int r, int g, int b){
 		setValue(Pixel.rgb(r, g, b));
@@ -526,6 +545,7 @@ public class Pixel {
 	 * @return 8bit luminance value of given RGB value. <br>
 	 * Using weights r=0.2126 g=0.7152 b=0.0722
 	 * @see #getGrey(int, int, int, int)
+	 * @since 1.0
 	 */
 	public static final int getLuminance(final int color){
 		return getGrey(color, 2126, 7152, 722);
@@ -548,6 +568,7 @@ public class Pixel {
 	 * @return weighted grey value (8bit) of RGB color value for non-negative weights.
 	 * @throws ArithmeticException divide by zero if the weights sum up to 0.
 	 * @see #getLuminance(int)
+	 * @since 1.0
 	 */
 	public static final int getGrey(final int color, final int redWeight, final int greenWeight, final int blueWeight){
 		return (r(color)*redWeight + g(color)*greenWeight + b(color)*blueWeight)/(redWeight+blueWeight+greenWeight);
@@ -571,6 +592,7 @@ public class Pixel {
 	 * @see #r(int) 
 	 * @see #g(int)
 	 * @see #b(int)
+	 * @since 1.0
 	 */
 	public static final int rgb_bounded(final int r, final int g, final int b){
 		return rgb_fast( 
@@ -597,6 +619,7 @@ public class Pixel {
 	 * @see #r(int) 
 	 * @see #g(int)
 	 * @see #b(int)
+	 * @since 1.0
 	 */
 	public static final int rgb(final int r, final int g, final int b){
 		return rgb_fast(r & 0xff, g & 0xff, b & 0xff);
@@ -621,6 +644,7 @@ public class Pixel {
 	 * @see #r(int) 
 	 * @see #g(int)
 	 * @see #b(int)
+	 * @since 1.0
 	 */
 	public static final int rgb_fast(final int r, final int g, final int b){
 		return 0xff000000|(r<<16)|(g<<8)|b;
@@ -666,6 +690,7 @@ public class Pixel {
 	 * @see #r(int) 
 	 * @see #g(int)
 	 * @see #b(int)
+	 * @since 1.0
 	 */
 	public static final int argb_bounded(final int a, final int r, final int g, final int b){
 		return argb_fast(
@@ -693,6 +718,7 @@ public class Pixel {
 	 * @see #r(int) 
 	 * @see #g(int)
 	 * @see #b(int)
+	 * @since 1.0
 	 */
 	public static final int argb(final int a, final int r, final int g, final int b){
 		return argb_fast(a & 0xff, r & 0xff, g & 0xff, b & 0xff);
@@ -717,6 +743,7 @@ public class Pixel {
 	 * @see #r(int) 
 	 * @see #g(int)
 	 * @see #b(int)
+	 * @since 1.0
 	 */
 	public static final int argb_fast(final int a, final int r, final int g, final int b){
 		return (a<<24)|(r<<16)|(g<<8)|b;
@@ -753,6 +780,7 @@ public class Pixel {
 	 * @see #g(int)
 	 * @see #argb(int, int, int, int)
 	 * @see #rgb(int, int, int)
+	 * @since 1.0
 	 */
 	public static final int b(final int color){
 		return (color) & 0xff;
@@ -766,6 +794,7 @@ public class Pixel {
 	 * @see #b(int)
 	 * @see #argb(int, int, int, int)
 	 * @see #rgb(int, int, int)
+	 * @since 1.0
 	 */
 	public static final int g(final int color){
 		return (color >> 8) & 0xff;
@@ -779,6 +808,7 @@ public class Pixel {
 	 * @see #b(int)
 	 * @see #argb(int, int, int, int)
 	 * @see #rgb(int, int, int)
+	 * @since 1.0
 	 */
 	public static final int r(final int color){
 		return (color >> 16) & 0xff;
@@ -792,6 +822,7 @@ public class Pixel {
 	 * @see #b(int)
 	 * @see #argb(int, int, int, int)
 	 * @see #rgb(int, int, int)
+	 * @since 1.0
 	 */
 	public static final int a(final int color){
 		return (color >> 24) & 0xff;
@@ -870,6 +901,7 @@ public class Pixel {
 	 * @param channels value for each channel (varargs)
 	 * @return packed channel values
 	 * @see #ch(int, int, int)
+	 * @since 1.0
 	 */
 	public static final int combineCh(int bitsPerChannel, int ... channels){
 		int result = 0;
@@ -897,6 +929,7 @@ public class Pixel {
 	 * @param numBits number of bits of the channel
 	 * @return channel value
 	 * @see #combineCh(int, int...) combineCh(int, int...)
+	 * @since 1.0
 	 */
 	public static final int ch(final int color, final int startBit, final int numBits){
 		return (color >> startBit) & ((1 << numBits)-1);
