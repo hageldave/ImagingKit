@@ -595,6 +595,15 @@ public class ImgTest {
 			}
 		}
 		
+		{
+			Img img = imgAlloc.apply(100, 100);
+			Spliterator<Pixel> split = img.spliterator();
+			while(split.tryAdvance(px->px.setValue(px.getIndex())));
+			for(int i = 0; i < img.numValues(); i++){
+				assertEquals(i, img.getData()[i]);
+			}
+		}
+		
 		// area spliterator
 		{
 			Img img = imgAlloc.apply(2000, 400);

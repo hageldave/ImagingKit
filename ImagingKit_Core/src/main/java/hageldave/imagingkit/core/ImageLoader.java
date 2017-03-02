@@ -1,3 +1,25 @@
+/*
+ * Copyright 2017 David Haegele
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to 
+ * deal in the Software without restriction, including without limitation the 
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or 
+ * sell copies of the Software, and to permit persons to whom the Software is 
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in 
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
+ * IN THE SOFTWARE.
+ */
+
 package hageldave.imagingkit.core;
 
 import java.awt.image.BufferedImage;
@@ -12,11 +34,16 @@ import javax.imageio.ImageIO;
 /**
  * Class providing convenience methods for loading Images with {@link ImageIO}.
  * @author hageldave
+ * @since 1.0
  */
 public class ImageLoader {
 	
+	static {/* for code coverage */new ImageLoader();}
+	private ImageLoader(){}
+	
 	/**
 	 * @return {@link ImageIO#getReaderFileSuffixes()}
+	 * @since 1.0
 	 */
 	public static String[] getLoadableImageFileFormats(){
 		return ImageIO.getReaderFileSuffixes();
@@ -28,6 +55,7 @@ public class ImageLoader {
 	 * @return loaded Image.
 	 * @throws ImageLoaderException if the file does not exist or cannot be 
 	 * loaded.
+	 * @since 1.0
 	 */
 	public static BufferedImage loadImage(String fileName){
 		File f = new File(fileName);
@@ -42,6 +70,7 @@ public class ImageLoader {
 	 * @param file the image file
 	 * @return loaded Image.
 	 * @throws ImageLoaderException if no image could be loaded from the file.
+	 * @since 1.0
 	 */
 	public static BufferedImage loadImage(File file){
 		try {
@@ -86,6 +115,7 @@ public class ImageLoader {
 	 * @param imageType of the resulting BufferedImage
 	 * @return loaded Image.
 	 * @throws ImageLoaderException if no image could be loaded from the file.
+	 * @since 1.0
 	 */
 	public static BufferedImage loadImage(File file, int imageType){
 		BufferedImage img = loadImage(file);
@@ -105,6 +135,7 @@ public class ImageLoader {
 	 * @param imageType of the resulting BufferedImage
 	 * @return loaded Image.
 	 * @throws ImageLoaderException if no image could be loaded from the file.
+	 * @since 1.0
 	 */
 	public static BufferedImage loadImage(String fileName, int imageType){
 		BufferedImage img = loadImage(fileName);

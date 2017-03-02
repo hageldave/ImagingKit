@@ -1,76 +1,84 @@
 package hageldave.imagingkit.filter.filterimpl;
 
+import java.util.function.Consumer;
+
 import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.Pixel;
-import hageldave.imagingkit.filter.Filter;
-import hageldave.imagingkit.filter.settings.ReadOnlyFilterSettings;
+import hageldave.imagingkit.filter.NeighborhoodFilter;
 
-public class ConvolutionFilter extends Filter {
-
-	public static final String boundaryModeID = "boundary mode";
-	public static final String convolveAlphaID = "convolve alpha";
+public class ConvolutionFilter implements NeighborhoodFilter {
+	
 	float[] convolutionKernel;
 	int kernelWidth;
 	int kernelHeight;
 	boolean convolveAlpha = true;
 	int boundaryMode = Img.boundary_mode_mirror;
 
-
+	
 	@Override
-	protected void readSettingsBeforeApply(ReadOnlyFilterSettings settings) {
-		this.convolveAlpha = settings.getAs(convolveAlphaID, Boolean.class, true);
-		this.boundaryMode = settings.getAs(boundaryModeID, Integer.class, Img.boundary_mode_mirror);
+	public Consumer<Pixel> consumer(Img copy) {
+		int kernelWidth=this.kernelWidth, kernelHeight=this.kernelHeight;
+		int kernelX0 = -kernelWidth/2, kernelY0 = -kernelHeight/2;
+		float[] convolutionKernel = this.convolutionKernel;
+		
+		if(convolveAlpha)
+			return px->convolveWithAlpha(px, copy, kernelX0, kernelY0, kernelWidth, kernelHeight, convolutionKernel);
+		else
+			return px->convolveWithoutAlpha(px, copy, kernelX0, kernelY0, kernelWidth, kernelHeight, convolutionKernel);
 	}
-
-	@Override
-	public void doApply(Img img) {
-		Img cpy = img.copy();
-		if(convolveAlpha){
-			img.forEachParallel((px)->
-			{
-				int x = px.getX(); int y = px.getY();
-				float a, r, g, b; 
-				a = r = g = b = 0;
-				for(int ky = getKernelY0(); ky < getKernelY0()+kernelHeight; ky++){
-					for(int kx = getKernelX0(); kx < getKernelX0()+kernelWidth; kx++){
-						int value = cpy.getValue(x+kx, y+ky, boundaryMode);
-						a += Pixel.a(value)*getKernelValue(kx, ky);
-						r += Pixel.r(value)*getKernelValue(kx, ky);
-						g += Pixel.g(value)*getKernelValue(kx, ky);
-						b += Pixel.b(value)*getKernelValue(kx, ky);
-					}
-				}
-				px.setValue(Pixel.argb_bounded((int)a, (int)r, (int)g, (int)b));
-			});
-		} else {
-			img.forEachParallel((px)->
-			{
-				int x = px.getX(); int y = px.getY();
-				float r, g, b; 
-				r = g = b = 0;
-				for(int ky = getKernelY0(); ky < getKernelY0()+kernelHeight; ky++){
-					for(int kx = getKernelX0(); kx < getKernelX0()+kernelWidth; kx++){
-						int value = cpy.getValue(x+kx, y+ky, boundaryMode);
-						r += Pixel.r(value)*getKernelValue(kx, ky);
-						g += Pixel.g(value)*getKernelValue(kx, ky);
-						b += Pixel.b(value)*getKernelValue(kx, ky);
-					}
-				}
-				px.setValue(Pixel.argb_bounded(px.a(), (int)r, (int)g, (int)b));
-			});
+	
+	
+	private void convolveWithAlpha(
+			final Pixel px, 
+			final Img copy, 
+			final int kernelX0, 
+			final int kernelY0, 
+			final int kernelWidth, 
+			final int kernelHeight, 
+			final float[] convolutionKernel)
+	{
+		int x = px.getX(), y = px.getY();
+		float a, r, g, b; 
+		a = r = g = b = 0;
+		for(int ky = kernelY0; ky < kernelY0+kernelHeight; ky++){
+			for(int kx = kernelX0; kx < kernelX0+kernelWidth; kx++){
+				int value = copy.getValue(x+kx, y+ky, boundaryMode);
+				float k = getKernelValue(kx, ky, kernelX0, kernelY0, kernelWidth, convolutionKernel);
+				a += Pixel.a(value)*k;
+				r += Pixel.r(value)*k;
+				g += Pixel.g(value)*k;
+				b += Pixel.b(value)*k;
+			}
 		}
+		px.setValue(Pixel.argb_bounded((int)a, (int)r, (int)g, (int)b));
+	}
+	
+	private void convolveWithoutAlpha(
+			final Pixel px, 
+			final Img copy, 
+			final int kernelX0, 
+			final int kernelY0, 
+			final int kernelWidth, 
+			final int kernelHeight, 
+			final float[] convolutionKernel)
+	{
+		int x = px.getX(), y = px.getY();
+		float r, g, b; 
+		r = g = b = 0;
+		for(int ky = kernelY0; ky < kernelY0+kernelHeight; ky++){
+			for(int kx = kernelX0; kx < kernelX0+kernelWidth; kx++){
+				int value = copy.getValue(x+kx, y+ky, boundaryMode);
+				float k = getKernelValue(kx, ky, kernelX0, kernelY0, kernelWidth, convolutionKernel);
+				r += Pixel.r(value)*k;
+				g += Pixel.g(value)*k;
+				b += Pixel.b(value)*k;
+			}
+		}
+		px.setValue(Pixel.argb_bounded(px.a(), (int)r, (int)g, (int)b));
 	}
 
-	int getKernelX0(){
-		return -kernelWidth/2;
-	}
-
-	int getKernelY0(){
-		return -kernelHeight/2;
-	}
-
-	float getKernelValue(int kx, int ky){
-		return convolutionKernel[(ky-getKernelY0())*kernelWidth+(kx-getKernelX0())];
+	static float getKernelValue(int kx, int ky, int kx0, int ky0, int kWidth, float[] convolutionKernel){
+		return convolutionKernel[(ky-ky0)*kWidth+(kx-kx0)];
 	}
 
 	public void setConvolutionKernel(int kWidth, int kHeight, float[] kernel){

@@ -1,3 +1,25 @@
+/*
+ * Copyright 2017 David Haegele
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to 
+ * deal in the Software without restriction, including without limitation the 
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or 
+ * sell copies of the Software, and to permit persons to whom the Software is 
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in 
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
+ * IN THE SOFTWARE.
+ */
+
 package hageldave.imagingkit.core;
 
 import java.awt.Image;
@@ -14,11 +36,16 @@ import javax.imageio.ImageIO;
 /**
  * Class providing convenience methods for saving Images to file.
  * @author hageldave
+ * @since 1.0
  */
 public class ImageSaver {
 	
+	static {/* for code coverage */new ImageSaver();}
+	private ImageSaver(){}
+	
 	/**
 	 * @return {@link ImageIO#getWriterFileSuffixes()}
+	 * @since 1.0
 	 */
 	public static String[] getSaveableImageFileFormats(){
 		return ImageIO.getWriterFileSuffixes();
@@ -29,6 +56,7 @@ public class ImageSaver {
 	 * argb values probably need conversion beforehand.
 	 * @param imgFormat the file format e.g. jpg or png
 	 * @return true if format only supports rgb values
+	 * @since 1.0
 	 */
 	public static boolean isFormatRGBOnly(String imgFormat){
 		switch (imgFormat.toLowerCase()) {
@@ -89,7 +117,8 @@ public class ImageSaver {
 	 * @param imgFileFormat image file format. Consult {@link #getSaveableImageFileFormats()}
 	 * @throws ImageSaverException if an IOException occured during 
 	 * the process, the provided filename path does refer to a directory or no 
-	 * appropriate writer could be found for specified format. 
+	 * appropriate writer could be found for specified format.
+	 * @since 1.0 
 	 */
 	public static void saveImage(Image image, String filename, String imgFileFormat){
 		File f = new File(filename);
@@ -109,6 +138,7 @@ public class ImageSaver {
 	 * the process, no OutputStream could be created due to a 
 	 * FileNotFoundException or no appropriate writer could be found for 
 	 * specified format.
+	 * @since 1.0
 	 */
 	public static void saveImage(Image image, File file, String imgFileFormat){
 		FileOutputStream fos = null;
@@ -130,6 +160,7 @@ public class ImageSaver {
 	 * @throws ImageSaverException if an IOException occured during 
 	 * the process, the filename does not contain a dot to get the filetype
 	 * or no appropriate writer could be found for specified format.
+	 * @since 1.0
 	 */
 	public static void saveImage(Image image, File file){
 		// get file ending
@@ -151,6 +182,7 @@ public class ImageSaver {
 	 * the process, the filename does not contain a dot to get the filetype,
 	 * the provided filename path does refer to a directory, 
 	 * or no appropriate writer could be found for specified format.
+	 * @since 1.0
 	 */
 	public static void saveImage(Image image, String filename){
 		File f = new File(filename);

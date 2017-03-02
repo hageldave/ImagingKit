@@ -1,3 +1,25 @@
+/*
+ * Copyright 2017 David Haegele
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to 
+ * deal in the Software without restriction, including without limitation the 
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or 
+ * sell copies of the Software, and to permit persons to whom the Software is 
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in 
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
+ * IN THE SOFTWARE.
+ */
+
 package hageldave.imagingkit.core;
 
 import java.util.function.Consumer;
@@ -10,7 +32,7 @@ import java.util.function.Consumer;
  * @author hageldave
  * @since 1.2
  */
-public enum ColorSpaceTransformation {
+public enum ColorSpaceTransformation implements Consumer<Pixel> {
 	
 	/**
 	 * Transforms colors from the RGB domain to the CIE L*a*b* domain. 
@@ -170,9 +192,11 @@ public enum ColorSpaceTransformation {
 	 * Pass this to {@link Img#forEach(Consumer)} or similar methods.
 	 * @return the Pixel Consumer corresponding to this transformation.
 	 * @since 1.2
+	 * @deprecated as of 1.4: no longer needed as ColorSpaceTransformation implements Consumer
 	 */
+	@Deprecated
 	public final Consumer<Pixel> get(){
-		return px -> px.setValue(transform(px.getValue()));
+		return this;
 	}
 	
 	/**
@@ -187,9 +211,20 @@ public enum ColorSpaceTransformation {
 		return (color & 0xff000000) | (transformation.transform(color) & 0x00ffffff);
 	}
 	
+	/**
+	 * Applies this transformation to the specified pixel
+	 * @param px pixel to be transformed
+	 * @since 1.4
+	 */
+	@Override
+	public void accept(Pixel px) {
+		px.setValue(transform(px.getValue()));
+	}
+	
 	
 	////// STATIC //////
-	
+
+
 	/** Interface for a transformation function from int to int */
 	private static interface Transformation {
 		/**
