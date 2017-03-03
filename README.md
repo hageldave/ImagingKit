@@ -8,9 +8,9 @@ A Java library for imaging tasks that integrates well with the commonly used jav
 So far the *ImagingKit-Core* artifact of the library is available through the maven central repository:
 ```
 <dependency>
-    <groupId>com.github.hageldave.imagingkit</groupId>
-    <artifactId>imagingkit-core</artifactId>
-    <version>1.3</version>
+  <groupId>com.github.hageldave.imagingkit</groupId>
+  <artifactId>imagingkit-core</artifactId>
+  <version>1.4</version>
 </dependency>
 ```
 
@@ -54,6 +54,7 @@ img.paint(g2d -> {
 	g2d.drawString(helloWorld, img.getWidth()/2-textWidth/2, img.getHeight()/2);
 	g2d.drawLine(0, img.getHeight()/2+4, img.getWidth(), img.getHeight()/2+4);
 });
+ImageFrame.display(img);
 ImageSaver.saveImage(img.getRemoteBufferedImage(), "hello_world.png");
 ```
 Fancy polar color thing:
@@ -72,7 +73,7 @@ img.forEach(px -> {
 	
 	px.setRGB((int)(r*(1-len)), (int)(g*(1-len)), (int)(b*(1-len)));
 });
-ImageSaver.saveImage(img.getRemoteBufferedImage(), "polar_colors.png");
+ImageFrame.display(img);
 ```
 Shifting hue (using color space transformation):
 ```java
@@ -86,7 +87,7 @@ img.forEach(pixel -> {
 });
 img.forEach(ColorSpaceTransformation.HSV_2_RGB.get());
 
-ImageSaver.saveImage(img.getRemoteBufferedImage(), "lena_hue_shift.png");
+ImageFrame.display(img);
 ```
 Swing framebuffer rendering:
 ```java
