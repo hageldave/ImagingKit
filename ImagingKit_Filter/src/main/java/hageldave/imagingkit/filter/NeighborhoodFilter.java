@@ -7,6 +7,22 @@ import java.util.function.Consumer;
 import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.Pixel;
 
+/**
+ * The {@link NeighborhoodFilter} interface provides a default imlementation of the
+ * {@link ImgFilter#applyTo(Img, boolean, int, int, int, int)} method which 
+ * applies a {@code Consumer<Pixel>} to the {@link Img}. Therefore classes that 
+ * implement this interface have to provide such a {@link Consumer} via the 
+ * {@link #consumer(Img)} method which is the action that will be executed on
+ * every {@link Pixel}. The {@link #consumer(Img)} method will be passed a copy
+ * of the Img that the returned {@code Consumer<Pixel>} will be applied to.
+ * <br>e.g. {@code img.forEach(consumer(img.copy()));}<br>
+ * This way a Consumer using the neighborhood of the pixel it operates on can
+ * access these in the copy where they are unchanged.
+ * <br>e.g. {@code Consumer<Pixel> c = px->px.setValue(copy.getValue(px.getX()-1,px.getY(),0x0));}
+ * 
+ * @author hageldave
+ *
+ */
 public interface NeighborhoodFilter extends ImgFilter {
 	
 	public Consumer<Pixel> consumer(Img copy);
