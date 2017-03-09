@@ -14,17 +14,35 @@ import hageldave.imagingkit.core.Pixel;
  * implement this interface have to provide such a {@link Consumer} via the 
  * {@link #consumer(Img)} method which is the action that will be executed on
  * every {@link Pixel}. The {@link #consumer(Img)} method will be passed a copy
- * of the Img that the returned {@code Consumer<Pixel>} will be applied to.
- * <br>e.g. {@code img.forEach(consumer(img.copy()));}<br>
+ * of the Img that the returned {@code Consumer<Pixel>} will be applied to. e.g. 
+ * <pre>{@code 
+ * img.forEach(consumer(img.copy()));
+ * }</pre>
  * This way a Consumer using the neighborhood of the pixel it operates on can
- * access these in the copy where they are unchanged.
- * <br>e.g. {@code Consumer<Pixel> c = px->px.setValue(copy.getValue(px.getX()-1,px.getY(),0x0));}
+ * access these in the copy where they are unchanged. e.g. 
+ * <pre>{@code 
+ * Consumer<Pixel> shiftRight = px->{
+ *    int x = px.getX()-1;
+ *    px.setValue(copy.getValue(x,px.getY(),Img.boundary_mode_repeat_image));
+ * };
+ * }</pre>
+ * 
  * 
  * @author hageldave
  *
  */
 public interface NeighborhoodFilter extends ImgFilter {
 	
+	/**
+	 * Returns the action to be performed on an individual pixel.
+	 * A copy of the {@link Img} the pixel belongs to is passed as argument
+	 * for accessing neighboring pixels in their unchanged state during
+	 * the application of the returned consumer.
+	 * 
+	 * @param copy of the image the returned consumer is applied to
+	 * @return the {@link Consumer} that will be applied to a {@link Pixel}
+	 */
+	/* >>>> TO BE IMPLEMENTED <<<< */
 	public Consumer<Pixel> consumer(Img copy);
 
 	
@@ -32,6 +50,25 @@ public interface NeighborhoodFilter extends ImgFilter {
 	default void applyTo(Img img, boolean parallelPreferred, int x, int y, int width, int height) 
 		{applyTo(img, new Img(img.getDimension()), parallelPreferred, x,y,width,height);}
 	
+	/**
+	 * Applies this filter to the specified {@link Img} (first argument) within 
+	 * the specified area (x, y, width, height). When parallelPreferred is true, 
+	 * a multithreaded (parallel) implementation will be executed leveraging
+	 * the {@link Img#forEachParallel(Consumer)} method.<br>
+	 * The specified {@link Img} copy (second argument) will be used to provide
+	 * the {@link #consumer(Img)} with an unchanging version of the image that
+	 * it is applied to.
+	 * 
+	 * @param img the filter will be applied to
+	 * @param copy Img of the same dimensions as the img argument (img content
+	 * will be copied to it)
+	 * @param parallelPreferred if true, the filter will be executed in parallel 
+	 * if possible
+	 * @param x starting x coordinate of the area the filter will be applied to
+	 * @param y starting y coordinate of the area the filter will be applied to
+	 * @param width of the area the filter will be applied to
+	 * @param height of the area the filter will be applied to
+	 */
 	public default void applyTo(Img img, Img copy, boolean parallelPreferred, int x, int y, int width, int height) {
 		assert(img.getDimension().equals(copy.getDimension()));
 		
@@ -39,14 +76,14 @@ public interface NeighborhoodFilter extends ImgFilter {
 		
 		if(parallelPreferred){
 			if(x == 0 && y == 0 && width == img.getWidth() && height == img.getHeight())
-				img.forEach(consumer(copy));
-			else
-				img.forEach(x, y, width, height, consumer(copy));
-		} else {
-			if(x == 0 && y == 0 && width == img.getWidth() && height == img.getHeight())
 				img.forEachParallel(consumer(copy));
 			else
 				img.forEachParallel(x, y, width, height, consumer(copy));
+		} else {
+			if(x == 0 && y == 0 && width == img.getWidth() && height == img.getHeight())
+				img.forEach(consumer(copy));
+			else
+				img.forEach(x, y, width, height, consumer(copy));
 		}
 	}
 	

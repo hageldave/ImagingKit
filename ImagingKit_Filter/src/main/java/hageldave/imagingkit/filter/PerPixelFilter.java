@@ -33,14 +33,14 @@ public interface PerPixelFilter extends ImgFilter {
 	public default void applyTo(Img img, boolean parallelPreferred, int x, int y, int width, int height) {
 		if(parallelPreferred){
 			if(x == 0 && y == 0 && width == img.getWidth() && height == img.getHeight())
-				img.forEach(consumer());
-			else
-				img.forEach(x, y, width, height, consumer());
-		} else {
-			if(x == 0 && y == 0 && width == img.getWidth() && height == img.getHeight())
 				img.forEachParallel(consumer());
 			else
 				img.forEachParallel(x, y, width, height, consumer());
+		} else {
+			if(x == 0 && y == 0 && width == img.getWidth() && height == img.getHeight())
+				img.forEach(consumer());
+			else
+				img.forEach(x, y, width, height, consumer());
 		}
 	}
 	
