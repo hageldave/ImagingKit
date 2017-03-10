@@ -97,6 +97,31 @@ public interface NeighborhoodFilter extends ImgFilter {
 			return ImgFilter.super.followedBy(nextFilter);
 	}
 	
+	
+	/**
+	 * Specialized <tt>followedBy()</tt> implementation for concatenating
+	 * this {@link NeighborhoodFilter} with another NeighborhoodFilter. The
+	 * Result of this concatenation will be a NeighborhoodFilter that will
+	 * apply this NeighborhoodFilter first and the specified NeighborhoodFilter
+	 * subsequently.
+	 * <p>
+	 * Using this method has an advantage over applying two NeighborhoodFilters
+	 * 'manually' (e.g. calling applyTo subsequently:
+	 * {@code nbFilter1.applyTo(img); nbFilter2.applyTo(img);}).
+	 * The advantage is that memory for the image copy is only allocated once
+	 * and reused on each subsequent NeighborhoodFilter, where as multiple calls
+	 * to applyTo() need to allocate a new copy each time.
+	 * <p><b>
+	 * Note that calls to {@link NeighborhoodFilter#consumer(Img)} of the
+	 * returned filter will throw an {@link UnsupportedOperationException} as
+	 * its {@link NeighborhoodFilter#applyTo(Img, Img, boolean, int, int, int, int)}
+	 * method no longer relies on that method.
+	 * 
+	 * @param nextFilter to be applied after this filter
+	 * @return a NeighborhoodFilter that will execute this filter and the 
+	 * specified one subsequently
+	 * @throws NullPointerException if nextFilter is null.
+	 */
 	public default NeighborhoodFilter followedBy(NeighborhoodFilter nextFilter){
 		Objects.requireNonNull(nextFilter);
 		return new NeighborhoodFilter() {
@@ -120,6 +145,23 @@ public interface NeighborhoodFilter extends ImgFilter {
 		};
 	}
 	
+	/**
+	 * Specialized <tt>followedBy()</tt> implementation for concatenating
+	 * this {@link NeighborhoodFilter} with a {@link PerPixelFilter}. The
+	 * Result of this concatenation will be a NeighborhoodFilter that will
+	 * apply this NeighborhoodFilter first and the specified PerPixelFilter
+	 * subsequently.
+	 * <p><b>
+	 * Note that calls to {@link NeighborhoodFilter#consumer(Img)} of the
+	 * returned filter will throw an {@link UnsupportedOperationException} as
+	 * its {@link NeighborhoodFilter#applyTo(Img, Img, boolean, int, int, int, int)}
+	 * method no longer relies on that method.
+	 * 
+	 * @param nextFilter to be applied after this filter
+	 * @return a NeighborhoodFilter that will execute this filter and the 
+	 * specified one subsequently
+	 * @throws NullPointerException if nextFilter is null.
+	 */
 	public default NeighborhoodFilter followedBy(PerPixelFilter nextFilter){
 		Objects.requireNonNull(nextFilter);
 		return new NeighborhoodFilter() {
@@ -141,8 +183,21 @@ public interface NeighborhoodFilter extends ImgFilter {
 		};
 	}
 	
-	public static NeighborhoodFilter fromConsumer(BiConsumer<Pixel, Img> consumer){
-		Objects.requireNonNull(consumer);
-		return copy->{return px->consumer.accept(px, copy);};
+	/**
+	 * Returns a {@link NeighborhoodFilter} that utilizes the specified 
+	 * {@code BiConsumer<Pixel, Img>}. This is simply a convenience method
+	 * for the following code <br> 
+	 * {@code NeighborhoodFilter nbf = (copy) -> {return px->biconsumer.accept(px,copy);};}
+	 * 
+	 * @param pixelNeighborhoodAction to be performed on a Pixel by the returned filter.
+	 * The Img argument of the {@link BiConsumer} will be a copy of Img the Pixel 
+	 * belongs to, enabling the BiConsumer to access the unchanged neighboring pixels.
+	 * @return a PerPixelFilter that applies the specified {@link BiConsumer} 
+	 * to a {@link Pixel}
+	 * @throws NullPointerException if pixelNeighborhoodAction is null
+	 */
+	public static NeighborhoodFilter fromConsumer(BiConsumer<Pixel, Img> pixelNeighborhoodAction){
+		Objects.requireNonNull(pixelNeighborhoodAction);
+		return copy->{return px->pixelNeighborhoodAction.accept(px, copy);};
 	}
 }
