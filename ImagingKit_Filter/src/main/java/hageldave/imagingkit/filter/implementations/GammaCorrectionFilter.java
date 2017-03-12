@@ -1,27 +1,8 @@
 package hageldave.imagingkit.filter.implementations;
 
-import java.util.function.Consumer;
-
-import hageldave.imagingkit.core.Pixel;
-import hageldave.imagingkit.filter.PerPixelFilter;
-
-public class GammaCorrectionFilter implements PerPixelFilter {
+public class GammaCorrectionFilter extends GenericColorChannelTransformation {
 	
 	private double gamma = 1.0;
-	
-	
-	@Override
-	public Consumer<Pixel> consumer() {
-		double divByGamma = 1.0/gamma;
-		return px->px.setValue(applyGamma(px.getValue(), divByGamma));
-	}
-	
-	public static int applyGamma(int argb, double divByGamma){
-		int r = (int)(255*Math.pow(Pixel.r(argb)/255.0, divByGamma));
-		int g = (int)(255*Math.pow(Pixel.g(argb)/255.0, divByGamma));
-		int b = (int)(255*Math.pow(Pixel.b(argb)/255.0, divByGamma));
-		return Pixel.argb_fast(Pixel.a(argb), r, g, b);
-	}
 	
 	public void setGamma(double gamma){
 		if(gamma == 0.0)
@@ -32,6 +13,31 @@ public class GammaCorrectionFilter implements PerPixelFilter {
 	
 	public double getGamma() {
 		return gamma;
+	}
+
+
+	@Override
+	protected int transformRed(int r) {
+		return correctGamma(r, 1.0/gamma);
+	}
+
+	@Override
+	protected int transformGreen(int g) {
+		return correctGamma(g, 1.0/gamma);
+	}
+
+	@Override
+	protected int transformBlue(int b) {
+		return correctGamma(b, 1.0/gamma);
+	}
+	
+	@Override
+	protected int transformAlpha(int a) {
+		return correctGamma(a, 1.0/gamma);
+	}
+	
+	private static int correctGamma(int value, double divByGamma){
+		return (int)(255*Math.pow(value/255.0, divByGamma));
 	}
 
 
