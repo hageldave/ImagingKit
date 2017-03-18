@@ -59,7 +59,7 @@ public interface ImgFilter {
 	 * @see #applyTo(Img)
 	 */
 	public default void applyTo(Img img, int x, int y, int width, int height)
-		{applyTo(img, false, 0, 0, img.getWidth(), img.getHeight());}
+		{applyTo(img, false, x, y, width, height);}
 	
 	/**
 	 * Applies this filter to the specified {@link Img} within the specified
