@@ -64,12 +64,12 @@ public class CurveTransformation extends GenericColorChannelTransformation {
 
 	public static void drawCurve(Point2D[] curvep) {
 		CubicHermiteSpline curve = new CubicHermiteSpline(curvep);
-		Img img = new Img(1600, 1600);
+		Img img = new Img(1024, 1024);
 		img.fill(0xff000000);
 		for(int x = 0; x < img.getWidth(); x++){
 			double v = x*1.0/img.getWidth();
 			int y = (int)(img.getHeight()*curve.interpolate(v));
-			img.setValue(x, y, 0xffffffff);
+			img.setValue(x, y, 0xff00ff00);
 		}
 		img.paint(g->{
 			g.setColor(Color.WHITE);
@@ -92,10 +92,7 @@ public class CurveTransformation extends GenericColorChannelTransformation {
 		private Point2D[] controlPoints;
 		
 		public CubicHermiteSpline(Point2D[] controlPoints) {
-			Objects.requireNonNull(controlPoints);
-			requireAtLeast2Points(controlPoints);
-			requireDistinctXCoordinates(controlPoints);
-			this.controlPoints = controlPoints;
+			setControlPoints(controlPoints);
 		}
 
 		private static void requireDistinctXCoordinates(Point2D[] controlPoints) {
@@ -120,6 +117,17 @@ public class CurveTransformation extends GenericColorChannelTransformation {
 		private static void requireAtLeast2Points(Point2D[] controlPoints) {
 			if(controlPoints.length < 2)
 				throw new IllegalArgumentException("Cannot create Curve from less than 2 points");
+		}
+		
+		public Point2D[] getControlPoints() {
+			return controlPoints;
+		}
+		
+		public void setControlPoints(Point2D[] controlPoints) {
+			Objects.requireNonNull(controlPoints);
+			requireAtLeast2Points(controlPoints);
+			requireDistinctXCoordinates(controlPoints);
+			this.controlPoints = controlPoints;
 		}
 
 		@Override
@@ -191,11 +199,11 @@ public class CurveTransformation extends GenericColorChannelTransformation {
 			if(p0.equals(p1)) return s2;
 			if(p1.equals(p2)) return s1;
 			
-			double d1 = p0.distance(p1);
-			double d2 = p1.distance(p2);
+			double d1 = Math.abs(p0.getX()-p1.getX());//p0.distance(p1);
+			double d2 = Math.abs(p1.getX()-p2.getX());//p1.distance(p2);
 			double dist = d1+d2;
 			// proximity weighted slope
-			return s1*(d2/dist)+s2*(d1/dist);
+			return s1*(d1/dist)+s2*(d2/dist);
 		}
 		
 		private static int clamp(int lowerBound, int value, int upperBound){

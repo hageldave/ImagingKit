@@ -1,10 +1,12 @@
 package hageldave.imagingkit.filter.implementations;
 
+import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
 import hageldave.imagingkit.core.Pixel;
 import hageldave.imagingkit.filter.PerPixelFilter;
+import hageldave.imagingkit.filter.util.MiscUtils;
 
 public abstract class GenericColorChannelTransformation implements PerPixelFilter {
 
@@ -60,6 +62,7 @@ public abstract class GenericColorChannelTransformation implements PerPixelFilte
 	}
 	
 	public static GenericColorChannelTransformation from8BitFunction(Function<Integer, Integer> fn8bit){
+		Objects.requireNonNull(fn8bit);
 		return new GenericColorChannelTransformation() {
 			
 			@Override
@@ -84,6 +87,44 @@ public abstract class GenericColorChannelTransformation implements PerPixelFilte
 		};
 	}
 	
+	public static GenericColorChannelTransformation from8BitFunctions(
+			Function<Integer, Integer> fn8bitRed, 
+			Function<Integer, Integer> fn8bitGreen, 
+			Function<Integer, Integer> fn8bitBlue, 
+			Function<Integer, Integer> fn8bitAlpha)
+	{
+		
+		if(MiscUtils.isAnyOf(null, fn8bitRed,fn8bitGreen,fn8bitBlue,fn8bitAlpha)){
+			return from8BitFunctions(
+					fn8bitRed   != null ?   fn8bitRed:Function.identity(),
+					fn8bitGreen != null ? fn8bitGreen:Function.identity(),
+					fn8bitBlue  != null ?  fn8bitBlue:Function.identity(),
+					fn8bitAlpha != null ? fn8bitAlpha:Function.identity()
+			);
+		} else return new GenericColorChannelTransformation() {
+			
+			@Override
+			protected int transformRed(int r) {
+				return fn8bitRed.apply(r);
+			}
+			
+			@Override
+			protected int transformGreen(int g) {
+				return fn8bitGreen.apply(g);
+			}
+			
+			@Override
+			protected int transformBlue(int b) {
+				return fn8bitBlue.apply(b);
+			}
+			
+			@Override
+			protected int transformAlpha(int a) {
+				return fn8bitAlpha.apply(a);
+			}
+		};
+	}
+	
 	/**
 	 * <p>
 	 * Try this function for contrast stretching:<br>
@@ -93,26 +134,43 @@ public abstract class GenericColorChannelTransformation implements PerPixelFilte
 	 * @return
 	 */
 	public static GenericColorChannelTransformation fromFunction(Function<Double, Double> fn){
-		return new GenericColorChannelTransformation() {
+		Objects.requireNonNull(fn);
+		return fromFunctions(fn, fn, fn, fn);
+	}
+	
+	public static GenericColorChannelTransformation fromFunctions(
+			Function<Double, Double> fnRed, 
+			Function<Double, Double> fnGreen, 
+			Function<Double, Double> fnBlue, 
+			Function<Double, Double> fnAlpha)
+	{
+		if(MiscUtils.isAnyOf(null, fnRed,fnGreen,fnBlue,fnAlpha)){
+			return fromFunctions(
+					fnRed   != null ?   fnRed:Function.identity(),
+					fnGreen != null ? fnGreen:Function.identity(),
+					fnBlue  != null ?  fnBlue:Function.identity(),
+					fnAlpha != null ? fnAlpha:Function.identity()
+			);
+		} else return new GenericColorChannelTransformation() {
 			
 			@Override
 			protected int transformRed(int r) {
-				return (int)(255*fn.apply(r/255.0));
+				return (int)(255*fnRed.apply(r/255.0));
 			}
 			
 			@Override
 			protected int transformGreen(int g) {
-				return (int)(255*fn.apply(g/255.0));
+				return (int)(255*fnGreen.apply(g/255.0));
 			}
 			
 			@Override
 			protected int transformBlue(int b) {
-				return (int)(255*fn.apply(b/255.0));
+				return (int)(255*fnBlue.apply(b/255.0));
 			}
 			
 			@Override
 			protected int transformAlpha(int a) {
-				return (int)(255*fn.apply(a/255.0));
+				return (int)(255*fnAlpha.apply(a/255.0));
 			}
 		};
 	}
