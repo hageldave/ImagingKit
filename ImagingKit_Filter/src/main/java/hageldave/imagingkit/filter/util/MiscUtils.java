@@ -10,5 +10,13 @@ public class MiscUtils {
 		}
 		return false;
 	}
+	
+	public double clamp(double lowerBound, double value, double upperBound){
+		return Math.max(lowerBound, Math.min(value, upperBound));
+	}
 
+	public int clamp(int lowerBound, int value, int upperBound){
+		return Math.max(lowerBound, Math.min(value, upperBound));
+	}
+	
 }

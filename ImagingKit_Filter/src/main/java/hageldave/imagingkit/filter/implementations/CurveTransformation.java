@@ -12,8 +12,14 @@ import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.util.ImageFrame;
 
 public class CurveTransformation extends GenericColorChannelTransformation {
+	private static final Curve IDENTITY_CURVE = new Curve(){};
 	
-	private Curve curve;
+	
+	private Curve curveR = IDENTITY_CURVE;
+	private Curve curveG = IDENTITY_CURVE;
+	private Curve curveB = IDENTITY_CURVE;
+	private Curve curveA = IDENTITY_CURVE;
+	private Curve curveRGB = IDENTITY_CURVE;
 	
 	
 	public CurveTransformation() {
@@ -26,40 +32,35 @@ public class CurveTransformation extends GenericColorChannelTransformation {
 
 	@Override
 	protected int transformAlpha(int a) {
-		return (int) (255*interpolate(a/255.0));
+		return (int) (255*curveA.interpolate(a/255.0));
 	}
 	
 	@Override
 	protected int transformRed(int r) {
-		return (int) (255*interpolate(r/255.0));
+		return (int) (255*curveR.interpolate(r/255.0));
 	}
 
 	@Override
 	protected int transformGreen(int g) {
-		return (int) (255*interpolate(g/255.0));
+		return (int) (255*curveG.interpolate(g/255.0));
 	}
 
 	@Override
 	protected int transformBlue(int b) {
-		return (int) (255*interpolate(b/255.0));
-	}
-
-	
-	private double interpolate(double v){
-		return curve.interpolate(v);
+		return (int) (255*curveB.interpolate(b/255.0));
 	}
 	
 	public void setCurve(Curve curve) {
 		Objects.requireNonNull(curve);
-		this.curve = curve;
+		this.curveRGB = curve;
 	}
 	
 	public Curve getCurve() {
-		return curve;
+		return curveRGB;
 	}
 	
 	public CubicHermiteSpline setSpline(Point2D[] controlPoints){
-		return (CubicHermiteSpline) (this.curve = new CubicHermiteSpline(controlPoints));
+		return (CubicHermiteSpline) (this.curveRGB = new CubicHermiteSpline(controlPoints));
 	}
 
 	public static void drawCurve(Point2D[] curvep) {
@@ -85,6 +86,10 @@ public class CurveTransformation extends GenericColorChannelTransformation {
 	
 	public static interface Curve {
 		public default double interpolate(double v){return v;}
+		
+		public default Curve wrappedInside(Curve other) {
+			return new Curve() {}; // TODO: finish this
+		}
 	}
 	
 	public static class CubicHermiteSpline implements Curve {
