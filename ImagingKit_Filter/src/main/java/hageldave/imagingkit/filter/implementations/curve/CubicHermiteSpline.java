@@ -15,6 +15,22 @@ public class CubicHermiteSpline implements Curve {
 		setControlPoints(controlPoints);
 	}
 
+	public Point2D[] getControlPoints() {
+		return controlPoints;
+	}
+
+	public void setControlPoints(Point2D[] controlPoints) {
+		Objects.requireNonNull(controlPoints);
+		requireAtLeast2Points(controlPoints);
+		requireDistinctXCoordinates(controlPoints);
+		this.controlPoints = controlPoints;
+	}
+
+	private static void requireAtLeast2Points(Point2D[] controlPoints) {
+		if(controlPoints.length < 2)
+			throw new IllegalArgumentException("Cannot create Curve from less than 2 points");
+	}
+
 	private static void requireDistinctXCoordinates(Point2D[] controlPoints) {
 		TreeMap<Double, List<Integer>> coords2occurence = new TreeMap<>();
 		for(int i = 0; i < controlPoints.length; i++){
@@ -34,52 +50,9 @@ public class CubicHermiteSpline implements Curve {
 		}
 	}
 
-	private static void requireAtLeast2Points(Point2D[] controlPoints) {
-		if(controlPoints.length < 2)
-			throw new IllegalArgumentException("Cannot create Curve from less than 2 points");
-	}
-	
-	public Point2D[] getControlPoints() {
-		return controlPoints;
-	}
-	
-	public void setControlPoints(Point2D[] controlPoints) {
-		Objects.requireNonNull(controlPoints);
-		requireAtLeast2Points(controlPoints);
-		requireDistinctXCoordinates(controlPoints);
-		this.controlPoints = controlPoints;
-	}
-
 	@Override
 	public double interpolate(double v) {
 		return interpolateCurve(v, controlPoints);
-	}
-	
-	private static double catmullRom1D(double x, double x1, double x2, double y1, double y2, double m1, double m2) {
-		double d=(x2-x1), t=(x-x1)/d, t2=t*t, t3=t*t*t;
-		m1*=d; m2*=d;
-		return 	(2*t3-3*t2+1)*y1 + (-2*t3+3*t2)*y2 +
-				(t3-2*t2+t)*m1   + (t3-t2)*m2;
-	}
-	
-	private static double interpolateQuadratic(double x, double x1, double x2, double y1, double y2, double m2) {
-		// y = a*x^2 + b*x + c
-		// y'= m = 2*a*x + b
-		// b = m - 2*a*x
-		// y = a*x^2 + (m - 2*a*x)*x + c 
-		// y = m*x - a*x^2 + c
-		double a,b,c;
-		// shift x1 to 0
-		x2 -= x1;
-		x  -= x1;
-		x1 -= x1;
-		// if x1 = 0 then y1 = c;
-		c = y1;
-		// y2 = m*x2 - a*x2^2 + y1
-		a = (y2-y1-m2*x2)/-(x2*x2);
-		b = m2 - 2*a*x2;
-		// function is now complete
-		return a*(x*x) + b*x + c;
 	}
 	
 	private static double interpolateCurve(double v, Point2D[] points){
@@ -112,6 +85,33 @@ public class CubicHermiteSpline implements Curve {
 		return catmullRom1D(v, p1.getX(), p2.getX(), p1.getY(), p2.getY(), m1, m2);
 	}
 
+	private static double catmullRom1D(double x, double x1, double x2, double y1, double y2, double m1, double m2) {
+		double d=(x2-x1), t=(x-x1)/d, t2=t*t, t3=t*t*t;
+		m1*=d; m2*=d;
+		return 	(2*t3-3*t2+1)*y1 + (-2*t3+3*t2)*y2 +
+				(t3-2*t2+t)*m1   + (t3-t2)*m2;
+	}
+	
+	private static double interpolateQuadratic(double x, double x1, double x2, double y1, double y2, double m2) {
+		// y = a*x^2 + b*x + c
+		// y'= m = 2*a*x + b
+		// b = m - 2*a*x
+		// y = a*x^2 + (m - 2*a*x)*x + c 
+		// y = m*x - a*x^2 + c
+		double a,b,c;
+		// shift x1 to 0
+		x2 -= x1;
+		x  -= x1;
+		x1 -= x1;
+		// if x1 = 0 then y1 = c;
+		c = y1;
+		// y2 = m*x2 - a*x2^2 + y1
+		a = (y2-y1-m2*x2)/-(x2*x2);
+		b = m2 - 2*a*x2;
+		// function is now complete
+		return a*(x*x) + b*x + c;
+	}
+	
 	private static double midSlope(Point2D p0, Point2D p1, Point2D p2) {
 		double s1 = (p1.getY()-p0.getY())/(p1.getX()-p0.getX());
 		double s2 = (p2.getY()-p1.getY())/(p2.getX()-p1.getX());

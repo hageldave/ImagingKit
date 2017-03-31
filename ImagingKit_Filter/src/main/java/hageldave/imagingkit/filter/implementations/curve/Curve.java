@@ -7,6 +7,10 @@ public interface Curve extends DoubleFunction<Double>, Function<Double, Double> 
 	
 	public double interpolate(double v);
 	
+	public default double interpolateAffineTransformed(double v, double a, double b){
+		return a*interpolate(v)+b;
+	}
+	
 	@Override
 	default Double apply(double value) {
 		return interpolate(value);
@@ -18,7 +22,7 @@ public interface Curve extends DoubleFunction<Double>, Function<Double, Double> 
 	}
 	
 	public default Curve affineTransformedBy(double a, double b){
-		return v -> a*interpolate(v)+b;
+		return v -> interpolateAffineTransformed(v, a, b);
 	}
 	
 	public default Curve shiftedBy(double x){

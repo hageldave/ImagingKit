@@ -9,7 +9,7 @@ import hageldave.imagingkit.core.util.ImageFrame;
 import hageldave.imagingkit.filter.implementations.GenericColorChannelTransformation;
 import hageldave.imagingkit.filter.util.MiscUtils;
 
-public class CurveTransformation extends GenericColorChannelTransformation {
+public class ColorCurves extends GenericColorChannelTransformation {
 	private static final Curve IDENTITY_CURVE = Curve.identity();
 
 	
@@ -21,11 +21,11 @@ public class CurveTransformation extends GenericColorChannelTransformation {
 	private CurveCombinator curveCombination = CurveCombinator.addition();
 	
 	
-	public CurveTransformation() {
+	public ColorCurves() {
 		this(Curve.identity());
 	}
 	
-	public CurveTransformation(Curve curve) {
+	public ColorCurves(Curve curve) {
 		setCurve(curve);
 	}
 
