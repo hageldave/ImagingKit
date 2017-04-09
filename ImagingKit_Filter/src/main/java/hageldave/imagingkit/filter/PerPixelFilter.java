@@ -30,17 +30,25 @@ public interface PerPixelFilter extends ImgFilter {
 	public Consumer<Pixel> consumer();
 
 	@Override
-	public default void applyTo(Img img, boolean parallelPreferred, int x, int y, int width, int height) {
+	public default void applyTo(Img img, boolean parallelPreferred, int x, int y, int width, int height, ProgressListener progress) {
+		Consumer<Pixel> consumer = consumer();
+		if(progress != null){
+			progress.pushPendingFilter(this, height);
+			consumer = consumer.andThen(getScanlineProgressNotificationConsumer(progress, this, height, x+height-1));
+		}
 		if(parallelPreferred){
 			if(x == 0 && y == 0 && width == img.getWidth() && height == img.getHeight())
-				img.forEachParallel(consumer());
+				img.forEachParallel(consumer);
 			else
-				img.forEachParallel(x, y, width, height, consumer());
+				img.forEachParallel(x, y, width, height, consumer);
 		} else {
 			if(x == 0 && y == 0 && width == img.getWidth() && height == img.getHeight())
-				img.forEach(consumer());
+				img.forEach(consumer);
 			else
-				img.forEach(x, y, width, height, consumer());
+				img.forEach(x, y, width, height, consumer);
+		}
+		if(progress != null){
+			progress.popFinishedFilter(this);
 		}
 	}
 	
@@ -48,27 +56,10 @@ public interface PerPixelFilter extends ImgFilter {
 	public default ImgFilter followedBy(ImgFilter nextFilter) {
 		if(nextFilter instanceof NeighborhoodFilter)
 			return followedBy((NeighborhoodFilter)nextFilter);
-		if(nextFilter instanceof PerPixelFilter)
-			return followedBy((PerPixelFilter)nextFilter);
 		else
 			return ImgFilter.super.followedBy(nextFilter);
 	}
 	
-	/**
-	 * Specialized <tt>followedBy()</tt> implementation for concatenating
-	 * this {@link PerPixelFilter} with another PerPixelFilter. The
-	 * Returned {@link PerPixelFilter} will use a concatenated {@link Consumer}
-	 * build from <br><tt>this.consumer().andThen(next.consumer())</tt>.
-	 * 
-	 * @param nextFilter to be applied after this filter
-	 * @return a PerPixelFilter that will execute this filter and the specified 
-	 * one subsequently
-	 * @throws NullPointerException if nextFilter is null.
-	 */
-	public default PerPixelFilter followedBy(PerPixelFilter nextFilter) {
-		Objects.requireNonNull(nextFilter);
-		return () -> this.consumer().andThen(nextFilter.consumer())::accept;
-	}
 	
 	/**
 	 * Specialized <tt>followedBy()</tt> implementation for concatenating
@@ -101,10 +92,20 @@ public interface PerPixelFilter extends ImgFilter {
 			}
 			
 			@Override
-			public void applyTo(Img img, Img copy, boolean parallelPreferred, int x, int y, int width, int height) {
-				PerPixelFilter.this.applyTo(img, parallelPreferred, x, y, width, height);
+			public void applyTo(Img img, Img copy, boolean parallelPreferred, int x, int y, int width, int height, ProgressListener progress) {
+				if(progress != null) {
+					progress.pushPendingFilter(this, 2);
+				}
+				PerPixelFilter.this.applyTo(img, parallelPreferred, x, y, width, height, progress);
+				if(progress != null) {
+					progress.notifyFilterProgress(this, 2, 1);
+				}
 				System.arraycopy(img.getData(), 0, copy.getData(), 0, img.numValues());
-				nextFilter.applyTo(img, copy, parallelPreferred, x, y, width, height);
+				nextFilter.applyTo(img, copy, parallelPreferred, x, y, width, height, progress);
+				if(progress != null) {
+					progress.notifyFilterProgress(this, 2, 1);
+					progress.popFinishedFilter(this);
+				}
 			}
 		};
 	}
@@ -123,6 +124,14 @@ public interface PerPixelFilter extends ImgFilter {
 	public static PerPixelFilter fromPixelConsumer(Consumer<Pixel> perPixelAction) {
 		Objects.requireNonNull(perPixelAction);
 		return ()->perPixelAction::accept;
+	}
+	
+	static Consumer<Pixel> getScanlineProgressNotificationConsumer(ProgressListener progress, ImgFilter filter, long progressCount, int lastX){
+		return px->{
+			if(px.getX() == lastX){
+				progress.notifyFilterProgress(filter, progressCount, 1);
+			}
+		};
 	}
 	
 }

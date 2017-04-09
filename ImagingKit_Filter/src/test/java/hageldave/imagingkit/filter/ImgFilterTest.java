@@ -9,7 +9,7 @@ public class ImgFilterTest {
 
 	@Test
 	public void testImgFilterFollowedBy(){
-		ImgFilter rotateChannels = (img, parallel, x,y,w,h)->img.forEach(x, y, w, h, px->px.setRGB_preserveAlpha(px.g(),px.b(),px.r()));
+		ImgFilter rotateChannels = (img, parallel, x,y,w,h,p)->img.forEach(x, y, w, h, px->px.setRGB_preserveAlpha(px.g(),px.b(),px.r()));
 		
 		Img img = new Img(10, 10);
 		img.fill(0xff112233);
@@ -45,7 +45,7 @@ public class ImgFilterTest {
 			assertEquals(Integer.toHexString(c), 0xff223311, c);
 		
 		copy = img.copy();
-		PerPixelFilter rotateTwice = rotateChannels.followedBy(rotateChannels);
+		ImgFilter rotateTwice = rotateChannels.followedBy(rotateChannels);
 		rotateTwice.applyTo(copy);
 		for(int c: copy.getData())
 			assertEquals(Integer.toHexString(c), 0xff331122, c);

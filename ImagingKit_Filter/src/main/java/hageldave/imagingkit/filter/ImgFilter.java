@@ -23,7 +23,10 @@ public interface ImgFilter {
 	 * @param img the filter will be applied to
 	 */
 	public default void applyTo(Img img)
-		{applyTo(img, false);}
+		{applyTo(img, null);}
+	
+	public default void applyTo(Img img, ProgressListener progress)
+		{applyTo(img, false, progress);}
 
 	/**
 	 * Applies this filter to the whole specified {@link Img}.
@@ -41,7 +44,10 @@ public interface ImgFilter {
 	 * @see #applyTo(Img)
 	 */
 	public default void applyTo(Img img, boolean parallelPreferred)
-		{applyTo(img, parallelPreferred, 0, 0, img.getWidth(), img.getHeight());}
+		{applyTo(img, parallelPreferred, null);}
+	
+	public default void applyTo(Img img, boolean parallelPreferred, ProgressListener progress)
+		{applyTo(img, parallelPreferred, 0, 0, img.getWidth(), img.getHeight(), progress);}
 	
 	/**
 	 * Applies this filter to the specified {@link Img} within the specified
@@ -59,7 +65,10 @@ public interface ImgFilter {
 	 * @see #applyTo(Img)
 	 */
 	public default void applyTo(Img img, int x, int y, int width, int height)
-		{applyTo(img, false, x, y, width, height);}
+		{applyTo(img, false, x, y, width, height, null);}
+	
+	public default void applyTo(Img img, int x, int y, int width, int height, ProgressListener progress)
+		{applyTo(img, false, x, y, width, height, progress);}
 	
 	/**
 	 * Applies this filter to the specified {@link Img} within the specified
@@ -75,13 +84,15 @@ public interface ImgFilter {
 	 * @param y starting y coordinate of the area the filter will be applied to
 	 * @param width of the area the filter will be applied to
 	 * @param height of the area the filter will be applied to
+	 * @param progress <b>MAY BE NULL</B>; the {@link ProgressListener} that will be notified about the progress 
+	 * of the application of this filter within this method. 
 	 * 
 	 * @see #applyTo(Img, int, int, int, int)
 	 * @see #applyTo(Img, boolean)
 	 * @see #applyTo(Img)
 	 */
 	/* >>>> TO BE IMPLEMENTED <<<< */
-	public void applyTo(Img img, boolean parallelPreferred, int x, int y, int width, int height);
+	public void applyTo(Img img, boolean parallelPreferred, int x, int y, int width, int height, ProgressListener progress);
 	
 	/**
 	 * Returns a combined ImageFilter that will apply the specified filter 
@@ -96,9 +107,19 @@ public interface ImgFilter {
 		Objects.requireNonNull(nextFilter);
 		return new ImgFilter() {
 			@Override
-			public void applyTo(Img img, boolean parallelPreferred, int x, int y, int width, int height) {
-				ImgFilter.this.applyTo(img, parallelPreferred, x, y, width, height);
-				nextFilter.applyTo(img, parallelPreferred, x, y, width, height);
+			public void applyTo(Img img, boolean parallelPreferred, int x, int y, int width, int height, ProgressListener progress) {
+				if(progress != null) {
+					progress.pushPendingFilter(this, 2);
+				}
+				ImgFilter.this.applyTo(img, parallelPreferred, x, y, width, height, progress);
+				if(progress != null) {
+					progress.notifyFilterProgress(this, 2, 1);
+				}
+				nextFilter.applyTo(img, parallelPreferred, x, y, width, height, progress);
+				if(progress != null) {
+					progress.notifyFilterProgress(this, 2, 1);
+					progress.popFinishedFilter(this);
+				}
 			}
 		};
 	}

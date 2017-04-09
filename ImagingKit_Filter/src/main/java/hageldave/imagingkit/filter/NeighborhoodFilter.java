@@ -47,8 +47,8 @@ public interface NeighborhoodFilter extends ImgFilter {
 
 	
 	@Override
-	default void applyTo(Img img, boolean parallelPreferred, int x, int y, int width, int height) 
-		{applyTo(img, new Img(img.getDimension()), parallelPreferred, x,y,width,height);}
+	default void applyTo(Img img, boolean parallelPreferred, int x, int y, int width, int height, ProgressListener progress) 
+		{applyTo(img, new Img(img.getDimension()), parallelPreferred, x,y,width,height, progress);}
 	
 	/**
 	 * Applies this filter to the specified {@link Img} (first argument) within 
@@ -69,21 +69,32 @@ public interface NeighborhoodFilter extends ImgFilter {
 	 * @param width of the area the filter will be applied to
 	 * @param height of the area the filter will be applied to
 	 */
-	public default void applyTo(Img img, Img copy, boolean parallelPreferred, int x, int y, int width, int height) {
+	public default void applyTo(Img img, Img copy, boolean parallelPreferred, int x, int y, int width, int height, ProgressListener progress) {
 		assert(img.getDimension().equals(copy.getDimension()));
+		
+		Consumer<Pixel> consumer = consumer(copy);
+		
+		if(progress != null){
+			progress.pushPendingFilter(this, height);
+			consumer = consumer.andThen(PerPixelFilter.getScanlineProgressNotificationConsumer(progress, this, height, x+height-1));
+		}
 		
 		System.arraycopy(img.getData(), 0, copy.getData(), 0, img.numValues());
 		
 		if(parallelPreferred){
 			if(x == 0 && y == 0 && width == img.getWidth() && height == img.getHeight())
-				img.forEachParallel(consumer(copy));
+				img.forEachParallel(consumer);
 			else
-				img.forEachParallel(x, y, width, height, consumer(copy));
+				img.forEachParallel(x, y, width, height, consumer);
 		} else {
 			if(x == 0 && y == 0 && width == img.getWidth() && height == img.getHeight())
-				img.forEach(consumer(copy));
+				img.forEach(consumer);
 			else
-				img.forEach(x, y, width, height, consumer(copy));
+				img.forEach(x, y, width, height, consumer);
+		}
+		
+		if(progress != null) {
+			progress.popFinishedFilter(this);
 		}
 	}
 	
@@ -137,10 +148,20 @@ public interface NeighborhoodFilter extends ImgFilter {
 			}
 			
 			@Override
-			public void applyTo(Img img, Img copy, boolean parallelPreferred, int x, int y, int width, int height) {
-				NeighborhoodFilter.this.applyTo(img, copy, parallelPreferred, x, y, width, height);
+			public void applyTo(Img img, Img copy, boolean parallelPreferred, int x, int y, int width, int height, ProgressListener progress) {
+				if(progress != null) {
+					progress.pushPendingFilter(this, 2);
+				}
+				NeighborhoodFilter.this.applyTo(img, copy, parallelPreferred, x, y, width, height, progress);
+				if(progress != null) {
+					progress.notifyFilterProgress(this, 2, 1);
+				}
 				System.arraycopy(img.getData(), 0, copy.getData(), 0, img.numValues());
-				nextFilter.applyTo(img, copy, parallelPreferred, x, y, width, height);
+				nextFilter.applyTo(img, copy, parallelPreferred, x, y, width, height, progress);
+				if(progress != null) {
+					progress.notifyFilterProgress(this, 2, 1);
+					progress.popFinishedFilter(this);
+				}
 			}
 		};
 	}
@@ -176,9 +197,19 @@ public interface NeighborhoodFilter extends ImgFilter {
 			}
 			
 			@Override
-			public void applyTo(Img img, Img copy, boolean parallelPreferred, int x, int y, int width, int height) {
-				NeighborhoodFilter.this.applyTo(img, copy, parallelPreferred, x, y, width, height);
-				nextFilter.applyTo(img, parallelPreferred, x, y, width, height);
+			public void applyTo(Img img, Img copy, boolean parallelPreferred, int x, int y, int width, int height, ProgressListener progress) {
+				if(progress != null) {
+					progress.pushPendingFilter(this, 2);
+				}
+				NeighborhoodFilter.this.applyTo(img, copy, parallelPreferred, x, y, width, height, progress);
+				if(progress != null) {
+					progress.notifyFilterProgress(this, 2, 1);
+				}
+				nextFilter.applyTo(img, parallelPreferred, x, y, width, height, progress);
+				if(progress != null) {
+					progress.notifyFilterProgress(this, 2, 1);
+					progress.popFinishedFilter(this);
+				}
 			}
 		};
 	}
