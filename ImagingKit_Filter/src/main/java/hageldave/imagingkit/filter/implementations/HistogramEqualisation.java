@@ -2,42 +2,65 @@ package hageldave.imagingkit.filter.implementations;
 
 import java.util.function.Consumer;
 
+import hageldave.imagingkit.core.ColorSpaceTransformation;
 import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.Pixel;
+import hageldave.imagingkit.filter.ImgFilter;
 import hageldave.imagingkit.filter.PerPixelFilter;
+import hageldave.imagingkit.filter.ProgressListener;
 import hageldave.imagingkit.filter.util.Histogram;
 
-public class HistogramEqualisation implements PerPixelFilter {
+public class HistogramEqualisation implements ImgFilter {
 
 	@Override
-	public Consumer<Pixel> consumer() {
-		return new Consumer<Pixel>() {
-
-
-			Histogram h = null;
-			int[] r,g,b,a;
-
-			@Override
-			public void accept(Pixel p) {
-				if(h == null){
-					makeHistogram(p.getImg());
-				}
-				p.setARGB(a[p.a()], r[p.r()], g[p.g()], b[p.b()]);
+	public void applyTo(Img img, boolean parallelPreferred, int x, int y, int width, int height, ProgressListener progress) {
+		
+		Consumer<Pixel> progressNotifier = px->{};
+		if(progress != null){
+			progress.pushPendingFilter(this, height);
+			progressNotifier = PerPixelFilter.getScanlineProgressNotificationConsumer(progress, this, height*2, x+height-1);
+		}
+		if(parallelPreferred){
+			if(x == 0 && y == 0 && width == img.getWidth() && height == img.getHeight()){
+				img.forEachParallel(ColorSpaceTransformation.RGB_2_HSV
+						.andThen(progressNotifier));
+				img.forEachParallel(equalization(Histogram.getHistogram(img).getEqualizationLUT(Histogram.BLUE_HIST))
+						.andThen(ColorSpaceTransformation.HSV_2_RGB)
+						.andThen(progressNotifier));
+			} else {
+				img.forEachParallel(x, y, width, height, ColorSpaceTransformation.RGB_2_HSV
+						.andThen(progressNotifier));
+				img.forEachParallel(x, y, width, height, equalization(Histogram.getHistogram(img).getEqualizationLUT(Histogram.BLUE_HIST))
+						.andThen(ColorSpaceTransformation.HSV_2_RGB)
+						.andThen(progressNotifier));
 			}
-
-			private synchronized void makeHistogram(Img img){
-				if(h == null){
-					h = Histogram.getHistogram(img);
-					r = h.getEqualizationLUT(Histogram.RED_HIST);
-					g = h.getEqualizationLUT(Histogram.GREEN_HIST);
-					b = h.getEqualizationLUT(Histogram.BLUE_HIST);
-					a = h.getEqualizationLUT(Histogram.ALPHA_HIST);
-				}
+		} else {
+			if(x == 0 && y == 0 && width == img.getWidth() && height == img.getHeight()){
+				img.forEach(ColorSpaceTransformation.RGB_2_HSV
+						.andThen(progressNotifier));
+				img.forEach(equalization(Histogram.getHistogram(img).getEqualizationLUT(Histogram.BLUE_HIST))
+						.andThen(ColorSpaceTransformation.HSV_2_RGB)
+						.andThen(progressNotifier));
+				
+			} else {
+				img.forEach(x, y, width, height, ColorSpaceTransformation.RGB_2_HSV
+						.andThen(progressNotifier));
+				img.forEach(x, y, width, height, equalization(Histogram.getHistogram(img).getEqualizationLUT(Histogram.BLUE_HIST))
+						.andThen(ColorSpaceTransformation.HSV_2_RGB)
+						.andThen(progressNotifier));
 			}
-
-		};
+		}
+		if(progress != null){
+			progress.popFinishedFilter(this);
+		}
+		
+		
 	}
-
-
+	
+	private Consumer<Pixel> equalization(int[] lut){
+		return px->px.setB(lut[px.b()]);
+	}
+	
+	
 
 }
