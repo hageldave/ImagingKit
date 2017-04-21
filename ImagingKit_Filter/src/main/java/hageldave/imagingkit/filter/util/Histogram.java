@@ -47,6 +47,21 @@ public class Histogram {
 	private int getValueFrequency_(int value, int histogram) {
 		return histograms[histogram+value];
 	}
+	
+	public int getMaximumFrequencyValue(int histogram) {
+		if(MiscUtils.isAnyOf(histogram, RED_HIST,GREEN_HIST,BLUE_HIST,ALPHA_HIST,LUMINANCE_HIST)){
+			int max = 0;
+			int val = 0;
+			for(int i = 0; i < 256; i++){
+				if(getValueFrequency_(i, histogram) > max){
+					max = getValueFrequency_(i, histogram);
+					val = i;
+				}
+			}
+			return val;
+		}
+		return -1;
+	}
 
 	private static boolean validValueAndHistogramArgs(int value, int histogram){
 		return 	0 <= value
