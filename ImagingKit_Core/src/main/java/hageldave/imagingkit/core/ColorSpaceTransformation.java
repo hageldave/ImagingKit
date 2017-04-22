@@ -177,6 +177,26 @@ public enum ColorSpaceTransformation implements Consumer<Pixel> {
 		case 5:  return Pixel.rgb_fromNormalized(v,p,q);
 		default: return Pixel.rgb_fromNormalized(v,t,p);
 		}
+	}),
+	
+	
+	RGB_2_YCbCr(val->
+	{
+		float r = Pixel.r(val), g = Pixel.g(val), b = Pixel.b(val);
+		return Pixel.rgb_bounded(
+				Math.round( 0.2990f*r +0.5870f*g +0.1140f*b), 
+				Math.round(-0.1687f*r -0.3313f*g +0.5000f*b +128f), 
+				Math.round( 0.5000f*r -0.4187f*g +0.0813f*b +128f));
+	}),
+	
+	
+	YCbCr_2_RGB(val->
+	{
+		float y = Pixel.r(val), cb = Pixel.g(val)-128, cr = Pixel.b(val)-128;
+		return Pixel.rgb_bounded(
+				Math.round(0.7720f*y -0.4030f *cb +1.4020f*cr),
+				Math.round(1.1161f*y -0.1384f*cb -0.7141f*cr),
+				Math.round(1.0000f*y +1.7720f *cb -0.0001f*cr));
 	})
 	;	
 	
