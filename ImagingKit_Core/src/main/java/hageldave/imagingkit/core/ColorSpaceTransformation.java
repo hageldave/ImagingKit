@@ -194,14 +194,26 @@ public enum ColorSpaceTransformation implements Consumer<Pixel> {
 	{
 		float y = Pixel.r(val), cb = Pixel.g(val)-128, cr = Pixel.b(val)-128;
 		return Pixel.rgb_bounded(
-				Math.round(0.7720f*y -0.4030f *cb +1.4020f*cr),
+				Math.round(0.7720f*y -0.4030f*cb +1.4020f*cr),
 				Math.round(1.1161f*y -0.1384f*cb -0.7141f*cr),
-				Math.round(1.0000f*y +1.7720f *cb -0.0001f*cr));
+				Math.round(1.0000f*y +1.7720f*cb -0.0001f*cr));
 	})
-	;	
+	;
+	
+	static {
+		pairTransforms(RGB_2_HSV,     HSV_2_RGB);
+		pairTransforms(RGB_2_LAB,     LAB_2_RGB);
+		pairTransforms(RGB_2_YCbCr, YCbCr_2_RGB);
+	}
+	
+	private static final void pairTransforms(ColorSpaceTransformation t1, ColorSpaceTransformation t2){
+		t1.inverse = t2;
+		t2.inverse = t1;
+	}
 	
 	////// ATTRIBUTES / METHODS //////
 	private final Transformation transformation;
+	private ColorSpaceTransformation inverse;
 	
 	private ColorSpaceTransformation(Transformation transformation) {
 		this.transformation = transformation;
@@ -239,6 +251,10 @@ public enum ColorSpaceTransformation implements Consumer<Pixel> {
 	@Override
 	public void accept(Pixel px) {
 		px.setValue(transform(px.getValue()));
+	}
+	
+	public ColorSpaceTransformation inverse() {
+		return inverse;
 	}
 	
 	
