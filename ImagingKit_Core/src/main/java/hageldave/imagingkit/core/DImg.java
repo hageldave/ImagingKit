@@ -34,8 +34,8 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Objects;
 import java.util.Spliterator;
-import java.util.concurrent.CountedCompleter;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -118,6 +118,11 @@ public class DImg implements Iterable<DPixel> {
 	 * @since 1.0
 	 */
 	public static final int boundary_mode_mirror = 3;
+	
+	public static final int channel_r = 0;
+	public static final int channel_g = 1;
+	public static final int channel_b = 2;
+	public static final int channel_a = 3;
 
 
 	/** data array of this Img containing a value for each DPixel in row major order
@@ -314,6 +319,22 @@ public class DImg implements Iterable<DPixel> {
 	public double getValue(final int channel, final int x, final int y){
 		return this.data[channel][y*dimension.width + x];
 	}
+	
+	public double getValueR(final int x, final int y){
+		return this.dataR[y*dimension.width + x];
+	}
+	
+	public double getValueG(final int x, final int y){
+		return this.dataG[y*dimension.width + x];
+	}
+	
+	public double getValueB(final int x, final int y){
+		return this.dataB[y*dimension.width + x];
+	}
+	
+	public double getValueA(final int x, final int y){
+		return this.dataA[y*dimension.width + x];
+	}
 
 	/**
 	 * Returns the value of this Img at the specified position.
@@ -377,6 +398,22 @@ public class DImg implements Iterable<DPixel> {
 			return getValue(channel, x, y);
 		}
 	}
+	
+	public double getValueR(int x, int y, final int boundaryMode){
+		return getValue(channel_r, x, y, boundaryMode);
+	}
+	
+	public double getValueG(int x, int y, final int boundaryMode){
+		return getValue(channel_g, x, y, boundaryMode);
+	}
+	
+	public double getValueB(int x, int y, final int boundaryMode){
+		return getValue(channel_b, x, y, boundaryMode);
+	}
+	
+	public double getValueA(int x, int y, final int boundaryMode){
+		return getValue(channel_a, x, y, boundaryMode);
+	}
 
 	/**
 	 * Returns a bilinearly interpolated ARGB value of the image for the
@@ -405,24 +442,63 @@ public class DImg implements Iterable<DPixel> {
 		double c11 = getValue(channel, (x+1 < getWidth() ? x+1:x), (y+1 < getHeight() ? y+1:y));
 		return interpolateBilinear(c00, c01, c10, c11, xF-x, yF-y);
 	}
+	
+	public double interpolateR(final float xNormalized, final float yNormalized){
+		float xF = xNormalized * (getWidth()-1);
+		float yF = yNormalized * (getHeight()-1);
+		int x = (int)xF;
+		int y = (int)yF;
+		double c00 = getValueR(x, 							y);
+		double c01 = getValueR(x, 						   (y+1 < getHeight() ? y+1:y));
+		double c10 = getValueR((x+1 < getWidth() ? x+1:x), 	y);
+		double c11 = getValueR((x+1 < getWidth() ? x+1:x), (y+1 < getHeight() ? y+1:y));
+		return interpolateBilinear(c00, c01, c10, c11, xF-x, yF-y);
+	}
+	
+	public double interpolateG(final float xNormalized, final float yNormalized){
+		float xF = xNormalized * (getWidth()-1);
+		float yF = yNormalized * (getHeight()-1);
+		int x = (int)xF;
+		int y = (int)yF;
+		double c00 = getValueG(x, 							y);
+		double c01 = getValueG(x, 						   (y+1 < getHeight() ? y+1:y));
+		double c10 = getValueG((x+1 < getWidth() ? x+1:x), 	y);
+		double c11 = getValueG((x+1 < getWidth() ? x+1:x), (y+1 < getHeight() ? y+1:y));
+		return interpolateBilinear(c00, c01, c10, c11, xF-x, yF-y);
+	}
+	
+	public double interpolateB(final float xNormalized, final float yNormalized){
+		float xF = xNormalized * (getWidth()-1);
+		float yF = yNormalized * (getHeight()-1);
+		int x = (int)xF;
+		int y = (int)yF;
+		double c00 = getValueB(x, 							y);
+		double c01 = getValueB(x, 						   (y+1 < getHeight() ? y+1:y));
+		double c10 = getValueB((x+1 < getWidth() ? x+1:x), 	y);
+		double c11 = getValueB((x+1 < getWidth() ? x+1:x), (y+1 < getHeight() ? y+1:y));
+		return interpolateBilinear(c00, c01, c10, c11, xF-x, yF-y);
+	}
+	
+	public double interpolateA(final float xNormalized, final float yNormalized){
+		float xF = xNormalized * (getWidth()-1);
+		float yF = yNormalized * (getHeight()-1);
+		int x = (int)xF;
+		int y = (int)yF;
+		double c00 = getValueA(x, 							y);
+		double c01 = getValueA(x, 						   (y+1 < getHeight() ? y+1:y));
+		double c10 = getValueA((x+1 < getWidth() ? x+1:x), 	y);
+		double c11 = getValueA((x+1 < getWidth() ? x+1:x), (y+1 < getHeight() ? y+1:y));
+		return interpolateBilinear(c00, c01, c10, c11, xF-x, yF-y);
+	}
+	
 
 	private static double interpolateBilinear(final double c00, final double c01, final double c10, final double c11, final float mx, final float my){
-
 		return (c00*mx+c10*(1.0-mx))* my + (c01*mx+c11*(1.0-mx))*(1.0-my);
-//		return DPixel.argb_fast/*_bounded*/(
-//				blend( blend(DPixel.a(c00), DPixel.a(c10), mx), blend(DPixel.a(c10), DPixel.a(c01), mx), my),
-//				blend( blend(DPixel.r(c00), DPixel.r(c10), mx), blend(DPixel.r(c10), DPixel.r(c01), mx), my),
-//				blend( blend(DPixel.g(c00), DPixel.g(c10), mx), blend(DPixel.g(c10), DPixel.g(c01), mx), my),
-//				blend( blend(DPixel.b(c00), DPixel.b(c10), mx), blend(DPixel.b(c10), DPixel.b(c01), mx), my) );
-	}
-
-	private static int blend(final int channel1, final int channel2, final float m){
-		return (int) ((channel2 * m) + (channel1 * (1f-m)));
 	}
 
 	/**
-	 * Creates a new DPixel object for this Img with position {0,0}.
-	 * @return a DPixel object for this Img.
+	 * Creates a new DPixel object for this DImg with position {0,0}.
+	 * @return a DPixel object for this DImg.
 	 * @since 1.0
 	 */
 	public DPixel getDPixel(){
@@ -430,7 +506,7 @@ public class DImg implements Iterable<DPixel> {
 	}
 
 	/**
-	 * Creates a new DPixel object for this Img at specified position.
+	 * Creates a new DPixel object for this DImg at specified position.
 	 * No bounds checks are performed for x and y.
 	 * <p>
 	 * <b>Tip:</b><br>
@@ -442,7 +518,7 @@ public class DImg implements Iterable<DPixel> {
 	 * {@link #forEach(Consumer)} method to iterate this image.
 	 * @param x coordinate
 	 * @param y coordinate
-	 * @return a DPixel object for this Img at {x,y}.
+	 * @return a DPixel object for this DImg at {x,y}.
 	 * @see #getValue(int, int)
 	 * @since 1.0
 	 */
@@ -485,7 +561,7 @@ public class DImg implements Iterable<DPixel> {
 					x,y,w,h,getWidth(),getHeight()));
 		}
 		if(dest == null){
-			return copyArea(x, y, w, h, new DImg(w,h), 0, 0);
+			return copyArea(x, y, w, h, new DImg(w,h,this.hasAlpha()), 0, 0);
 		}
 		if(x==0 && destX==0 && w==dest.getWidth() && w==this.getWidth()){
 			if(destY < 0){
@@ -498,7 +574,13 @@ public class DImg implements Iterable<DPixel> {
 			// limit area height to not exceed targets bounds
 			h = Math.min(h, dest.getHeight()-destY);
 			if(h > 0){
-				System.arraycopy(this.getData(), y*w, dest.getData(), destY*w, w*h);
+				int srcPos = y*w, destPos = destY*w, len=w*h;
+				System.arraycopy(this.getDataR(), srcPos, dest.getDataR(), destPos, len);
+				System.arraycopy(this.getDataG(), srcPos, dest.getDataG(), destPos, len);
+				System.arraycopy(this.getDataB(), srcPos, dest.getDataB(), destPos, len);
+				if(this.hasAlpha() && dest.hasAlpha()) System.arraycopy(this.getDataA(), srcPos, dest.getDataA(), destPos, len);
+				else 
+				if(dest.hasAlpha())                    Arrays.fill(dest.getDataA(), destPos, destPos+len, 1.0);
 			}
 		} else {
 			if(destX < 0){
@@ -520,10 +602,28 @@ public class DImg implements Iterable<DPixel> {
 			h = Math.min(h, dest.getHeight()-destY);
 			if(w > 0 && h > 0){
 				for(int i = 0; i < h; i++){
+					int srcPos = (y+i)*getWidth()+x;
+					int destPos = (destY+i)*dest.getWidth()+destX;
+					int len = w;
 					System.arraycopy(
-							this.getData(), (y+i)*getWidth()+x,
-							dest.getData(), (destY+i)*dest.getWidth()+destX,
-							w);
+							this.getDataR(), srcPos,
+							dest.getDataR(), destPos,
+							len);
+					System.arraycopy(
+							this.getDataG(), srcPos,
+							dest.getDataG(), destPos,
+							len);
+					System.arraycopy(
+							this.getDataB(), srcPos,
+							dest.getDataB(), destPos,
+							len);
+					if(this.hasAlpha() && dest.hasAlpha()) { System.arraycopy(
+							this.getDataA(), srcPos,
+							dest.getDataA(), destPos,
+							len);
+					} else if(dest.hasAlpha()) { 
+						Arrays.fill(dest.getDataA(), destPos, destPos+len, 1.0);
+					}
 				}
 			}
 		}
@@ -543,8 +643,24 @@ public class DImg implements Iterable<DPixel> {
 	 * @see #getValue(int, int)
 	 * @since 1.0
 	 */
-	public void setValue(final int x, final int y, final int value){
-		this.data[y*dimension.width + x] = value;
+	public void setValue(final int channel, final int x, final int y, final double value){
+		this.data[channel][y*dimension.width + x] = value;
+	}
+	
+	public void setValueR(final int x, final int y, final double value){
+		this.dataR[y*dimension.width + x] = value;
+	}
+	
+	public void setValueG(final int x, final int y, final double value){
+		this.dataG[y*dimension.width + x] = value;
+	}
+	
+	public void setValueB(final int x, final int y, final double value){
+		this.dataB[y*dimension.width + x] = value;
+	}
+	
+	public void setValueA(final int x, final int y, final double value){
+		this.dataA[y*dimension.width + x] = value;
 	}
 
 	/**
@@ -561,7 +677,12 @@ public class DImg implements Iterable<DPixel> {
 	 * @since 1.0
 	 */
 	public DImg copy(){
-		return new DImg(getDimension(), Arrays.copyOf(getData(), getData().length));
+		return new DImg(
+				getDimension(), 
+				Arrays.copyOf(getDataR(), numValues()),
+				Arrays.copyOf(getDataG(), numValues()),
+				Arrays.copyOf(getDataB(), numValues()),
+				hasAlpha() ? Arrays.copyOf(getDataA(), numValues()):null);
 	}
 
 	/**
@@ -571,8 +692,11 @@ public class DImg implements Iterable<DPixel> {
 	 * @since 1.0
 	 */
 	public BufferedImage toBufferedImage(){
-		BufferedImage bimg = BufferedImageFactory.getINT_ARGB(getDimension());
-		return toBufferedImage(bimg);
+		return toBufferedImage(TransferFunction.normalizedInput());
+	}
+	
+	public BufferedImage toBufferedImage(TransferFunction transferFunc){
+		return toImg(transferFunc).getRemoteBufferedImage();
 	}
 
 	/**
@@ -586,10 +710,35 @@ public class DImg implements Iterable<DPixel> {
 	 * @since 1.0
 	 */
 	public BufferedImage toBufferedImage(BufferedImage bimg){
-		bimg.setRGB(0, 0, getWidth(), getHeight(), getData(), 0, getWidth());
-		return bimg;
+		return toBufferedImage(bimg, TransferFunction.normalizedInput());
+	}
+	
+	
+	public BufferedImage toBufferedImage(BufferedImage bimg, TransferFunction transferFunc){
+		return toImg(transferFunc).toBufferedImage(bimg);
 	}
 
+	public Img toImg(TransferFunction transferFunc){
+		Img img = new Img(getDimension());
+		if(hasAlpha()){
+			img.forEach(px->px.setValue(transferFunc.toARGB(
+					getDataA()[px.getIndex()], 
+					getDataR()[px.getIndex()], 
+					getDataG()[px.getIndex()], 
+					getDataB()[px.getIndex()])));
+		} else {
+			img.forEach(px->px.setValue(0xff000000 | transferFunc.toRGB( 
+					getDataR()[px.getIndex()], 
+					getDataG()[px.getIndex()], 
+					getDataB()[px.getIndex()])));
+		}
+		return null;
+	}
+	
+	public Img toImg(){
+		return toImg(TransferFunction.normalizedInput());
+	}
+	
 	/**
 	 * Creates a BufferedImage that shares the data of this Img. Changes in
 	 * this Img are reflected in the created BufferedImage and vice versa.
@@ -600,18 +749,19 @@ public class DImg implements Iterable<DPixel> {
 	 * @see #toBufferedImage()
 	 * @since 1.0
 	 */
-	public BufferedImage getRemoteBufferedImage(){
-		DirectColorModel cm = new DirectColorModel(32,
-				0x00ff0000,       // Red
-                0x0000ff00,       // Green
-                0x000000ff,       // Blue
-                0xff000000        // Alpha
-                );
-		DataBufferInt buffer = new DataBufferInt(getData(), numValues());
-		WritableRaster raster = Raster.createPackedRaster(buffer, getWidth(), getHeight(), getWidth(), cm.getMasks(), null);
-		BufferedImage bimg = new BufferedImage(cm, raster, false, null);
-		return bimg;
-	}
+// TODO: figure out if this is even possible
+//	public BufferedImage getRemoteBufferedImage(){
+//		DirectColorModel cm = new DirectColorModel(32,
+//				0x00ff0000,       // Red
+//                0x0000ff00,       // Green
+//                0x000000ff,       // Blue
+//                0xff000000        // Alpha
+//                );
+//		DataBufferInt buffer = new DataBufferInt(getData(), numValues());
+//		WritableRaster raster = Raster.createPackedRaster(buffer, getWidth(), getHeight(), getWidth(), cm.getMasks(), null);
+//		BufferedImage bimg = new BufferedImage(cm, raster, false, null);
+//		return bimg;
+//	}
 
 	/**
 	 * Creates an Img sharing the specified BufferedImage's data. Changes in
@@ -629,20 +779,21 @@ public class DImg implements Iterable<DPixel> {
 	 * @see #Img(BufferedImage)
 	 * @since 1.0
 	 */
-	public static DImg createRemoteImg(BufferedImage bimg){
-		int type = bimg.getRaster().getDataBuffer().getDataType();
-		if(type != DataBuffer.TYPE_INT){
-			throw new IllegalArgumentException(
-					String.format("cannot create Img as remote of provided BufferedImage!%n"
-							+ "Need BufferedImage with DataBuffer of type TYPE_INT (%d). Provided type: %d",
-							DataBuffer.TYPE_INT, type));
-		}
-		DImg img = new DImg(
-				new Dimension(bimg.getWidth(),bimg.getHeight()),
-				((DataBufferInt)bimg.getRaster().getDataBuffer()).getData()
-			);
-		return img;
-	}
+// TODO: figure out if this is even possible
+//	public static DImg createRemoteImg(BufferedImage bimg){
+//		int type = bimg.getRaster().getDataBuffer().getDataType();
+//		if(type != DataBuffer.TYPE_INT){
+//			throw new IllegalArgumentException(
+//					String.format("cannot create Img as remote of provided BufferedImage!%n"
+//							+ "Need BufferedImage with DataBuffer of type TYPE_INT (%d). Provided type: %d",
+//							DataBuffer.TYPE_INT, type));
+//		}
+//		DImg img = new DImg(
+//				new Dimension(bimg.getWidth(),bimg.getHeight()),
+//				((DataBufferInt)bimg.getRaster().getDataBuffer()).getData()
+//			);
+//		return img;
+//	}
 
 
 	@Override
@@ -730,7 +881,7 @@ public class DImg implements Iterable<DPixel> {
 
 	@Override
 	public Spliterator<DPixel> spliterator() {
-		return new ImgSpliterator(0, numValues()-1, spliteratorMinimumSplitSize);
+		return new DImgSpliterator(0, numValues()-1, spliteratorMinimumSplitSize);
 	}
 
 	/**
@@ -747,7 +898,7 @@ public class DImg implements Iterable<DPixel> {
 	 * @since 1.3
 	 */
 	public Spliterator<DPixel> rowSpliterator() {
-		return new RowSpliterator(0, getWidth(), 0, getHeight()-1, this);
+		return new DRowSpliterator(0, getWidth(), 0, getHeight()-1, this);
 	}
 
 	/**
@@ -764,7 +915,7 @@ public class DImg implements Iterable<DPixel> {
 	 * @since 1.3
 	 */
 	public Spliterator<DPixel> colSpliterator() {
-		return new ColSpliterator(0, getWidth()-1, 0, getHeight(), this);
+		return new DColSpliterator(0, getWidth()-1, 0, getHeight(), this);
 	}
 
 	/**
@@ -787,7 +938,7 @@ public class DImg implements Iterable<DPixel> {
 							"provided area [%d,%d][%d,%d] is not within bounds of the image [%d,%d]",
 							xStart,yStart,width,height, getWidth(), getHeight()));
 		}
-		return new ImgAreaSpliterator(xStart,yStart,width,height, spliteratorMinimumSplitSize);
+		return new DImgAreaSpliterator(xStart,yStart,width,height, spliteratorMinimumSplitSize);
 	}
 
 	/**
@@ -835,7 +986,7 @@ public class DImg implements Iterable<DPixel> {
 	 * @since 1.0
 	 */
 	public void forEachParallel(final Consumer<? super DPixel> action) {
-		ParallelForEachExecutor exec = new ParallelForEachExecutor(null, spliterator(), action);
+		Img.ParallelForEachExecutor<DPixel> exec = new Img.ParallelForEachExecutor<>(null, spliterator(), action);
 		exec.invoke();
 	}
 
@@ -856,7 +1007,7 @@ public class DImg implements Iterable<DPixel> {
 	 * @since 1.1
 	 */
 	public void forEachParallel(final int xStart, final int yStart, final int width, final int height, final Consumer<? super DPixel> action) {
-		ParallelForEachExecutor exec = new ParallelForEachExecutor(null, spliterator(xStart, yStart, width, height), action);
+		Img.ParallelForEachExecutor<DPixel> exec = new Img.ParallelForEachExecutor<>(null, spliterator(xStart, yStart, width, height), action);
 		exec.invoke();
 	}
 
@@ -1004,9 +1155,10 @@ public class DImg implements Iterable<DPixel> {
 	 * @see #paint(Consumer)
 	 * @since 1.3
 	 */
-	public Graphics2D createGraphics(){
-		return getRemoteBufferedImage().createGraphics();
-	}
+// TODO: only possible if getRemoteBufferedImage can be implemented
+//	public Graphics2D createGraphics(){
+//		return getRemoteBufferedImage().createGraphics();
+//	}
 
 	/**
 	 * Uses the specified paintInstructions to draw into this Img.
@@ -1027,11 +1179,12 @@ public class DImg implements Iterable<DPixel> {
 	 * @see #createGraphics()
 	 * @since 1.3
 	 */
-	public void paint(Consumer<Graphics2D> paintInstructions){
-		Graphics2D g2d = createGraphics();
-		paintInstructions.accept(g2d);
-		g2d.dispose();
-	}
+// TODO: only possible if createGraphics can be implemented
+//	public void paint(Consumer<Graphics2D> paintInstructions){
+//		Graphics2D g2d = createGraphics();
+//		paintInstructions.accept(g2d);
+//		g2d.dispose();
+//	}
 
 
 	/**
@@ -1039,7 +1192,7 @@ public class DImg implements Iterable<DPixel> {
 	 * @author hageldave
 	 * @since 1.1
 	 */
-	private final class ImgAreaSpliterator implements Spliterator<DPixel> {
+	private final class DImgAreaSpliterator implements Spliterator<DPixel> {
 
 		final DPixel px;
 		/* start x coord and end x coord of a row */
@@ -1060,11 +1213,11 @@ public class DImg implements Iterable<DPixel> {
 		 * @param minSplitSize the minimum number of elements in a split
 		 * @since 1.1
 		 */
-		private ImgAreaSpliterator(int xStart, int yStart, int width, int height, int minSplitSize){
+		private DImgAreaSpliterator(int xStart, int yStart, int width, int height, int minSplitSize){
 			this(xStart, xStart+width, xStart, yStart, xStart+width, yStart+height-1, minSplitSize);
 		}
 
-		private ImgAreaSpliterator(int xStart, int endXexcl, int x, int y, int finalXexcl, int finalYincl, int minSplitSize){
+		private DImgAreaSpliterator(int xStart, int endXexcl, int x, int y, int finalXexcl, int finalYincl, int minSplitSize){
 			this.startX = xStart;
 			this.endXexcl = endXexcl;
 			this.x = x;
@@ -1132,7 +1285,7 @@ public class DImg implements Iterable<DPixel> {
 
 				int newFinalX_excl = startX + (midIdx_excl%width);
 				int newFinalY_incl = this.y + midIdx_excl/width;
-				ImgAreaSpliterator split = new ImgAreaSpliterator(
+				DImgAreaSpliterator split = new DImgAreaSpliterator(
 						startX,         // start of a row
 						endXexcl,       // end of a row
 						newFinalX_excl, // x coord of new spliterator
@@ -1170,7 +1323,7 @@ public class DImg implements Iterable<DPixel> {
 	 * @author hageldave
 	 * @since 1.0
 	 */
-	private final class ImgSpliterator implements Spliterator<DPixel> {
+	private final class DImgSpliterator implements Spliterator<DPixel> {
 
 		final DPixel px;
 		int endIndex;
@@ -1183,7 +1336,7 @@ public class DImg implements Iterable<DPixel> {
 		 * @param minSplitSize minimum split size for this spliterator (minimum number of elements in a split)
 		 * @since 1.0
 		 */
-		private ImgSpliterator(int startIndex, int endIndex, int minSplitSize) {
+		private DImgSpliterator(int startIndex, int endIndex, int minSplitSize) {
 			px = new DPixel(DImg.this, startIndex);
 			this.endIndex = endIndex;
 			this.minimumSplitSize = minSplitSize;
@@ -1218,7 +1371,7 @@ public class DImg implements Iterable<DPixel> {
 			int currentIdx = Math.min(px.getIndex(), endIndex);
 			int midIdx = currentIdx + (endIndex-currentIdx)/2;
 			if(midIdx > currentIdx+minimumSplitSize){
-				ImgSpliterator split = new ImgSpliterator(midIdx, endIndex, minimumSplitSize);
+				DImgSpliterator split = new DImgSpliterator(midIdx, endIndex, minimumSplitSize);
 				setEndIndex(midIdx-1);
 				return split;
 			} else {
@@ -1246,7 +1399,7 @@ public class DImg implements Iterable<DPixel> {
 	 * @author hageldave
 	 * @since 1.3
 	 */
-	private static final class RowSpliterator implements Spliterator<DPixel> {
+	private static final class DRowSpliterator implements Spliterator<DPixel> {
 
 		int startX;
 		int endXinclusive;
@@ -1255,7 +1408,7 @@ public class DImg implements Iterable<DPixel> {
 		int endYinclusive;
 		DPixel px;
 
-		public RowSpliterator(int startX, int width, int startY, int endYincl, DImg img) {
+		public DRowSpliterator(int startX, int width, int startY, int endYincl, DImg img) {
 			this.startX = startX;
 			this.x = startX;
 			this.endXinclusive = startX+width-1;
@@ -1298,7 +1451,7 @@ public class DImg implements Iterable<DPixel> {
 		public Spliterator<DPixel> trySplit() {
 			if(this.y < endYinclusive){
 				int newY = y + 1 + (endYinclusive-y)/2;
-				RowSpliterator split = new RowSpliterator(startX, endXinclusive-startX+1, newY, endYinclusive, px.getDImg());
+				DRowSpliterator split = new DRowSpliterator(startX, endXinclusive-startX+1, newY, endYinclusive, px.getDImg());
 				this.endYinclusive = newY-1;
 				return split;
 			} else return null;
@@ -1323,7 +1476,7 @@ public class DImg implements Iterable<DPixel> {
 	 * @author hageldave
 	 * @since 1.3
 	 */
-	private static final class ColSpliterator implements Spliterator<DPixel> {
+	private static final class DColSpliterator implements Spliterator<DPixel> {
 
 		int startY;
 		int endXinclusive;
@@ -1332,7 +1485,7 @@ public class DImg implements Iterable<DPixel> {
 		int endYinclusive;
 		DPixel px;
 
-		public ColSpliterator(int startX, int endXincl, int startY, int height, DImg img) {
+		public DColSpliterator(int startX, int endXincl, int startY, int height, DImg img) {
 			this.startY = startY;
 			this.y = startY;
 			this.endYinclusive = startY+height-1;
@@ -1375,7 +1528,7 @@ public class DImg implements Iterable<DPixel> {
 		public Spliterator<DPixel> trySplit() {
 			if(this.x < endXinclusive){
 				int newX = x + 1 + (endXinclusive-x)/2;
-				ColSpliterator split = new ColSpliterator(newX, endXinclusive, startY, endYinclusive-startY+1, px.getDImg());
+				DColSpliterator split = new DColSpliterator(newX, endXinclusive, startY, endYinclusive-startY+1, px.getDImg());
 				this.endXinclusive = newX-1;
 				return split;
 			} else return null;
@@ -1393,46 +1546,32 @@ public class DImg implements Iterable<DPixel> {
 
 	}
 
-	/**
-	 * CountedCompleter class for multithreaded execution of a Consumer on a
-	 * DPixel Spliterator. Used to realise multithreaded forEach loop.
-	 * @author hageldave
-	 * @see DImg#forEachParallel(Consumer)
-	 * @since 1.0
-	 */
-	private final static class ParallelForEachExecutor extends CountedCompleter<Void> {
-		private static final long serialVersionUID = 1L;
-
-		final Spliterator<DPixel> spliterator;
-		final Consumer<? super DPixel> action;
-
-		ParallelForEachExecutor(
-				ParallelForEachExecutor parent,
-				Spliterator<DPixel> spliterator,
-				Consumer<? super DPixel> action)
-		{
-			super(parent);
-			this.spliterator = spliterator;
-			this.action = action;
+	
+	public static interface TransferFunction {
+		
+		public int toARGB(double a, double r, double g, double b);
+		
+		public default int toRGB(double r, double g, double b){
+			return 0xff000000 | toARGB(0, r, g, b);
 		}
-
-		@Override
-		public void compute() {
-			Spliterator<DPixel> sub;
-			while ((sub = spliterator.trySplit()) != null) {
-				addToPendingCount(1);
-				new ParallelForEachExecutor(this, sub, action).fork();
-			}
-			spliterator.forEachRemaining(action);
-			propagateCompletion();
+		
+		static TransferFunction fromFunction(Function<Double, Integer> fn){
+			return (a,r,g,b) -> Pixel.argb_fast(
+					fn.apply(a), 
+					fn.apply(r), 
+					fn.apply(g), 
+					fn.apply(b));
 		}
+		
+		static TransferFunction normalizedInput(){
+			return (a,r,g,b) -> Pixel.argb_fromNormalized((float)a, (float)r, (float)g, (float)b);
+		}
+		
 	}
 
 
-
-
-
-
-
+	
+	
+	
 
 }

@@ -776,7 +776,7 @@ public class Img implements Iterable<Pixel> {
 	 * @since 1.0
 	 */
 	public void forEachParallel(final Consumer<? super Pixel> action) {
-		ParallelForEachExecutor exec = new ParallelForEachExecutor(null, spliterator(), action);
+		ParallelForEachExecutor<Pixel> exec = new ParallelForEachExecutor<>(null, spliterator(), action);
 		exec.invoke();
 	}
 
@@ -797,7 +797,7 @@ public class Img implements Iterable<Pixel> {
 	 * @since 1.1
 	 */
 	public void forEachParallel(final int xStart, final int yStart, final int width, final int height, final Consumer<? super Pixel> action) {
-		ParallelForEachExecutor exec = new ParallelForEachExecutor(null, spliterator(xStart, yStart, width, height), action);
+		ParallelForEachExecutor<Pixel> exec = new ParallelForEachExecutor<>(null, spliterator(xStart, yStart, width, height), action);
 		exec.invoke();
 	}
 
@@ -1341,16 +1341,16 @@ public class Img implements Iterable<Pixel> {
 	 * @see Img#forEachParallel(Consumer)
 	 * @since 1.0
 	 */
-	private final static class ParallelForEachExecutor extends CountedCompleter<Void> {
+	final static class ParallelForEachExecutor<T> extends CountedCompleter<Void> {
 		private static final long serialVersionUID = 1L;
 
-		final Spliterator<Pixel> spliterator;
-		final Consumer<? super Pixel> action;
+		final Spliterator<T> spliterator;
+		final Consumer<? super T> action;
 
 		ParallelForEachExecutor(
-				ParallelForEachExecutor parent,
-				Spliterator<Pixel> spliterator,
-				Consumer<? super Pixel> action)
+				ParallelForEachExecutor<T> parent,
+				Spliterator<T> spliterator,
+				Consumer<? super T> action)
 		{
 			super(parent);
 			this.spliterator = spliterator;
@@ -1359,10 +1359,10 @@ public class Img implements Iterable<Pixel> {
 
 		@Override
 		public void compute() {
-			Spliterator<Pixel> sub;
+			Spliterator<T> sub;
 			while ((sub = spliterator.trySplit()) != null) {
 				addToPendingCount(1);
-				new ParallelForEachExecutor(this, sub, action).fork();
+				new ParallelForEachExecutor<T>(this, sub, action).fork();
 			}
 			spliterator.forEachRemaining(action);
 			propagateCompletion();

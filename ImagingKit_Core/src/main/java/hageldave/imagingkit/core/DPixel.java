@@ -184,7 +184,9 @@ public class DPixel {
 	 * @since 1.0
 	 */
 	public void setValue(int pixelValue){
-		this.DImg.getData()[index] = pixelValue;
+//		this.DImg.getData()[index] = pixelValue;
+		throw new RuntimeException();
+		// TODO: adapt this class
 	}
 
 	/**
@@ -206,7 +208,9 @@ public class DPixel {
 	 * @since 1.0
 	 */
 	public int getValue(){
-		return this.DImg.getData()[index];
+//		return this.DImg.getData()[index];
+		throw new RuntimeException();
+		// TODO: adapt this class
 	}
 
 	/**
