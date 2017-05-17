@@ -29,7 +29,7 @@ public class ImgTest {
 		assertEquals(0xaa/255.0f, Pixel.r_normalized(color), 0);
 		assertEquals(0x12/255.0f, Pixel.g_normalized(color), 0);
 		assertEquals(0x44/255.0f, Pixel.b_normalized(color), 0);
-		
+
 		assertEquals(0x01001234, Pixel.argb_fast(0x01, 0x00, 0x12, 0x34));
 		assertEquals(0xff543210, Pixel.rgb_fast(0x54, 0x32, 0x10));
 		assertEquals(0xff00ff54, Pixel.rgb_bounded(-12, 260, 0x54));
@@ -53,7 +53,7 @@ public class ImgTest {
 		assertEquals(128, Pixel.getGrey(Pixel.rgb(127, 128, 129), 1, 1, 1));
 		assertEquals(100, Pixel.getGrey(Pixel.rgb(80, 80, 120), 1, 1, 2));
 		assertEquals(0xaa, Pixel.getLuminance(0xffaaaaaa));
-		
+
 		Img img = new Img(11,11);
 		Pixel p = new Pixel(img, 0);
 		assertEquals(img, p.getImg());
@@ -66,7 +66,7 @@ public class ImgTest {
 		assertEquals(0x00ffaaef, p.getValue());
 		p.setA(p.r());
 		assertEquals(0xffffaaef, p.getValue());
-		
+
 		p.setA(0x44);
 		p.setRGB_preserveAlpha(0x88, 0x77, 0x66);
 		assertEquals(0x44887766, p.getValue());
@@ -91,8 +91,8 @@ public class ImgTest {
 		assertEquals(0x88, p.r());
 		assertEquals(0xee, p.g());
 		assertEquals(0xcc, p.b());
-		
-		
+
+
 		assertEquals(0, p.getX());
 		assertEquals(0, p.getY());
 		assertEquals(0, p.getXnormalized(), 0);
@@ -112,20 +112,20 @@ public class ImgTest {
 		assertEquals(10, p.getY());
 		assertEquals(1, p.getXnormalized(), 0);
 		assertEquals(1, p.getYnormalized(), 0);
-		
+
 		color = 0x88997744;
 		p.setValue(color);
 		assertEquals(color, p.getValue());
 		assertEquals(Pixel.getGrey(color, 4, 2, 1), p.getGrey(4, 2, 1));
 		assertEquals(Pixel.getLuminance(color), p.getLuminance());
 	}
-	
+
 	@Test
 	public void misc_test(){
 		JunitUtils.testException(()->{new Img(1, 2, new int[]{0});}, IllegalArgumentException.class);
 		JunitUtils.testException(()->{new Img(10,10).setSpliteratorMinimumSplitSize(0);}, IllegalArgumentException.class);
 	}
-	
+
 	@Test
 	public void boundaryModes_test(){
 		Img img = new Img(4, 4, new int[]
@@ -146,17 +146,17 @@ public class ImgTest {
 		assertEquals(0, img.getValue(4, 0, Img.boundary_mode_zero));
 		assertEquals(0, img.getValue(0, -1, Img.boundary_mode_zero));
 		assertEquals(0, img.getValue(0, 4, Img.boundary_mode_zero));
-		
+
 		assertEquals(0xff112233, img.getValue(-1, 0, 0xff112233));
 		assertEquals(0xff112233, img.getValue(4, 0,  0xff112233));
 		assertEquals(0xff112233, img.getValue(0, -1, 0xff112233));
 		assertEquals(0xff112233, img.getValue(0, 4,  0xff112233));
-		
+
 		assertEquals(0, img.getValue(-2, 0, Img.boundary_mode_repeat_edge));
 		assertEquals(3, img.getValue(3, -2, Img.boundary_mode_repeat_edge));
 		assertEquals(9, img.getValue(-10, 10, Img.boundary_mode_repeat_edge));
 		assertEquals(3, img.getValue(10, -10, Img.boundary_mode_repeat_edge));
-		
+
 		for(int y = 0; y < 4; y++)
 		for(int x = 0; x < 4; x++){
 			assertEquals(img.getValue(x, y), img.getValue(x+4, y, Img.boundary_mode_repeat_image));
@@ -166,7 +166,7 @@ public class ImgTest {
 			assertEquals(img.getValue(x, y), img.getValue(x+8, y+8, Img.boundary_mode_repeat_image));
 			assertEquals(img.getValue(x, y), img.getValue(x-8, y-8, Img.boundary_mode_repeat_image));
 		}
-		
+
 		for(int y = 0; y < 4; y++)
 		for(int x = 0; x < 4; x++){
 			assertEquals(img.getValue(x, y), img.getValue(x+8, y+8, Img.boundary_mode_mirror));
@@ -176,7 +176,7 @@ public class ImgTest {
 		}
 
 	}
-	
+
 	@Test
 	public void pixelRetrieval_test(){
 		Img img = new Img(4, 3, new int[]
@@ -185,31 +185,42 @@ public class ImgTest {
 						4,5,6,7,
 						8,9,9,5
 				});
-		
+
 		assertEquals(img.getData().length, img.getWidth()*img.getHeight());
 		assertEquals(img.getData().length, img.numValues());
-		
+
 		int i = 0;
 		for(int y = 0; y < img.getHeight(); y++)
 		for(int x = 0; x < img.getWidth(); x++){
 			assertEquals(img.getData()[i], img.getValue(x, y));
 			i++;
 		}
-		
+
 		// test interpolation
+		img = new Img(2,2, new int[]
+				{
+						0,4,
+						8,16
+				});
+		assertEquals(2, img.interpolateARGB(0.5f, 0));
+		assertEquals(4, img.interpolateARGB(0, 0.5f));
+		assertEquals(12, img.interpolateARGB(0.5f, 1));
+		assertEquals(10, img.interpolateARGB(1, 0.5f));
+		assertEquals(7, img.interpolateARGB(0.5f, 0.5f));
+
 		img = new Img(5,3, new int[]
 				{
 					0,1,2,3,4,
 					2,3,4,5,6,
 					4,5,6,7,8
 				});
-		
+
 		assertEquals(img.getValue(0, 0), img.interpolateARGB(0, 0));
 		assertEquals(img.getValue(img.getWidth()-1, img.getHeight()-1), img.interpolateARGB(1, 1));
 		assertEquals(img.getValue(0, img.getHeight()-1), img.interpolateARGB(0, 1));
 		assertEquals(img.getValue(img.getWidth()-1, 0), img.interpolateARGB(1, 0));
 		assertEquals(img.getValue(2, 1), img.interpolateARGB(0.5f, 0.5f));
-		
+
 		// test copypixels
 		Img img2 = new Img(2,2);
 		img.copyArea(0, 0, 2, 2, img2, 0, 0);
@@ -221,11 +232,11 @@ public class ImgTest {
 		img.copyArea(4, 2, 1, 1, img2, 1, 0);
 		assertEquals(img.getValue(4, 2), img2.getValue(1, 0));
 	}
-	
+
 	@Test
 	public void copyArea_test(){
 		// testing copy with overlapping area
-		
+
 		Img source = new Img(5, 10);
 		Img target = new Img(10, 5);
 		source.fill(1);
@@ -235,7 +246,7 @@ public class ImgTest {
 		for(int value: target.getData()){
 			assertEquals(0, value);
 		}
-		
+
 		source.copyArea(0, 0, 5, 10, target, 0, 0);
 		for(int y = 0; y < target.getHeight(); y++)
 		for(int x = 0; x < target.getWidth(); x++){
@@ -245,7 +256,7 @@ public class ImgTest {
 				assertEquals(0, target.getValue(x, y));
 			}
 		}
-		
+
 		target.fill(0);
 		source.copyArea(0, 0, 5, 10, target, -1, 0);
 		for(int y = 0; y < target.getHeight(); y++)
@@ -256,7 +267,7 @@ public class ImgTest {
 				assertEquals(0, target.getValue(x, y));
 			}
 		}
-		
+
 		target.fill(0);
 		source.copyArea(0, 0, 5, 10, target, 0, -6);
 		for(int y = 0; y < target.getHeight(); y++)
@@ -267,7 +278,7 @@ public class ImgTest {
 				assertEquals(0, target.getValue(x, y));
 			}
 		}
-		
+
 		target.fill(0);
 		source.copyArea(0, 0, 5, 10, target, 1, 0);
 		for(int y = 0; y < target.getHeight(); y++)
@@ -278,7 +289,7 @@ public class ImgTest {
 				assertEquals(0, target.getValue(x, y));
 			}
 		}
-		
+
 		target.fill(0);
 		source.copyArea(0, 0, 5, 10, target, 0, 1);
 		for(int y = 0; y < target.getHeight(); y++)
@@ -289,27 +300,27 @@ public class ImgTest {
 				assertEquals(0, target.getValue(x, y));
 			}
 		}
-		
+
 		target.fill(0);
 		source.copyArea(0, 0, 5, 10, target, -5, 0);
 		for(int color: target.getData()){
 			assertEquals(0, color);
 		}
-		
+
 		target.fill(0);
 		source.copyArea(0, 0, 5, 10, target, 0, -10);
 		for(int color: target.getData()){
 			assertEquals(0, color);
 		}
-		
+
 		// same width images
 		target = new Img(5, 9);
-		
+
 		source.copyArea(0, 0, 5, 10, target, 0, 0);
 		for(int value: target.getData()){
 			assertEquals(1, value);
 		}
-		
+
 		target.fill(0);
 		source.copyArea(0, 1, 5, 8, target, 0, 0);
 		for(int y = 0; y < target.getHeight(); y++)
@@ -320,7 +331,7 @@ public class ImgTest {
 				assertEquals(0, target.getValue(x, y));
 			}
 		}
-		
+
 		target.fill(0);
 		source.copyArea(0, 1, 5, 9, target, 0, 1);
 		for(int y = 0; y < target.getHeight(); y++)
@@ -331,7 +342,7 @@ public class ImgTest {
 				assertEquals(0, target.getValue(x, y));
 			}
 		}
-		
+
 		target.fill(0);
 		source.copyArea(0, 1, 5, 8, target, 0, -1);
 		for(int y = 0; y < target.getHeight(); y++)
@@ -342,13 +353,13 @@ public class ImgTest {
 				assertEquals(0, target.getValue(x, y));
 			}
 		}
-		
+
 		target.fill(0);
 		source.copyArea(0, 0, 5, 9, target, 0, -10);
 		for(int color: target.getData()){
 			assertEquals(0, color);
 		}
-		
+
 		// copy to new source
 		Img result = source.copyArea(0, 0, 5, 4, null, 0, 0);
 		assertEquals(5, result.getWidth());
@@ -357,12 +368,12 @@ public class ImgTest {
 		for(int x = 0; x < result.getWidth(); x++){
 			assertEquals(source.getValue(x, y), result.getValue(x, y));
 		}
-		
+
 		result = source.copy();
 		for(int i = 0; i < source.numValues(); i++){
 			assertEquals(source.getData()[i], result.getData()[i]);
 		}
-		
+
 		// exceptions
 		JunitUtils.testException(()->{source.copyArea(0,0,0,1,null,0,0);}, IllegalArgumentException.class);
 		JunitUtils.testException(()->{source.copyArea(0,0,1,0,null,0,0);}, IllegalArgumentException.class);
@@ -371,7 +382,7 @@ public class ImgTest {
 		JunitUtils.testException(()->{source.copyArea(0,0,20,2,null,0,0);}, IllegalArgumentException.class);
 		JunitUtils.testException(()->{source.copyArea(0,0,2,20,null,0,0);}, IllegalArgumentException.class);
 	}
-	
+
 	@Test
 	public void buffimg_test(){
 		BufferedImage bimg = new BufferedImage(4, 4, BufferedImage.TYPE_INT_ARGB);
@@ -382,7 +393,7 @@ public class ImgTest {
 					8,9,0,1,
 					2,3,4,5
 				}, 0, 4);
-		
+
 		{
 			// test same pixels
 			Img img = new Img(bimg);
@@ -391,7 +402,7 @@ public class ImgTest {
 			assertEquals(bimg.getRGB(x, y), img.getValue(x, y));
 			}
 		}
-		
+
 		{
 			// test remoteness
 			Img img = new Img(bimg);
@@ -403,8 +414,8 @@ public class ImgTest {
 				assertEquals(bimg.getRGB(x, y), img2.getValue(x, y));
 			}
 		}
-		
-		{	
+
+		{
 			// test remoteness in both directions
 			Img img = Img.createRemoteImg(bimg);
 			BufferedImage r_bimg = img.getRemoteBufferedImage();
@@ -417,7 +428,7 @@ public class ImgTest {
 				assertEquals(bimg.getRGB(x, y), r_bimg.getRGB(x, y));
 			}
 		}
-		
+
 		{
 			// test toBufferedImage
 			Img img = new Img(3, 3, new int[]
@@ -431,20 +442,20 @@ public class ImgTest {
 				assertNotEquals(img.getValue(i%3, i/3), bimg2.getRGB(i%3, i/3));
 			}
 		}
-		
+
 		{
 			// test exceptions
 			BufferedImage bimg2 = new BufferedImage(1,1,BufferedImage.TYPE_BYTE_BINARY);
 			JunitUtils.testException(()->{Img.createRemoteImg(bimg2);}, IllegalArgumentException.class);
 		}
-		
+
 	}
-	
+
 	@Test
 	public void iterable_test(){
 		BiFunction<Integer, Integer, Img> stdAlloc = (w,h)->{return new Img(w,h);};
 		iterable_test(stdAlloc);
-		
+
 		BiFunction<Integer, Integer, Img> rowsplitAlloc = (w,h)->{return new Img(w,h){
 			@Override
 			public Spliterator<Pixel> spliterator() {
@@ -452,7 +463,7 @@ public class ImgTest {
 			}
 		};};
 		iterable_test(rowsplitAlloc);
-		
+
 		BiFunction<Integer, Integer, Img> colsplitAlloc = (w,h)->{return new Img(w,h){
 			@Override
 			public Spliterator<Pixel> spliterator() {
@@ -461,7 +472,7 @@ public class ImgTest {
 		};};
 		iterable_test(colsplitAlloc);
 	}
-	
+
 	private void iterable_test(BiFunction<Integer, Integer, Img> imgAlloc){
 		// iterator
 		{
@@ -475,12 +486,12 @@ public class ImgTest {
 			for(int i = 0; i < img.numValues(); i++){
 				assertEquals(i, img.getData()[i]);
 			}
-			
+
 			img.forEach_defaultimpl(px->{
 				assertEquals(px.getIndex(), px.getValue());
 			});
 		}
-		
+
 		{
 			Img img = imgAlloc.apply(16,9);
 			img.iterator().forEachRemaining((px)->{px.setValue(px.getValue()+px.getIndex());});
@@ -488,7 +499,7 @@ public class ImgTest {
 				assertEquals(i, img.getData()[i]);
 			}
 		}
-		
+
 		{
 			Img img = imgAlloc.apply(16,9);
 			Iterator<Pixel> it = img.iterator();
@@ -500,7 +511,7 @@ public class ImgTest {
 				assertEquals(i, img.getData()[i]);
 			}
 		}
-		
+
 		{
 			Img img = imgAlloc.apply(16,9);
 			img.forEach((px)->{px.setValue(px.getIndex());});
@@ -508,7 +519,7 @@ public class ImgTest {
 				assertEquals(i, img.getData()[i]);
 			}
 		}
-		
+
 		// area iterator
 		{
 			Img img = imgAlloc.apply(16, 9);
@@ -542,10 +553,10 @@ public class ImgTest {
 					}
 				}
 			}
-			
+
 			JunitUtils.testException(()->{img.iterator(2,3,10,8);}, IllegalArgumentException.class);
 		}
-		
+
 		// spliterator
 		{
 			Img img = imgAlloc.apply(2000, 400);
@@ -562,7 +573,7 @@ public class ImgTest {
 					all.add(child);
 				} else {
 					idx++;
-				}	
+				}
 			}
 			for(Spliterator<Pixel> iter: all){
 				iter.tryAdvance((px) -> {px.setValue(px.getValue()+px.getIndex());});
@@ -585,7 +596,7 @@ public class ImgTest {
 					all.add(child);
 				} else {
 					idx++;
-				}	
+				}
 			}
 			for(Spliterator<Pixel> iter: all){
 				while(iter.tryAdvance((px) -> {px.setValue(px.getValue()+px.getIndex());}));
@@ -594,7 +605,7 @@ public class ImgTest {
 				assertEquals(i, img.getData()[i]);
 			}
 		}
-		
+
 		{
 			Img img = imgAlloc.apply(100, 100);
 			Spliterator<Pixel> split = img.spliterator();
@@ -603,7 +614,7 @@ public class ImgTest {
 				assertEquals(i, img.getData()[i]);
 			}
 		}
-		
+
 		// area spliterator
 		{
 			Img img = imgAlloc.apply(2000, 400);
@@ -693,7 +704,7 @@ public class ImgTest {
 					assertEquals(px.getIndex(), px.getValue());
 				}
 			}
-			
+
 		}
 
 		// parallel foreach
@@ -704,7 +715,7 @@ public class ImgTest {
 				assertEquals(i, img.getData()[i]);
 			}
 		}
-		
+
 		// foreach area
 		{
 			Img img = imgAlloc.apply(2000,400);
@@ -719,7 +730,7 @@ public class ImgTest {
 				}
 			}
 		}
-		
+
 		// parallel foreach area
 		{
 			Img img = imgAlloc.apply(3000,2000);
@@ -733,12 +744,12 @@ public class ImgTest {
 					assertEquals(0, img.getData()[i]);
 				}
 			}
-			
+
 			JunitUtils.testException(()->{
 				img.forEachParallel(0, 0, 3000,2001, (px)->{});
 			}, IllegalArgumentException.class);
 		}
-		
+
 		// streams
 		{
 			Img img = imgAlloc.apply(3000, 2000);
@@ -773,11 +784,11 @@ public class ImgTest {
 					assertEquals((x+1)%2, img.getValue(x, y));
 				}
 			}
-			
+
 		}
-		
+
 	}
-	
+
 	@Test
 	public void graphics_test(){
 		Img img = new Img(400, 400);
@@ -793,6 +804,6 @@ public class ImgTest {
 			}
 		});
 	}
-	
-	
+
+
 }
