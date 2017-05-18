@@ -37,9 +37,15 @@ package hageldave.imagingkit.core;
  * @since 1.0
  */
 public class DPixel {
+	
+	public static final int R = DImg.channel_r;
+	public static final int G = DImg.channel_g;
+	public static final int B = DImg.channel_b;
+	public static final int A = DImg.channel_a;
+	
 	/** DImg this pixel belongs to
 	 * @since 1.0 */
-	private final DImg DImg;
+	private final DImg img;
 
 	/** index of the value this pixel references
 	 * @since 1.0 */
@@ -58,7 +64,7 @@ public class DPixel {
 	 * @since 1.0
 	 */
 	public DPixel(DImg DImg, int index) {
-		this.DImg = DImg;
+		this.img = DImg;
 		this.index = index;
 	}
 
@@ -84,7 +90,7 @@ public class DPixel {
 	 * @since 1.0
 	 */
 	public DImg getDImg() {
-		return DImg;
+		return img;
 	}
 
 	/**
@@ -110,7 +116,7 @@ public class DPixel {
 	 * @since 1.0
 	 */
 	public void setPosition(int x, int y) {
-		this.index = y*DImg.getWidth()+x;
+		this.index = y*img.getWidth()+x;
 	}
 
 	/**
@@ -129,7 +135,7 @@ public class DPixel {
 	 * @since 1.0
 	 */
 	public int getX() {
-		return index % DImg.getWidth();
+		return index % img.getWidth();
 	}
 
 	/**
@@ -140,7 +146,7 @@ public class DPixel {
 	 * @since 1.0
 	 */
 	public int getY() {
-		return index / DImg.getWidth();
+		return index / img.getWidth();
 	}
 
 	/**
@@ -152,7 +158,7 @@ public class DPixel {
 	 * @since 1.2
 	 */
 	public float getXnormalized() {
-		return getX() * 1.0f / (DImg.getWidth()-1.0f);
+		return getX() * 1.0f / (img.getWidth()-1.0f);
 	}
 
 	/**
@@ -164,7 +170,7 @@ public class DPixel {
 	 * @since 1.2
 	 */
 	public float getYnormalized() {
-		return getY() * 1.0f / (DImg.getHeight()-1.0f);
+		return getY() * 1.0f / (img.getHeight()-1.0f);
 	}
 
 	/**
@@ -183,10 +189,9 @@ public class DPixel {
 	 * @see DImg#setValue(int, int, int)
 	 * @since 1.0
 	 */
-	public void setValue(int pixelValue){
-//		this.DImg.getData()[index] = pixelValue;
-		throw new RuntimeException();
-		// TODO: adapt this class
+	public DPixel setValue(int channel, double value){
+		this.img.getData()[channel][index] = value;
+		return this;
 	}
 
 	/**
@@ -207,10 +212,8 @@ public class DPixel {
 	 * @see DImg#getValue(int, int)
 	 * @since 1.0
 	 */
-	public int getValue(){
-//		return this.DImg.getData()[index];
-		throw new RuntimeException();
-		// TODO: adapt this class
+	public double getValue(int channel){
+		return this.img.getData()[channel][index];
 	}
 
 	/**
@@ -227,8 +230,8 @@ public class DPixel {
 	 * @see #getValue()
 	 * @since 1.0
 	 */
-	public int a(){
-		return DPixel.a(getValue());
+	public double a(){
+		return this.img.getDataA()[index];
 	}
 
 	/**
@@ -245,8 +248,8 @@ public class DPixel {
 	 * @see #getValue()
 	 * @since 1.0
 	 */
-	public int r(){
-		return DPixel.r(getValue());
+	public double r(){
+		return this.img.getDataR()[index];
 	}
 
 	/**
@@ -263,8 +266,8 @@ public class DPixel {
 	 * @see #getValue()
 	 * @since 1.0
 	 */
-	public int g(){
-		return DPixel.g(getValue());
+	public double g(){
+		return this.img.getDataG()[index];
 	}
 
 	/**
@@ -281,72 +284,8 @@ public class DPixel {
 	 * @see #getValue()
 	 * @since 1.0
 	 */
-	public int b(){
-		return DPixel.b(getValue());
-	}
-
-	/**
-	 * @return the normalized alpha component of the value currently referenced by this
-	 * Pixel. This will return a value in [0.0 .. 1.0].
-	 * @throws ArrayIndexOutOfBoundsException if this Pixel's index is not in
-	 * range of the DImg's data array.
-	 *
-	 * @see #a()
-	 * @see #r_normalized()
-	 * @see #g_normalized()
-	 * @see #b_normalized()
-	 * @since 1.2
-	 */
-	public float a_normalized(){
-		return DPixel.a_normalized(getValue());
-	}
-
-	/**
-	 * @return the normalized red component of the value currently referenced by this
-	 * Pixel. This will return a value in [0.0 .. 1.0].
-	 * @throws ArrayIndexOutOfBoundsException if this Pixel's index is not in
-	 * range of the DImg's data array.
-	 *
-	 * @see #r()
-	 * @see #a_normalized()
-	 * @see #g_normalized()
-	 * @see #b_normalized()
-	 * @since 1.2
-	 */
-	public float r_normalized(){
-		return DPixel.r_normalized(getValue());
-	}
-
-	/**
-	 * @return the normalized green component of the value currently referenced by this
-	 * Pixel. This will return a value in [0.0 .. 1.0].
-	 * @throws ArrayIndexOutOfBoundsException if this Pixel's index is not in
-	 * range of the DImg's data array.
-	 *
-	 * @see #g()
-	 * @see #a_normalized()
-	 * @see #r_normalized()
-	 * @see #b_normalized()
-	 * @since 1.2
-	 */
-	public float g_normalized(){
-		return DPixel.g_normalized(getValue());
-	}
-
-	/**
-	 * @return the normalized blue component of the value currently referenced by this
-	 * Pixel. This will return a value in [0.0 .. 1.0].
-	 * @throws ArrayIndexOutOfBoundsException if this Pixel's index is not in
-	 * range of the DImg's data array.
-	 *
-	 * @see #b()
-	 * @see #a_normalized()
-	 * @see #r_normalized()
-	 * @see #g_normalized()
-	 * @since 1.2
-	 */
-	public float b_normalized(){
-		return DPixel.b_normalized(getValue());
+	public double b(){
+		return this.img.getDataB()[index];
 	}
 
 	/**
@@ -366,8 +305,11 @@ public class DPixel {
 	 * @see #setValue(int)
 	 * @since 1.0
 	 */
-	public void setARGB(int a, int r, int g, int b){
-		setValue(DPixel.argb(a, r, g, b));
+	public void setARGB(double a, double r, double g, double b){
+		this.img.getDataR()[index] = r;
+		this.img.getDataG()[index] = g;
+		this.img.getDataB()[index] = b;
+		this.img.getDataA()[index] = a;
 	}
 
 	/**
@@ -386,8 +328,12 @@ public class DPixel {
 	 * @see #setValue(int)
 	 * @since 1.0
 	 */
-	public void setRGB(int r, int g, int b){
-		setValue(DPixel.rgb(r, g, b));
+	public void setRGB(double r, double g, double b){
+		this.img.getDataR()[index] = r;
+		this.img.getDataG()[index] = g;
+		this.img.getDataB()[index] = b;
+		if(this.img.hasAlpha())
+		this.img.getDataA()[index] = 1;
 	}
 
 	/**
@@ -402,73 +348,10 @@ public class DPixel {
 	 * @see #setRGB_fromNormalized_preserveAlpha(float, float, float)
 	 * @since 1.2
 	 */
-	public void setRGB_preserveAlpha(int r, int g, int b){
-		setValue((getValue() & 0xff000000 ) | DPixel.argb(0, r, g, b));
-	}
-
-	/**
-	 * Sets an ARGB value at the position currently referenced by this Pixel. <br>
-	 * Each channel value is assumed to be within [0.0 .. 1.0]. Channel values
-	 * outside these bounds will result in a broken, malformed ARBG value.
-	 * @param a normalized alpha
-	 * @param r normalized red
-	 * @param g normalized green
-	 * @param b normalized blue
-	 * @throws ArrayIndexOutOfBoundsException if this Pixel's index is not in
-	 * range of the DImg's data array.
-	 *
-	 * @see #setRGB_fromNormalized(float, float, float)
-	 * @see #setRGB_fromNormalized_preserveAlpha(float, float, float)
-	 * @see #setARGB(int, int, int, int)
-	 * @see #a_normalized()
-	 * @see #r_normalized()
-	 * @see #g_normalized()
-	 * @see #b_normalized()
-	 * @since 1.2
-	 */
-	public void setARGB_fromNormalized(float a, float r, float g, float b){
-		setValue(DPixel.argb_fromNormalized(a, r, g, b));
-	}
-
-	/**
-	 * Sets an opaque RGB value at the position currently referenced by this Pixel. <br>
-	 * Each channel value is assumed to be within [0.0 .. 1.0]. Channel values
-	 * outside these bounds will result in a broken, malformed ARBG value.
-	 * @param r normalized red
-	 * @param g normalized green
-	 * @param b normalized blue
-	 * @throws ArrayIndexOutOfBoundsException if this Pixel's index is not in
-	 * range of the DImg's data array.
-	 *
-	 * @see #setARGB_fromNormalized(float, float, float, float)
-	 * @see #setRGB_fromNormalized_preserveAlpha(float, float, float)
-	 * @see #setRGB(int, int, int)
-	 * @see #a_normalized()
-	 * @see #r_normalized()
-	 * @see #g_normalized()
-	 * @see #b_normalized()
-	 * @since 1.2
-	 */
-	public void setRGB_fromNormalized(float r, float g, float b){
-		setValue(DPixel.rgb_fromNormalized(r, g, b));
-	}
-
-	/**
-	 * Sets an RGB value at the position currently referenced by this Pixel.
-	 * The present alpha value will not be altered by this operation. <br>
-	 * Each channel value is assumed to be within [0.0 .. 1.0]. Channel values
-	 * outside these bounds will result in a broken, malformed ARBG value.
-	 * @param r normalized red
-	 * @param g normalized green
-	 * @param b normalized blue
-	 * @throws ArrayIndexOutOfBoundsException if this Pixel's index is not in
-	 * range of the DImg's data array.
-	 *
-	 * @see #setRGB_preserveAlpha(int, int, int)
-	 * @since 1.2
-	 */
-	public void setRGB_fromNormalized_preserveAlpha(float r, float g, float b){
-		setValue((getValue() & 0xff000000) | DPixel.argb(0,(int)(0xff*r),(int)(0xff*g),(int)(0xff*b)) );
+	public void setRGB_preserveAlpha(double r, double g, double b){
+		this.img.getDataR()[index] = r;
+		this.img.getDataG()[index] = g;
+		this.img.getDataB()[index] = b;
 	}
 
 	/**
@@ -480,8 +363,9 @@ public class DPixel {
 	 * @see #setARGB(int a, int r, int g, int b)
 	 * @since 1.2
 	 */
-	public void setA(int a){
-		setValue((getValue() & 0x00ffffff) | ((a<<24) & 0xff000000));
+	public DPixel setA(double a){
+		this.img.getDataA()[index] = a;
+		return this;
 	}
 
 	/**
@@ -494,8 +378,9 @@ public class DPixel {
 	 * @see #setRGB(int r, int g, int b)
 	 * @since 1.2
 	 */
-	public void setR(int r){
-		setValue((getValue() & 0xff00ffff) | ((r<<16) & 0x00ff0000));
+	public DPixel setR(double r){
+		this.img.getDataR()[index] = r;
+		return this;
 	}
 
 	/**
@@ -508,8 +393,9 @@ public class DPixel {
 	 * @see #setRGB(int r, int g, int b)
 	 * @since 1.2
 	 */
-	public void setG(int g){
-		setValue((getValue() & 0xffff00ff) | ((g<<8) & 0x0000ff00));
+	public DPixel setG(double g){
+		this.img.getDataG()[index] = g;
+		return this;
 	}
 
 	/**
@@ -522,8 +408,9 @@ public class DPixel {
 	 * @see #setRGB(int r, int g, int b)
 	 * @since 1.2
 	 */
-	public void setB(int b){
-		setValue((getValue() & 0xffffff00) | ((b) & 0x000000ff));
+	public DPixel setB(double b){
+		this.img.getDataB()[index] = b;
+		return this;
 	}
 
 	/**
@@ -535,8 +422,8 @@ public class DPixel {
 	 * @see #getLuminance(int)
 	 * @since 1.2
 	 */
-	public int getLuminance(){
-		return DPixel.getLuminance(getValue());
+	public double getLuminance(){
+		return DPixel.getLuminance(r(),g(),b());
 	}
 
 	/**
@@ -552,8 +439,8 @@ public class DPixel {
 	 * @see #getGrey(int, int, int, int)
 	 * @since 1.2
 	 */
-	public int getGrey(final int redWeight, final int greenWeight, final int blueWeight){
-		return DPixel.getGrey(getValue(), redWeight, greenWeight, blueWeight);
+	public double getGrey(final double redWeight, final double greenWeight, final double blueWeight){
+		return DPixel.getGrey(r(),g(),b(), redWeight, greenWeight, blueWeight);
 	}
 
 	@Override
@@ -573,8 +460,8 @@ public class DPixel {
 	 * @see #getGrey(int, int, int, int)
 	 * @since 1.0
 	 */
-	public static final int getLuminance(final int color){
-		return getGrey(color, 2126, 7152, 722);
+	public static final double getLuminance(final double r, final double g, final double b){
+		return getGrey(r,g,b, 0.2126, 0.7152, 0.0722);
 	}
 
 	/**
@@ -596,368 +483,8 @@ public class DPixel {
 	 * @see #getLuminance(int)
 	 * @since 1.0
 	 */
-	public static final int getGrey(final int color, final int redWeight, final int greenWeight, final int blueWeight){
-		return (r(color)*redWeight + g(color)*greenWeight + b(color)*blueWeight)/(redWeight+blueWeight+greenWeight);
+	public static final double getGrey(final double r, final double g, final double b, final double redWeight, final double greenWeight, final double blueWeight){
+		return r*redWeight+g*greenWeight+b*blueWeight;
 	}
 
-	/**
-	 * Packs 8bit RGB color components into a single 32bit ARGB integer value
-	 * with alpha=255 (opaque).
-	 * Components are clamped to [0,255].
-	 * @param r red
-	 * @param g green
-	 * @param b blue
-	 * @return packed ARGB value
-	 *
-	 * @see #argb(int, int, int, int)
-	 * @see #argb_bounded(int, int, int, int)
-	 * @see #argb_fast(int, int, int, int)
-	 * @see #rgb(int, int, int)
-	 * @see #rgb_fast(int, int, int)
-	 * @see #a(int)
-	 * @see #r(int)
-	 * @see #g(int)
-	 * @see #b(int)
-	 * @since 1.0
-	 */
-	public static final int rgb_bounded(final int r, final int g, final int b){
-		return rgb_fast(
-				r > 255 ? 255: r < 0 ? 0:r,
-				g > 255 ? 255: g < 0 ? 0:g,
-				b > 255 ? 255: b < 0 ? 0:b);
-	}
-
-	/**
-	 * Packs 8bit RGB color components into a single 32bit ARGB integer value
-	 * with alpha=255 (opaque).
-	 * Components larger than 8bit get truncated to 8bit.
-	 * @param r red
-	 * @param g green
-	 * @param b blue
-	 * @return packed ARGB value
-	 *
-	 * @see #argb(int, int, int, int)
-	 * @see #argb_bounded(int, int, int, int)
-	 * @see #argb_fast(int, int, int, int)
-	 * @see #rgb_bounded(int, int, int)
-	 * @see #rgb_fast(int, int, int)
-	 * @see #a(int)
-	 * @see #r(int)
-	 * @see #g(int)
-	 * @see #b(int)
-	 * @since 1.0
-	 */
-	public static final int rgb(final int r, final int g, final int b){
-		return rgb_fast(r & 0xff, g & 0xff, b & 0xff);
-	}
-
-	/**
-	 * Packs 8bit RGB color components into a single 32bit ARGB integer value
-	 * with alpha=255 (opaque).
-	 * Components larger than 8bit are NOT truncated and will result in a
-	 * broken, malformed value.
-	 * @param r red
-	 * @param g green
-	 * @param b blue
-	 * @return packed ARGB value
-	 *
-	 * @see #argb(int, int, int, int)
-	 * @see #argb_bounded(int, int, int, int)
-	 * @see #argb_fast(int, int, int, int)
-	 * @see #rgb_bounded(int, int, int)
-	 * @see #rgb(int, int, int)
-	 * @see #a(int)
-	 * @see #r(int)
-	 * @see #g(int)
-	 * @see #b(int)
-	 * @since 1.0
-	 */
-	public static final int rgb_fast(final int r, final int g, final int b){
-		return 0xff000000|(r<<16)|(g<<8)|b;
-	}
-
-	/**
-	 * Packs normalized ARGB color components (values in [0.0 .. 1.0]) into a
-	 * single 32bit integer value with alpha=255 (opaque).
-	 * Component values less than 0 or greater than 1 are NOT truncated and will
-	 * result in a broken, malformed value.
-	 * @param r red
-	 * @param g green
-	 * @param b blue
-	 * @return packed ARGB value
-	 *
-	 * @see #argb_fromNormalized(float, float, float, float)
-	 * @see #rgb(int, int, int)
-	 * @see #a_normalized(int)
-	 * @see #r_normalized(int)
-	 * @see #g_normalized(int)
-	 * @see #b_normalized(int)
-	 * @since 1.2
-	 */
-	public static final int rgb_fromNormalized(final float r, final float g, final float b){
-		return rgb_fast((int)(r*0xff), (int)(g*0xff), (int)(b*0xff));
-	}
-
-	/**
-	 * Packs 8bit ARGB color components into a single 32bit integer value.
-	 * Components are clamped to [0,255].
-	 * @param a alpha
-	 * @param r red
-	 * @param g green
-	 * @param b blue
-	 * @return packed ARGB value
-	 *
-	 * @see #argb(int, int, int, int)
-	 * @see #argb_fast(int, int, int, int)
-	 * @see #rgb_bounded(int, int, int)
-	 * @see #rgb(int, int, int)
-	 * @see #rgb_fast(int, int, int)
-	 * @see #a(int)
-	 * @see #r(int)
-	 * @see #g(int)
-	 * @see #b(int)
-	 * @since 1.0
-	 */
-	public static final int argb_bounded(final int a, final int r, final int g, final int b){
-		return argb_fast(
-				a > 255 ? 255: a < 0 ? 0:a,
-				r > 255 ? 255: r < 0 ? 0:r,
-				g > 255 ? 255: g < 0 ? 0:g,
-				b > 255 ? 255: b < 0 ? 0:b);
-	}
-
-	/**
-	 * Packs 8bit ARGB color components into a single 32bit integer value.
-	 * Components larger than 8bit get truncated to 8bit.
-	 * @param a alpha
-	 * @param r red
-	 * @param g green
-	 * @param b blue
-	 * @return packed ARGB value
-	 *
-	 * @see #argb_bounded(int, int, int, int)
-	 * @see #argb_fast(int, int, int, int)
-	 * @see #rgb_bounded(int, int, int)
-	 * @see #rgb(int, int, int)
-	 * @see #rgb_fast(int, int, int)
-	 * @see #a(int)
-	 * @see #r(int)
-	 * @see #g(int)
-	 * @see #b(int)
-	 * @since 1.0
-	 */
-	public static final int argb(final int a, final int r, final int g, final int b){
-		return argb_fast(a & 0xff, r & 0xff, g & 0xff, b & 0xff);
-	}
-
-	/**
-	 * Packs 8bit ARGB color components into a single 32bit integer value.
-	 * Components larger than 8bit are NOT truncated and will result in a
-	 * broken, malformed value.
-	 * @param a alpha
-	 * @param r red
-	 * @param g green
-	 * @param b blue
-	 * @return packed ARGB value
-	 *
-	 * @see #argb(int, int, int, int)
-	 * @see #argb_bounded(int, int, int, int)
-	 * @see #rgb_bounded(int, int, int)
-	 * @see #rgb(int, int, int)
-	 * @see #rgb_fast(int, int, int)
-	 * @see #a(int)
-	 * @see #r(int)
-	 * @see #g(int)
-	 * @see #b(int)
-	 * @since 1.0
-	 */
-	public static final int argb_fast(final int a, final int r, final int g, final int b){
-		return (a<<24)|(r<<16)|(g<<8)|b;
-	}
-
-	/**
-	 * Packs normalized ARGB color components (values in [0.0 .. 1.0]) into a
-	 * single 32bit integer value.
-	 * Component values less than 0 or greater than 1 are NOT truncated and will
-	 * result in a broken, malformed value.
-	 * @param a alpha
-	 * @param r red
-	 * @param g green
-	 * @param b blue
-	 * @return packed ARGB value
-	 *
-	 * @see #rgb_fromNormalized(float, float, float)
-	 * @see #argb(int, int, int, int)
-	 * @see #a_normalized(int)
-	 * @see #r_normalized(int)
-	 * @see #g_normalized(int)
-	 * @see #b_normalized(int)
-	 * @since 1.2
-	 */
-	public static final int argb_fromNormalized(final float a, final float r, final float g, final float b){
-		return argb_fast((int)(a*0xff), (int)(r*0xff), (int)(g*0xff), (int)(b*0xff));
-	}
-
-	/**
-	 * @param color ARGB(32bit) or RGB(24bit) value
-	 * @return blue component(8bit) of specified color.
-	 * @see #a(int)
-	 * @see #r(int)
-	 * @see #g(int)
-	 * @see #argb(int, int, int, int)
-	 * @see #rgb(int, int, int)
-	 * @since 1.0
-	 */
-	public static final int b(final int color){
-		return (color) & 0xff;
-	}
-
-	/**
-	 * @param color ARGB(32bit) or RGB(24bit) value
-	 * @return green component(8bit) of specified color.
-	 * @see #a(int)
-	 * @see #r(int)
-	 * @see #b(int)
-	 * @see #argb(int, int, int, int)
-	 * @see #rgb(int, int, int)
-	 * @since 1.0
-	 */
-	public static final int g(final int color){
-		return (color >> 8) & 0xff;
-	}
-
-	/**
-	 * @param color ARGB(32bit) or RGB(24bit) value
-	 * @return red component(8bit) of specified color.
-	 * @see #a(int)
-	 * @see #g(int)
-	 * @see #b(int)
-	 * @see #argb(int, int, int, int)
-	 * @see #rgb(int, int, int)
-	 * @since 1.0
-	 */
-	public static final int r(final int color){
-		return (color >> 16) & 0xff;
-	}
-
-	/**
-	 * @param color ARGB(32bit) value
-	 * @return alpha component(8bit) of specified color.
-	 * @see #r(int)
-	 * @see #g(int)
-	 * @see #b(int)
-	 * @see #argb(int, int, int, int)
-	 * @see #rgb(int, int, int)
-	 * @since 1.0
-	 */
-	public static final int a(final int color){
-		return (color >> 24) & 0xff;
-	}
-
-	/**
-	 * @param color ARGB(32bit) or RGB(24bit) value
-	 * @return normalized blue component of specified color <br>
-	 * (value in [0.0 .. 1.0]).
-	 * @see #b()
-	 * @see #r_normalized(int)
-	 * @see #g_normalized(int)
-	 * @see #a_normalized(int)
-	 * @since 1.2
-	 */
-	public static final float b_normalized(final int color){
-		return b(color)/255.0f;
-	}
-
-	/**
-	 * @param color ARGB(32bit) or RGB(24bit) value
-	 * @return normalized green component of specified color <br>
-	 * (value in [0.0 .. 1.0]).
-	 * @see #g()
-	 * @see #r_normalized(int)
-	 * @see #b_normalized(int)
-	 * @see #a_normalized(int)
-	 * @since 1.2
-	 */
-	public static final float g_normalized(final int color){
-		return g(color)/255.0f;
-	}
-
-	/**
-	 * @param color ARGB(32bit) or RGB(24bit) value
-	 * @return normalized red component of specified color <br>
-	 * (value in [0.0 .. 1.0]).
-	 * @see #r()
-	 * @see #b_normalized(int)
-	 * @see #g_normalized(int)
-	 * @see #a_normalized(int)
-	 * @since 1.2
-	 */
-	public static final float r_normalized(final int color){
-		return r(color)/255.0f;
-	}
-
-	/**
-	 * @param color ARGB(32bit) value
-	 * @return normalized alpha component of specified color <br>
-	 * (value in [0.0 .. 1.0]).
-	 * @see #a()
-	 * @see #r_normalized(int)
-	 * @see #g_normalized(int)
-	 * @see #a_normalized(int)
-	 * @since 1.2
-	 */
-	public static final float a_normalized(final int color){
-		return a(color)/255.0f;
-	}
-
-	/**
-	 * Generalized channel packing method similar to {@link #argb(int, int, int, int)}
-	 * but for arbitrary channel sizes and number of channels.
-	 * This method calculates the bitwise OR concatenation of all channels with
-	 * the last channel occupying the least significant bits of the result and
-	 * former channels the following bits so that there wont be any collisions.
-	 * Each channel is assumed to be in the specified number of bits. <br>
-	 * E.g. ARGB would be realised like this: <code>combineCh(8,a,r,g,b)</code>
-	 * or 30bit YCbCr could be realized like this: <code>combineCh(10,y,cb,cr)</code>
-	 * <p>
-	 * From a performance point of view this method is not optimal. A custom
-	 * method tailored to the specific packing task will certainly be superior.
-	 *
-	 * @param bitsPerChannel number of bits per channel
-	 * @param channels value for each channel (varargs)
-	 * @return packed channel values
-	 * @see #ch(int, int, int)
-	 * @since 1.0
-	 */
-	public static final int combineCh(int bitsPerChannel, int ... channels){
-		int result = 0;
-		int startBit = 0;
-		for(int i = channels.length-1; i >= 0; i--){
-			result |= channels[i] << startBit;
-			startBit += bitsPerChannel;
-		}
-		return result;
-	}
-
-	/**
-	 * Extracts a channel value of arbitrary bitsize and bit position
-	 * from an integer color value. This method bit shifts the requested
-	 * channel area to the least significant bits and truncates the resulting
-	 * value to match the number of bits of the channel area. <br>
-	 * E.g. blue from ARGB would be realised like this: <code>ch(argb, 0, 8)</code>
-	 * red would be: <code>ch(argb, 16, 8)</code>
-	 * <p>
-	 * From a performance point of view this method is not optimal. A custom
-	 * method tailored to the specific extraction task will probably be superior.
-	 *
-	 * @param color from which a channel should be extracted
-	 * @param startBit starting bit of the channel
-	 * @param numBits number of bits of the channel
-	 * @return channel value
-	 * @see #combineCh(int, int...) combineCh(int, int...)
-	 * @since 1.0
-	 */
-	public static final int ch(final int color, final int startBit, final int numBits){
-		return (color >> startBit) & ((1 << numBits)-1);
-	}
 }

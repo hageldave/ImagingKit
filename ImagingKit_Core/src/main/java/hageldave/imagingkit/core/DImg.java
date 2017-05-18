@@ -29,11 +29,8 @@ import java.awt.image.BandedSampleModel;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.ComponentColorModel;
-import java.awt.image.ComponentSampleModel;
 import java.awt.image.DataBuffer;
 import java.awt.image.DataBufferDouble;
-import java.awt.image.DataBufferInt;
-import java.awt.image.DirectColorModel;
 import java.awt.image.Raster;
 import java.awt.image.SampleModel;
 import java.awt.image.WritableRaster;
@@ -137,9 +134,10 @@ public class DImg implements Iterable<DPixel> {
 	private final double[] dataR;
 	private final double[] dataG;
 	private final double[] dataB;
-	private double[] dataA;
+	private final double[] dataA;
 
 	private final double[][] data;
+	private final boolean hasAlpha;
 
 	/** dimension of this Img
 	 * @since 1.0 */
@@ -173,6 +171,7 @@ public class DImg implements Iterable<DPixel> {
 		this.dataR = new double[dimension.width*dimension.height];
 		this.dataG = new double[dimension.width*dimension.height];
 		this.dataB = new double[dimension.width*dimension.height];
+		this.hasAlpha = alpha;
 		this.dataA = alpha ? new double[dimension.width*dimension.height]:null;
 		this.data = alpha ? new double[][]{dataR,dataG,dataB,dataA}:new double[][]{dataR,dataG,dataB};
 		this.dimension = new Dimension(dimension);
@@ -227,7 +226,7 @@ public class DImg implements Iterable<DPixel> {
 		Objects.requireNonNull(dataR);
 		Objects.requireNonNull(dataG);
 		Objects.requireNonNull(dataB);
-		boolean hasAlpha = dataA != null;
+		hasAlpha = dataA != null;
 		if(dataR.length != dataG.length || dataG.length != dataB.length || (hasAlpha && dataB.length != dataA.length)){
 			throw new IllegalArgumentException(String.format("Provided data arrays are not of same size. R[%d] G[%d] B[%d]%s", dataR.length, dataG.length, dataB.length, hasAlpha ? " A["+dataA.length+"]":""));
 		}
@@ -251,13 +250,7 @@ public class DImg implements Iterable<DPixel> {
 	}
 
 	public boolean hasAlpha(){
-		return dataA != null;
-	}
-
-	public DImg addAlpha(){
-		dataA = new double[numValues()];
-		Arrays.fill(dataA, 1.0);
-		return this;
+		return hasAlpha;
 	}
 
 	/**
