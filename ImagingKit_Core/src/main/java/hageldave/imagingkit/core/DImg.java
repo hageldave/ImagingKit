@@ -24,11 +24,18 @@ package hageldave.imagingkit.core;
 
 import java.awt.Dimension;
 import java.awt.Graphics2D;
+import java.awt.color.ColorSpace;
+import java.awt.image.BandedSampleModel;
 import java.awt.image.BufferedImage;
+import java.awt.image.ColorModel;
+import java.awt.image.ComponentColorModel;
+import java.awt.image.ComponentSampleModel;
 import java.awt.image.DataBuffer;
+import java.awt.image.DataBufferDouble;
 import java.awt.image.DataBufferInt;
 import java.awt.image.DirectColorModel;
 import java.awt.image.Raster;
+import java.awt.image.SampleModel;
 import java.awt.image.WritableRaster;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -749,19 +756,20 @@ public class DImg implements Iterable<DPixel> {
 	 * @see #toBufferedImage()
 	 * @since 1.0
 	 */
-// TODO: figure out if this is even possible
-//	public BufferedImage getRemoteBufferedImage(){
-//		DirectColorModel cm = new DirectColorModel(32,
-//				0x00ff0000,       // Red
-//                0x0000ff00,       // Green
-//                0x000000ff,       // Blue
-//                0xff000000        // Alpha
-//                );
-//		DataBufferInt buffer = new DataBufferInt(getData(), numValues());
-//		WritableRaster raster = Raster.createPackedRaster(buffer, getWidth(), getHeight(), getWidth(), cm.getMasks(), null);
-//		BufferedImage bimg = new BufferedImage(cm, raster, false, null);
-//		return bimg;
-//	}
+	public BufferedImage getRemoteBufferedImage(){
+		SampleModel samplemodel = new BandedSampleModel(DataBuffer.TYPE_DOUBLE, getWidth(), getHeight(), hasAlpha() ? 4:3);
+		DataBufferDouble databuffer = new DataBufferDouble(getData(), numValues());
+		WritableRaster raster = Raster.createWritableRaster(samplemodel, databuffer, null);
+		ColorModel colormodel = new ComponentColorModel(
+				ColorSpace.getInstance(ColorSpace.CS_sRGB), 
+				hasAlpha(), 
+				false, 
+				ComponentColorModel.TRANSLUCENT, 
+				DataBuffer.TYPE_DOUBLE
+		);
+		BufferedImage bimg = new BufferedImage(colormodel, raster, false, null);
+		return bimg;
+	}
 
 	/**
 	 * Creates an Img sharing the specified BufferedImage's data. Changes in
@@ -1155,10 +1163,9 @@ public class DImg implements Iterable<DPixel> {
 	 * @see #paint(Consumer)
 	 * @since 1.3
 	 */
-// TODO: only possible if getRemoteBufferedImage can be implemented
-//	public Graphics2D createGraphics(){
-//		return getRemoteBufferedImage().createGraphics();
-//	}
+	public Graphics2D createGraphics(){
+		return getRemoteBufferedImage().createGraphics();
+	}
 
 	/**
 	 * Uses the specified paintInstructions to draw into this Img.
@@ -1179,12 +1186,11 @@ public class DImg implements Iterable<DPixel> {
 	 * @see #createGraphics()
 	 * @since 1.3
 	 */
-// TODO: only possible if createGraphics can be implemented
-//	public void paint(Consumer<Graphics2D> paintInstructions){
-//		Graphics2D g2d = createGraphics();
-//		paintInstructions.accept(g2d);
-//		g2d.dispose();
-//	}
+	public void paint(Consumer<Graphics2D> paintInstructions){
+		Graphics2D g2d = createGraphics();
+		paintInstructions.accept(g2d);
+		g2d.dispose();
+	}
 
 
 	/**
