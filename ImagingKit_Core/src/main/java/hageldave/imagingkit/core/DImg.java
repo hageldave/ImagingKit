@@ -122,7 +122,7 @@ public class DImg implements Iterable<DPixel> {
 	 * @since 1.0
 	 */
 	public static final int boundary_mode_mirror = 3;
-	
+
 	public static final int channel_r = 0;
 	public static final int channel_g = 1;
 	public static final int channel_b = 2;
@@ -241,6 +241,12 @@ public class DImg implements Iterable<DPixel> {
 		this.data = hasAlpha ? new double[][]{dataR,dataG,dataB,dataA}:new double[][]{dataR,dataG,dataB};
 	}
 
+
+	public DImg (BufferedImage bimg){
+		this(bimg.getWidth(),bimg.getHeight(),bimg.getColorModel().hasAlpha());
+		this.paint(g->g.drawImage(bimg, 0, 0, getWidth(), getHeight(), 0, 0, getWidth(), getHeight(), null));
+	}
+
 	/**
 	 * @return dimension of this Img
 	 * @since 1.0
@@ -319,19 +325,19 @@ public class DImg implements Iterable<DPixel> {
 	public double getValue(final int channel, final int x, final int y){
 		return this.data[channel][y*dimension.width + x];
 	}
-	
+
 	public double getValueR(final int x, final int y){
 		return this.dataR[y*dimension.width + x];
 	}
-	
+
 	public double getValueG(final int x, final int y){
 		return this.dataG[y*dimension.width + x];
 	}
-	
+
 	public double getValueB(final int x, final int y){
 		return this.dataB[y*dimension.width + x];
 	}
-	
+
 	public double getValueA(final int x, final int y){
 		return this.dataA[y*dimension.width + x];
 	}
@@ -398,19 +404,19 @@ public class DImg implements Iterable<DPixel> {
 			return getValue(channel, x, y);
 		}
 	}
-	
+
 	public double getValueR(int x, int y, final int boundaryMode){
 		return getValue(channel_r, x, y, boundaryMode);
 	}
-	
+
 	public double getValueG(int x, int y, final int boundaryMode){
 		return getValue(channel_g, x, y, boundaryMode);
 	}
-	
+
 	public double getValueB(int x, int y, final int boundaryMode){
 		return getValue(channel_b, x, y, boundaryMode);
 	}
-	
+
 	public double getValueA(int x, int y, final int boundaryMode){
 		return getValue(channel_a, x, y, boundaryMode);
 	}
@@ -442,7 +448,7 @@ public class DImg implements Iterable<DPixel> {
 		double c11 = getValue(channel, (x+1 < getWidth() ? x+1:x), (y+1 < getHeight() ? y+1:y));
 		return interpolateBilinear(c00, c01, c10, c11, xF-x, yF-y);
 	}
-	
+
 	public double interpolateR(final float xNormalized, final float yNormalized){
 		float xF = xNormalized * (getWidth()-1);
 		float yF = yNormalized * (getHeight()-1);
@@ -454,7 +460,7 @@ public class DImg implements Iterable<DPixel> {
 		double c11 = getValueR((x+1 < getWidth() ? x+1:x), (y+1 < getHeight() ? y+1:y));
 		return interpolateBilinear(c00, c01, c10, c11, xF-x, yF-y);
 	}
-	
+
 	public double interpolateG(final float xNormalized, final float yNormalized){
 		float xF = xNormalized * (getWidth()-1);
 		float yF = yNormalized * (getHeight()-1);
@@ -466,7 +472,7 @@ public class DImg implements Iterable<DPixel> {
 		double c11 = getValueG((x+1 < getWidth() ? x+1:x), (y+1 < getHeight() ? y+1:y));
 		return interpolateBilinear(c00, c01, c10, c11, xF-x, yF-y);
 	}
-	
+
 	public double interpolateB(final float xNormalized, final float yNormalized){
 		float xF = xNormalized * (getWidth()-1);
 		float yF = yNormalized * (getHeight()-1);
@@ -478,7 +484,7 @@ public class DImg implements Iterable<DPixel> {
 		double c11 = getValueB((x+1 < getWidth() ? x+1:x), (y+1 < getHeight() ? y+1:y));
 		return interpolateBilinear(c00, c01, c10, c11, xF-x, yF-y);
 	}
-	
+
 	public double interpolateA(final float xNormalized, final float yNormalized){
 		float xF = xNormalized * (getWidth()-1);
 		float yF = yNormalized * (getHeight()-1);
@@ -490,7 +496,7 @@ public class DImg implements Iterable<DPixel> {
 		double c11 = getValueA((x+1 < getWidth() ? x+1:x), (y+1 < getHeight() ? y+1:y));
 		return interpolateBilinear(c00, c01, c10, c11, xF-x, yF-y);
 	}
-	
+
 
 	private static double interpolateBilinear(final double c00, final double c01, final double c10, final double c11, final float mx, final float my){
 		return (c00*mx+c10*(1.0-mx))* my + (c01*mx+c11*(1.0-mx))*(1.0-my);
@@ -579,7 +585,7 @@ public class DImg implements Iterable<DPixel> {
 				System.arraycopy(this.getDataG(), srcPos, dest.getDataG(), destPos, len);
 				System.arraycopy(this.getDataB(), srcPos, dest.getDataB(), destPos, len);
 				if(this.hasAlpha() && dest.hasAlpha()) System.arraycopy(this.getDataA(), srcPos, dest.getDataA(), destPos, len);
-				else 
+				else
 				if(dest.hasAlpha())                    Arrays.fill(dest.getDataA(), destPos, destPos+len, 1.0);
 			}
 		} else {
@@ -621,7 +627,7 @@ public class DImg implements Iterable<DPixel> {
 							this.getDataA(), srcPos,
 							dest.getDataA(), destPos,
 							len);
-					} else if(dest.hasAlpha()) { 
+					} else if(dest.hasAlpha()) {
 						Arrays.fill(dest.getDataA(), destPos, destPos+len, 1.0);
 					}
 				}
@@ -646,19 +652,19 @@ public class DImg implements Iterable<DPixel> {
 	public void setValue(final int channel, final int x, final int y, final double value){
 		this.data[channel][y*dimension.width + x] = value;
 	}
-	
+
 	public void setValueR(final int x, final int y, final double value){
 		this.dataR[y*dimension.width + x] = value;
 	}
-	
+
 	public void setValueG(final int x, final int y, final double value){
 		this.dataG[y*dimension.width + x] = value;
 	}
-	
+
 	public void setValueB(final int x, final int y, final double value){
 		this.dataB[y*dimension.width + x] = value;
 	}
-	
+
 	public void setValueA(final int x, final int y, final double value){
 		this.dataA[y*dimension.width + x] = value;
 	}
@@ -668,8 +674,8 @@ public class DImg implements Iterable<DPixel> {
 	 * @param value for filling image
 	 * @since 1.0
 	 */
-	public void fill(final int value){
-		Arrays.fill(getData(), value);
+	public void fill(final int channel, final double value){
+		Arrays.fill(getData()[channel], value);
 	}
 
 	/**
@@ -678,7 +684,7 @@ public class DImg implements Iterable<DPixel> {
 	 */
 	public DImg copy(){
 		return new DImg(
-				getDimension(), 
+				getDimension(),
 				Arrays.copyOf(getDataR(), numValues()),
 				Arrays.copyOf(getDataG(), numValues()),
 				Arrays.copyOf(getDataB(), numValues()),
@@ -694,7 +700,7 @@ public class DImg implements Iterable<DPixel> {
 	public BufferedImage toBufferedImage(){
 		return toBufferedImage(TransferFunction.normalizedInput());
 	}
-	
+
 	public BufferedImage toBufferedImage(TransferFunction transferFunc){
 		return toImg(transferFunc).getRemoteBufferedImage();
 	}
@@ -712,8 +718,8 @@ public class DImg implements Iterable<DPixel> {
 	public BufferedImage toBufferedImage(BufferedImage bimg){
 		return toBufferedImage(bimg, TransferFunction.normalizedInput());
 	}
-	
-	
+
+
 	public BufferedImage toBufferedImage(BufferedImage bimg, TransferFunction transferFunc){
 		return toImg(transferFunc).toBufferedImage(bimg);
 	}
@@ -722,23 +728,23 @@ public class DImg implements Iterable<DPixel> {
 		Img img = new Img(getDimension());
 		if(hasAlpha()){
 			img.forEach(px->px.setValue(transferFunc.toARGB(
-					getDataA()[px.getIndex()], 
-					getDataR()[px.getIndex()], 
-					getDataG()[px.getIndex()], 
+					getDataA()[px.getIndex()],
+					getDataR()[px.getIndex()],
+					getDataG()[px.getIndex()],
 					getDataB()[px.getIndex()])));
 		} else {
-			img.forEach(px->px.setValue(0xff000000 | transferFunc.toRGB( 
-					getDataR()[px.getIndex()], 
-					getDataG()[px.getIndex()], 
+			img.forEach(px->px.setValue(0xff000000 | transferFunc.toRGB(
+					getDataR()[px.getIndex()],
+					getDataG()[px.getIndex()],
 					getDataB()[px.getIndex()])));
 		}
 		return null;
 	}
-	
+
 	public Img toImg(){
 		return toImg(TransferFunction.normalizedInput());
 	}
-	
+
 	/**
 	 * Creates a BufferedImage that shares the data of this Img. Changes in
 	 * this Img are reflected in the created BufferedImage and vice versa.
@@ -754,10 +760,10 @@ public class DImg implements Iterable<DPixel> {
 		DataBufferDouble databuffer = new DataBufferDouble(getData(), numValues());
 		WritableRaster raster = Raster.createWritableRaster(samplemodel, databuffer, null);
 		ColorModel colormodel = new ComponentColorModel(
-				ColorSpace.getInstance(ColorSpace.CS_sRGB), 
-				hasAlpha(), 
-				false, 
-				ComponentColorModel.TRANSLUCENT, 
+				ColorSpace.getInstance(ColorSpace.CS_sRGB),
+				hasAlpha(),
+				false,
+				ComponentColorModel.TRANSLUCENT,
 				DataBuffer.TYPE_DOUBLE
 		);
 		BufferedImage bimg = new BufferedImage(colormodel, raster, false, null);
@@ -1545,32 +1551,32 @@ public class DImg implements Iterable<DPixel> {
 
 	}
 
-	
+
 	public static interface TransferFunction {
-		
+
 		public int toARGB(double a, double r, double g, double b);
-		
+
 		public default int toRGB(double r, double g, double b){
 			return 0xff000000 | toARGB(0, r, g, b);
 		}
-		
+
 		static TransferFunction fromFunction(Function<Double, Integer> fn){
 			return (a,r,g,b) -> Pixel.argb_fast(
-					fn.apply(a), 
-					fn.apply(r), 
-					fn.apply(g), 
+					fn.apply(a),
+					fn.apply(r),
+					fn.apply(g),
 					fn.apply(b));
 		}
-		
+
 		static TransferFunction normalizedInput(){
 			return (a,r,g,b) -> Pixel.argb_fromNormalized((float)a, (float)r, (float)g, (float)b);
 		}
-		
+
 	}
 
 
-	
-	
-	
+
+
+
 
 }

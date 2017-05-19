@@ -37,12 +37,12 @@ package hageldave.imagingkit.core;
  * @since 1.0
  */
 public class DPixel {
-	
+
 	public static final int R = DImg.channel_r;
 	public static final int G = DImg.channel_g;
 	public static final int B = DImg.channel_b;
 	public static final int A = DImg.channel_a;
-	
+
 	/** DImg this pixel belongs to
 	 * @since 1.0 */
 	private final DImg img;
@@ -305,11 +305,12 @@ public class DPixel {
 	 * @see #setValue(int)
 	 * @since 1.0
 	 */
-	public void setARGB(double a, double r, double g, double b){
+	public DPixel setARGB(double a, double r, double g, double b){
 		this.img.getDataR()[index] = r;
 		this.img.getDataG()[index] = g;
 		this.img.getDataB()[index] = b;
 		this.img.getDataA()[index] = a;
+		return this;
 	}
 
 	/**
@@ -328,12 +329,13 @@ public class DPixel {
 	 * @see #setValue(int)
 	 * @since 1.0
 	 */
-	public void setRGB(double r, double g, double b){
+	public DPixel setRGB(double r, double g, double b){
 		this.img.getDataR()[index] = r;
 		this.img.getDataG()[index] = g;
 		this.img.getDataB()[index] = b;
 		if(this.img.hasAlpha())
 		this.img.getDataA()[index] = 1;
+		return this;
 	}
 
 	/**
@@ -348,10 +350,11 @@ public class DPixel {
 	 * @see #setRGB_fromNormalized_preserveAlpha(float, float, float)
 	 * @since 1.2
 	 */
-	public void setRGB_preserveAlpha(double r, double g, double b){
+	public DPixel setRGB_preserveAlpha(double r, double g, double b){
 		this.img.getDataR()[index] = r;
 		this.img.getDataG()[index] = g;
 		this.img.getDataB()[index] = b;
+		return this;
 	}
 
 	/**
@@ -446,6 +449,114 @@ public class DPixel {
 	@Override
 	public String toString() {
 		return String.format("%s at %d (%d,%d)", getClass().getSimpleName(), getIndex(), getX(), getY());
+	}
+
+	public DPixel convertRange(double lowerLimitNow, double upperLimitNow, double lowerLimitAfter, double upperLimitAfter){
+		//		double currentRange = upperLimitNow-lowerLimitNow;
+		//		double newRange = upperLimitAfter-lowerLimitAfter;
+		//		double scaling = newRange/currentRange;
+		double scaling = (upperLimitAfter-lowerLimitAfter)/(upperLimitNow-lowerLimitNow);
+		return setRGB_preserveAlpha(
+				lowerLimitAfter+(r()-lowerLimitNow)*scaling,
+				lowerLimitAfter+(g()-lowerLimitNow)*scaling,
+				lowerLimitAfter+(b()-lowerLimitNow)*scaling);
+	}
+
+	public DPixel scaleToRange(double lowerLimit, double upperLimit){
+		return convertRange(minValue(), maxValue(), lowerLimit, upperLimit);
+	}
+
+	public DPixel scaleToUnitRange(){
+		return scaleToRange(0, 1);
+	}
+
+	public DPixel scale(double factor){
+		return setRGB_preserveAlpha(r()*factor, g()*factor, b()*factor);
+	}
+
+	public DPixel add(double r, double g, double b){
+		return setRGB_preserveAlpha(r+r(), g+g(), b+b());
+	}
+
+	public DPixel subtract(double r, double g, double b){
+		return add(-r,-g,-b);
+	}
+
+	public DPixel cross(double r, double g, double b){
+		return setRGB_preserveAlpha(
+				(g()*b)-(g*b()),
+				(b()*r)-(b*r()),
+				(r()*g)-(r*g()));
+	}
+
+	public DPixel cross_(double r, double g, double b){
+		return setRGB_preserveAlpha(
+				(g*b())-(g()*b),
+				(b*r())-(b()*r),
+				(r*g())-(r()*g));
+	}
+
+	public double dot(double r, double g, double b){
+		return getGrey(r, g, b);
+	}
+
+	public DPixel transform(
+			double m00, double m01, double m02,
+			double m10, double m11, double m12,
+			double m20, double m21, double m22)
+	{
+		return setRGB_preserveAlpha(
+				dot(m00,m01,m02),
+				dot(m10,m11,m12),
+				dot(m20,m21,m22)
+				);
+	}
+
+	public DPixel transform(double[][] m3x3){
+		return transform(
+				m3x3[0][0],m3x3[0][1],m3x3[0][2],
+				m3x3[1][0],m3x3[1][1],m3x3[1][2],
+				m3x3[2][0],m3x3[2][1],m3x3[2][2]
+				);
+	}
+
+
+
+	public double getLenSquared(){
+		return r()*r() + g()*g() + b()*b();
+	}
+
+	public double getLen(){
+		return Math.sqrt(getLenSquared());
+	}
+
+	public DPixel normalize(){
+		double len = getLen();
+		if(len == 0.0) return this;
+		double divByLen = 1/len;
+		return setR(r()*divByLen).setG(g()*divByLen).setB(b()*divByLen);
+	}
+
+	public int minChannel() {
+		int c = 0;
+		if(getValue(c) > getValue(1)) c=1;
+		if(getValue(c) > getValue(2)) c=2;
+		return c;
+	}
+
+	public int maxChannel() {
+		int c = 0;
+		if(getValue(c) < getValue(1)) c=1;
+		if(getValue(c) < getValue(2)) c=2;
+		return c;
+	}
+
+	public double minValue() {
+		return getValue(minChannel());
+	}
+
+	public double maxValue() {
+		return getValue(maxChannel());
 	}
 
 
