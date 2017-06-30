@@ -22,8 +22,6 @@
 
 package hageldave.imagingkit.core.util;
 
-import static hageldave.imagingkit.core.TheImageObserver.OBS_ALLBITS;
-import static hageldave.imagingkit.core.TheImageObserver.OBS_WIDTHHEIGHT;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -34,6 +32,8 @@ import java.awt.Point;
 import java.awt.Stroke;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.image.ImageObserver;
+import java.util.function.Function;
 
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
@@ -229,28 +229,36 @@ public class ImagePanel extends JPanel{
 	 * @since 1.4
 	 */
 	protected void drawImage(Graphics2D g) {
+		// image observer generator
+		Function<Integer, ImageObserver> obs = flags->{
+			return (image, infoflags, x, y, width, height)->(infoflags & flags)!=flags;
+		};
+		ImageObserver obs_w = obs.apply(ImageObserver.WIDTH);
+		ImageObserver obs_h = obs.apply(ImageObserver.HEIGHT);
+		ImageObserver obs_allbits = obs.apply(ImageObserver.ALLBITS);
+		
 		Image img = this.img;
 		if(img != null){
 			Point clickPoint = this.clickPoint;
 			if(clickPoint == null){
-				double imgRatio = img.getWidth(OBS_WIDTHHEIGHT)*1.0/img.getHeight(OBS_WIDTHHEIGHT);
+				double imgRatio = img.getWidth(obs_w)*1.0/img.getHeight(obs_h);
 				double panelRatio = this.getWidth()*1.0/this.getHeight();
 				if(imgRatio > panelRatio) {
 					// image wider than panel
 					int height = (int) (this.getWidth()/imgRatio);
 					int y = (this.getHeight()-height)/2;
-					g.drawImage(img, 0, y, this.getWidth(), y+height, 0, 0, img.getWidth(OBS_WIDTHHEIGHT), img.getHeight(OBS_WIDTHHEIGHT), OBS_ALLBITS);
+					g.drawImage(img, 0, y, this.getWidth(), y+height, 0, 0, img.getWidth(obs_w), img.getHeight(obs_h), obs_allbits);
 				} else {
 					// image higher than panel
 					int width = (int) (this.getHeight()*imgRatio);
 					int x = (this.getWidth()-width)/2;
-					g.drawImage(img, x, 0, x+width, this.getHeight(), 0, 0, img.getWidth(OBS_WIDTHHEIGHT), img.getHeight(OBS_WIDTHHEIGHT), OBS_ALLBITS);
+					g.drawImage(img, x, 0, x+width, this.getHeight(), 0, 0, img.getWidth(obs_w), img.getHeight(obs_h), obs_allbits);
 				}
 			} else {
 				float relX = clickPoint.x / (1.0f * this.getWidth());
 				float relY = clickPoint.y / (1.0f * this.getHeight());
-				int imgW = img.getWidth(OBS_WIDTHHEIGHT);
-				int imgH = img.getHeight(OBS_WIDTHHEIGHT);
+				int imgW = img.getWidth(obs_w);
+				int imgH = img.getHeight(obs_h);
 				int imgX = (int) (relX*imgW);
 				int imgY = (int) (relY*imgH);
 				
@@ -283,7 +291,7 @@ public class ImagePanel extends JPanel{
 				g.drawImage(img, 
 						dx1, dy1, dx2, dy2, 
 						sx1, sy1, sx2, sy2, 
-						OBS_ALLBITS);
+						obs_allbits);
 			}
 		}
 	}

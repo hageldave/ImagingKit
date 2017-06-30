@@ -24,8 +24,8 @@ public class ColorSpaceTest {
 			ColorSpaceTransformation backward = ColorSpaceTransformation.HSV_2_RGB;
 			// test image transformation (image covers all RGB values)
 			Img img = reference.copy();
-			img.forEachParallel(forward.get());
-			img.forEachParallel(backward.get());
+			img.forEach(true, forward);
+			img.forEach(true, backward);
 			int[] error = getMaxGreyError(reference, img);
 			assertTrue(error[0] >= 0);
 			assertTrue(String.format("LAB Error: %d %s %s", error[0], 
@@ -55,8 +55,8 @@ public class ColorSpaceTest {
 			ColorSpaceTransformation backward = ColorSpaceTransformation.LAB_2_RGB;
 			// test image transformation (image covers all RGB values)
 			Img img = reference.copy();
-			img.forEachParallel(forward.get());
-			img.forEachParallel(backward.get());
+			img.forEach(true, forward);
+			img.forEach(true, backward);
 			int[] error = getMaxGreyError(reference, img);
 			assertTrue(error[0] >= 0);
 			assertTrue(String.format("LAB Error: %d %s %s", error[0], 

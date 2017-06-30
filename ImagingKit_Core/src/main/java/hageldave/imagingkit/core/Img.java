@@ -768,55 +768,14 @@ public class Img implements Iterable<Pixel> {
 		this.spliteratorMinimumSplitSize = size;
 	}
 
-	/**
-	 * {@link #forEach(Consumer)} method but with multithreaded execution.
-	 * This Img's {@link #spliterator()} is used to parallelize the workload.
-	 * As the threaded execution comes with a certain overhead it is only
-	 * suitable for more sophisticated consumer actions and large Images (1MP+)
-	 * @param action to be performed on each pixel
-	 * @see #forEach(Consumer action)
+
+	/** default implementation of {@link Iterable#forEach(Consumer)} <br>
+	 * only for performance test purposes as it is slower than the
+	 * {@link Img#forEach(Consumer)} implementation
 	 * @since 1.0
 	 */
-	public void forEachParallel(final Consumer<? super Pixel> action) {
-		ParallelForEachExecutor<Pixel> exec = new ParallelForEachExecutor<>(null, spliterator(), action);
-		exec.invoke();
-	}
-	
-	public <T> void forEachParallel(final PixelConverter<T> converter, final Consumer<? super T> action) {
-		Spliterator<T> spliterator = new PixelConvertingSpliterator<T>(
-				spliterator(), 
-				converter);
- 		ParallelForEachExecutor<T> exec = new ParallelForEachExecutor<>(null, spliterator, action);
-		exec.invoke();
-	}
-
-	/**
-	 * Applies the specified action to every pixel in the specified area of
-	 * this image during a multithreaded execution.
-	 * This Img's {@link #spliterator(int,int,int,int)} is used to parallelize the workload.
-	 * As the threaded execution comes with a certain overhead it is only
-	 * suitable for more sophisticated consumer actions and large Images (1MP+)
-	 * @param xStart left boundary of the area (inclusive)
-	 * @param yStart upper boundary of the area (inclusive)
-	 * @param width of the area
-	 * @param height of the area
-	 * @param action to be performed on each pixel
-	 * @throws IllegalArgumentException if provided area is not within this
-	 * Img's bounds.
-	 * @see #forEach(int x, int y, int w, int h, Consumer action)
-	 * @since 1.1
-	 */
-	public void forEachParallel(final int xStart, final int yStart, final int width, final int height, final Consumer<? super Pixel> action) {
-		ParallelForEachExecutor<Pixel> exec = new ParallelForEachExecutor<>(null, spliterator(xStart, yStart, width, height), action);
-		exec.invoke();
-	}
-	
-	public <T> void forEachParallel(final PixelConverter<T> converter, final int xStart, final int yStart, final int width, final int height, final Consumer<? super T> action) {
-		Spliterator<T> spliterator = new PixelConvertingSpliterator<T>(
-				spliterator(xStart, yStart, width, height), 
-				converter);
-		ParallelForEachExecutor<T> exec = new ParallelForEachExecutor<>(null, spliterator, action);
-		exec.invoke();
+	void forEach_defaultimpl(final Consumer<? super Pixel> action) {
+		Iterable.super.forEach(action);
 	}
 
 	/**
@@ -825,22 +784,21 @@ public class Img implements Iterable<Pixel> {
 	 */
 	@Override
 	public void forEach(final Consumer<? super Pixel> action) {
-		Pixel p = getPixel();
-		for(int i = 0; i < numValues(); p.setIndex(++i)){
-			action.accept(p);
+		forEach(false, action);
+	}
+	
+	public void forEach(boolean parallel, final Consumer<? super Pixel> action) {
+		if(parallel){
+			ParallelForEachExecutor<Pixel> exec = new ParallelForEachExecutor<>(null, spliterator(), action);
+			exec.invoke();
+		} else {
+			Pixel p = getPixel();
+			for(int i = 0; i < numValues(); p.setIndex(++i)){
+				action.accept(p);
+			}
 		}
 	}
 	
-	public <T> void forEach(final PixelConverter<T> converter, final Consumer<? super T> action) {
-		Pixel px = getPixel();
-		T element = converter.allocateElement();
-		for(int i = 0; i < numValues(); px.setIndex(++i)){
-			converter.convertPixelToElement(px, element);
-			action.accept(element);
-			converter.convertElementToPixel(element, px);
-		}
-	}
-
 	/**
 	 * Applies the specified action to every pixel in the specified area of this image.
 	 * @param xStart left boundary of the area (inclusive)
@@ -854,60 +812,67 @@ public class Img implements Iterable<Pixel> {
 	 * @since 1.1
 	 */
 	public void forEach(final int xStart, final int yStart, final int width, final int height, final Consumer<? super Pixel> action) {
-		Pixel p = getPixel();
-		int yEnd = yStart+height;
-		int xEnd = xStart+width;
-		for(int y = yStart; y < yEnd; y++){
-			for(int x = xStart; x < xEnd; x++){
-				p.setPosition(x, y);
-				action.accept(p);
+		forEach(false, xStart, yStart, width, height, action);
+	}
+
+	public void forEach(boolean parallel, final int xStart, final int yStart, final int width, final int height, final Consumer<? super Pixel> action) {
+		if(parallel){
+			ParallelForEachExecutor<Pixel> exec = new ParallelForEachExecutor<>(null, spliterator(xStart, yStart, width, height), action);
+			exec.invoke();
+		} else {
+			Pixel p = getPixel();
+			int yEnd = yStart+height;
+			int xEnd = xStart+width;
+			for(int y = yStart; y < yEnd; y++){
+				for(int x = xStart; x < xEnd; x++){
+					p.setPosition(x, y);
+					action.accept(p);
+				}
 			}
 		}
 	}
+
 	
-	public <T> void forEach(final PixelConverter<T> converter, final int xStart, final int yStart, final int width, final int height, final Consumer<? super T> action) {
-		Pixel p = getPixel();
-		T element = converter.allocateElement();
-		int yEnd = yStart+height;
-		int xEnd = xStart+width;
-		for(int y = yStart; y < yEnd; y++){
-			for(int x = xStart; x < xEnd; x++){
-				p.setPosition(x, y);
-				converter.convertPixelToElement(p, element);
+	public <T> void forEach(final PixelConverter<T> converter, boolean parallel, final Consumer<? super T> action) {
+		if(parallel){
+			Spliterator<T> spliterator = new PixelConvertingSpliterator<T>(
+					spliterator(), 
+					converter);
+	 		ParallelForEachExecutor<T> exec = new ParallelForEachExecutor<>(null, spliterator, action);
+			exec.invoke();
+		} else {
+			Pixel px = getPixel();
+			T element = converter.allocateElement();
+			for(int i = 0; i < numValues(); px.setIndex(++i)){
+				converter.convertPixelToElement(px, element);
 				action.accept(element);
-				converter.convertElementToPixel(element, p);
+				converter.convertElementToPixel(element, px);
 			}
 		}
 	}
 
-	/** default implementation of {@link Iterable#forEach(Consumer)} <br>
-	 * only for performance test purposes as it is slower than the
-	 * {@link Img#forEach(Consumer)} implementation
-	 * @since 1.0
-	 */
-	void forEach_defaultimpl(final Consumer<? super Pixel> action) {
-		Iterable.super.forEach(action);
-	}
-
-	/**
-	 * Returns a Pixel {@link Stream} of this Img.
-	 * This Img's {@link #spliterator()} is used to create the Stream.
-	 * @return Pixel Stream of this Img.
-	 * @see #parallelStream()
-	 * @see #stream(int x, int y, int w, int h)
-	 * @since 1.2
-	 */
-	public Stream<Pixel> stream() {
-		return stream(false);
-	}
 	
-	public Stream<Pixel> stream(boolean parallel) {
-		return Img.stream(spliterator(), parallel);
-	}
-	
-	public <T> Stream<T> stream(PixelConverter<T> converter, boolean parallel) {
-		Spliterator<T> spliterator = new PixelConvertingSpliterator<T>(spliterator(), converter);
-		return StreamSupport.stream(spliterator, parallel);
+	public <T> void forEach(final PixelConverter<T> converter, boolean parallel, final int xStart, final int yStart, final int width, final int height, final Consumer<? super T> action) {
+		if(parallel){
+			Spliterator<T> spliterator = new PixelConvertingSpliterator<T>(
+					spliterator(xStart, yStart, width, height), 
+					converter);
+			ParallelForEachExecutor<T> exec = new ParallelForEachExecutor<>(null, spliterator, action);
+			exec.invoke();
+		} else {
+			Pixel p = getPixel();
+			T element = converter.allocateElement();
+			int yEnd = yStart+height;
+			int xEnd = xStart+width;
+			for(int y = yStart; y < yEnd; y++){
+				for(int x = xStart; x < xEnd; x++){
+					p.setPosition(x, y);
+					converter.convertPixelToElement(p, element);
+					action.accept(element);
+					converter.convertElementToPixel(element, p);
+				}
+			}
+		}
 	}
 
 	/**
@@ -941,6 +906,22 @@ public class Img implements Iterable<Pixel> {
 	}
 
 	/**
+	 * Returns a Pixel {@link Stream} of this Img.
+	 * This Img's {@link #spliterator()} is used to create the Stream.
+	 * @return Pixel Stream of this Img.
+	 * @see #parallelStream()
+	 * @see #stream(int x, int y, int w, int h)
+	 * @since 1.2
+	 */
+	public Stream<Pixel> stream() {
+		return stream(false);
+	}
+	
+	public Stream<Pixel> stream(boolean parallel) {
+		return Img.stream(spliterator(), parallel);
+	}
+	
+	/**
 	 * Returns a Pixel {@link Stream} for the specified area of this Img.<br>
 	 * This Img's {@link #spliterator(int,int,int,int)} is used to create
 	 * the Stream.
@@ -958,11 +939,16 @@ public class Img implements Iterable<Pixel> {
 	public Stream<Pixel> stream(final int xStart, final int yStart, final int width, final int height){
 		return stream(false, xStart, yStart, width, height);
 	}
-	
+
 	public Stream<Pixel> stream(boolean parallel, final int xStart, final int yStart, final int width, final int height){
 		return StreamSupport.stream(spliterator(xStart, yStart, width, height), parallel);
 	}
-	
+
+	public <T> Stream<T> stream(PixelConverter<T> converter, boolean parallel) {
+		Spliterator<T> spliterator = new PixelConvertingSpliterator<T>(spliterator(), converter);
+		return StreamSupport.stream(spliterator, parallel);
+	}
+
 	public <T> Stream<T> stream(final PixelConverter<T> converter, boolean parallel, final int xStart, final int yStart, final int width, final int height){
 		Spliterator<T> spliterator = new PixelConvertingSpliterator<>(
 				spliterator(xStart, yStart, width, height), 

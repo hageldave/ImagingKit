@@ -712,7 +712,7 @@ public class ImgTest {
 		// parallel foreach
 		{
 			Img img = imgAlloc.apply(3000, 2000);
-			img.forEachParallel( (px)->{px.setValue(px.getIndex());} );
+			img.forEach(true, (px)->{px.setValue(px.getIndex());} );
 			for(int i = 0; i < img.numValues(); i++){
 				assertEquals(i, img.getData()[i]);
 			}
@@ -736,7 +736,7 @@ public class ImgTest {
 		// parallel foreach area
 		{
 			Img img = imgAlloc.apply(3000,2000);
-			img.forEachParallel(40, 80, 1000, 500, (px)->{px.setValue(px.getValue()+px.getIndex());});
+			img.forEach(true, 40, 80, 1000, 500, (px)->{px.setValue(px.getValue()+px.getIndex());});
 			for(int i = 0; i < img.numValues(); i++){
 				int x = i % img.getWidth(); x-=40;
 				int y = i / img.getWidth(); y-=80;
@@ -748,7 +748,7 @@ public class ImgTest {
 			}
 
 			JunitUtils.testException(()->{
-				img.forEachParallel(0, 0, 3000,2001, (px)->{});
+				img.forEach(true, 0, 0, 3000,2001, (px)->{});
 			}, IllegalArgumentException.class);
 		}
 

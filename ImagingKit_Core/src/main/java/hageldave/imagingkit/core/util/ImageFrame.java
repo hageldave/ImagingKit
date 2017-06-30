@@ -30,8 +30,6 @@ import javax.swing.SwingUtilities;
 
 import hageldave.imagingkit.core.Img;
 
-import static hageldave.imagingkit.core.TheImageObserver.*;
-
 /**
  * {@link JFrame} for displaying an image utilizing an {@link ImagePanel}.
  * This class is merely meant for debugging purposes when you want
@@ -90,13 +88,14 @@ public class ImageFrame extends JFrame {
 	 * Sets the image to be displayed by this frame.
 	 * This will update the panel (calls repaint()).
 	 * @param img to be displayed
+	 * @return this
 	 * 
 	 * @see #setImg(Img)
 	 * @since 1.4
 	 */
-	public void setImage(final Image img){
+	public ImageFrame setImage(final Image img){
 		panel.setImage(img);
-		this.setTitle(img.getWidth(OBS_WIDTHHEIGHT) + " x " + img.getHeight(OBS_WIDTHHEIGHT) + " Pixels");
+		return this;
 	}
 	
 	/**

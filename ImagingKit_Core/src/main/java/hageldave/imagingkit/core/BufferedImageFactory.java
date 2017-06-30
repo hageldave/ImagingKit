@@ -25,6 +25,8 @@ import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
+import java.awt.image.ImageObserver;
+import java.util.function.Function;
 
 /**
  * Class providing convenience methods for converting Images to BufferedImages.
@@ -57,9 +59,16 @@ public class BufferedImageFactory {
 	 * @since 1.0
 	 */
 	public static BufferedImage get(Image img, int imgType){
-		BufferedImage bimg = new BufferedImage(img.getWidth(TheImageObserver.OBS_WIDTHHEIGHT), img.getHeight(TheImageObserver.OBS_WIDTHHEIGHT), imgType);
+		Function<Integer, ImageObserver> obs = flags->{
+			return (image, infoflags, x, y, width, height)->(infoflags & flags)!=flags;
+		};
+		BufferedImage bimg = new BufferedImage(
+				img.getWidth(obs.apply(ImageObserver.WIDTH)), 
+				img.getHeight(obs.apply(ImageObserver.HEIGHT)), 
+				imgType);
 		Graphics2D gr2D = bimg.createGraphics();
-		gr2D.drawImage(img, 0, 0, TheImageObserver.OBS_ALLBITS);
+		gr2D.drawImage(img, 0, 0, obs.apply(ImageObserver.ALLBITS));
+				
 		gr2D.dispose();
 		
 		return bimg;

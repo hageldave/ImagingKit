@@ -87,7 +87,7 @@ public class Performance {
 			System.out.println(methods[4]);
 			time = System.currentTimeMillis();
 			{
-				img.forEachParallel(action);
+				img.forEach(true,action);
 			}
 			times[4] += System.currentTimeMillis()-time;
 			imgBackup.copyArea(0, 0, img.getWidth(), img.getHeight(), img, 0, 0);
