@@ -18,27 +18,27 @@ public class PixelConvertingSpliteratorTest {
 		img.forEach(px->px.setB(1+(px.getIndex()%0xfe)));
 		assertEquals(1, img.getData()[0]);
 
-		Consumer<float[]> rotateChannels = (px) -> {float t=px[0]; px[0]=px[1]; px[1]=px[2]; px[2]=t;};
+		Consumer<double[]> rotateChannels = (px) -> {double t=px[0]; px[0]=px[1]; px[1]=px[2]; px[2]=t;};
 
 		{
 			Spliterator<Pixel> delegate = img.spliterator();
-			Spliterator<float[]> split = PixelConvertingSpliterator.getFloatArrayElementSpliterator(delegate);
+			Spliterator<double[]> split = PixelConvertingSpliterator.getDoubletArrayElementSpliterator(delegate);
 
 			assertTrue(split.hasCharacteristics(delegate.characteristics()));
 			assertEquals(img.numValues(), split.getExactSizeIfKnown());
-			LinkedList<Spliterator<float[]>> all = new LinkedList<>();
+			LinkedList<Spliterator<double[]>> all = new LinkedList<>();
 			all.add(split);
 			int idx = 0;
 			while(idx < all.size()){
-				Spliterator<float[]> sp = all.get(idx);
-				Spliterator<float[]> child = sp.trySplit();
+				Spliterator<double[]> sp = all.get(idx);
+				Spliterator<double[]> child = sp.trySplit();
 				if(child != null){
 					all.add(child);
 				} else {
 					idx++;
 				}	
 			}
-			for(Spliterator<float[]> iter: all){
+			for(Spliterator<double[]> iter: all){
 				iter.tryAdvance(rotateChannels);
 				iter.forEachRemaining(rotateChannels);
 			}
@@ -51,7 +51,7 @@ public class PixelConvertingSpliteratorTest {
 
 		{
 			img.setSpliteratorMinimumSplitSize(77);
-			Spliterator<float[]> split = PixelConvertingSpliterator.getFloatArrayElementSpliterator(img.colSpliterator());
+			Spliterator<double[]> split = PixelConvertingSpliterator.getDoubletArrayElementSpliterator(img.colSpliterator());
 			StreamSupport.stream(split, true).forEach(rotateChannels);
 
 			for(int i = 0; i < img.numValues(); i++){

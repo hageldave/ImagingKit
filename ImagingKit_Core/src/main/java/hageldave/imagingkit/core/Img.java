@@ -38,6 +38,8 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import hageldave.imagingkit.core.PixelConvertingSpliterator.PixelConverter;
+
 /**
  * Image class with data stored in an int array.
  * <p>
@@ -337,9 +339,9 @@ public class Img implements Iterable<Pixel> {
 	 * @return bilinearly interpolated ARGB value.
 	 * @since 1.0
 	 */
-	public int interpolateARGB(final float xNormalized, final float yNormalized){
-		float xF = xNormalized * (getWidth()-1);
-		float yF = yNormalized * (getHeight()-1);
+	public int interpolateARGB(final double xNormalized, final double yNormalized){
+		double xF = xNormalized * (getWidth()-1);
+		double yF = yNormalized * (getHeight()-1);
 		int x = (int)xF;
 		int y = (int)yF;
 		int c00 = getValue(x, 							y);
@@ -349,7 +351,7 @@ public class Img implements Iterable<Pixel> {
 		return interpolateColors(c00, c01, c10, c11, xF-x, yF-y);
 	}
 
-	private static int interpolateColors(final int c00, final int c01, final int c10, final int c11, final float mx, final float my){
+	private static int interpolateColors(final int c00, final int c01, final int c10, final int c11, final double mx, final double my){
 		return Pixel.argb_fast/*_bounded*/(
 				blend( blend(Pixel.a(c00), Pixel.a(c10), mx), blend(Pixel.a(c01), Pixel.a(c11), mx), my),
 				blend( blend(Pixel.r(c00), Pixel.r(c10), mx), blend(Pixel.r(c01), Pixel.r(c11), mx), my),
@@ -357,7 +359,7 @@ public class Img implements Iterable<Pixel> {
 				blend( blend(Pixel.b(c00), Pixel.b(c10), mx), blend(Pixel.b(c01), Pixel.b(c11), mx), my) );
 	}
 
-	private static int blend(final int channel1, final int channel2, final float m){
+	private static int blend(final int channel1, final int channel2, final double m){
 		return (int) ((channel2 * m) + (channel1 * (1f-m)));
 	}
 
@@ -779,6 +781,14 @@ public class Img implements Iterable<Pixel> {
 		ParallelForEachExecutor<Pixel> exec = new ParallelForEachExecutor<>(null, spliterator(), action);
 		exec.invoke();
 	}
+	
+	public <T> void forEachParallel(final PixelConverter<T> converter, final Consumer<? super T> action) {
+		Spliterator<T> spliterator = new PixelConvertingSpliterator<T>(
+				spliterator(), 
+				converter);
+ 		ParallelForEachExecutor<T> exec = new ParallelForEachExecutor<>(null, spliterator, action);
+		exec.invoke();
+	}
 
 	/**
 	 * Applies the specified action to every pixel in the specified area of
@@ -800,6 +810,14 @@ public class Img implements Iterable<Pixel> {
 		ParallelForEachExecutor<Pixel> exec = new ParallelForEachExecutor<>(null, spliterator(xStart, yStart, width, height), action);
 		exec.invoke();
 	}
+	
+	public <T> void forEachParallel(final PixelConverter<T> converter, final int xStart, final int yStart, final int width, final int height, final Consumer<? super T> action) {
+		Spliterator<T> spliterator = new PixelConvertingSpliterator<T>(
+				spliterator(xStart, yStart, width, height), 
+				converter);
+		ParallelForEachExecutor<T> exec = new ParallelForEachExecutor<>(null, spliterator, action);
+		exec.invoke();
+	}
 
 	/**
 	 * @see #forEachParallel(Consumer action)
@@ -810,6 +828,16 @@ public class Img implements Iterable<Pixel> {
 		Pixel p = getPixel();
 		for(int i = 0; i < numValues(); p.setIndex(++i)){
 			action.accept(p);
+		}
+	}
+	
+	public <T> void forEach(final PixelConverter<T> converter, final Consumer<? super T> action) {
+		Pixel px = getPixel();
+		T element = converter.allocateElement();
+		for(int i = 0; i < numValues(); px.setIndex(++i)){
+			converter.convertPixelToElement(px, element);
+			action.accept(element);
+			converter.convertElementToPixel(element, px);
 		}
 	}
 
@@ -836,6 +864,21 @@ public class Img implements Iterable<Pixel> {
 			}
 		}
 	}
+	
+	public <T> void forEach(final PixelConverter<T> converter, final int xStart, final int yStart, final int width, final int height, final Consumer<? super T> action) {
+		Pixel p = getPixel();
+		T element = converter.allocateElement();
+		int yEnd = yStart+height;
+		int xEnd = xStart+width;
+		for(int y = yStart; y < yEnd; y++){
+			for(int x = xStart; x < xEnd; x++){
+				p.setPosition(x, y);
+				converter.convertPixelToElement(p, element);
+				action.accept(element);
+				converter.convertElementToPixel(element, p);
+			}
+		}
+	}
 
 	/** default implementation of {@link Iterable#forEach(Consumer)} <br>
 	 * only for performance test purposes as it is slower than the
@@ -855,19 +898,16 @@ public class Img implements Iterable<Pixel> {
 	 * @since 1.2
 	 */
 	public Stream<Pixel> stream() {
-		return Img.stream(spliterator(), false);
+		return stream(false);
 	}
-
-	/**
-	 * Returns a parallel Pixel {@link Stream} of this Img.
-	 * This Img's {@link #spliterator()} is used to create the Stream.
-	 * @return parallel Pixel Stream of this Img.
-	 * @see #stream()
-	 * @see #parallelStream(int x, int y, int w, int h)
-	 * @since 1.2
-	 */
-	public Stream<Pixel> parallelStream() {
-		return Img.stream(spliterator(), true);
+	
+	public Stream<Pixel> stream(boolean parallel) {
+		return Img.stream(spliterator(), parallel);
+	}
+	
+	public <T> Stream<T> stream(PixelConverter<T> converter, boolean parallel) {
+		Spliterator<T> spliterator = new PixelConvertingSpliterator<T>(spliterator(), converter);
+		return StreamSupport.stream(spliterator, parallel);
 	}
 
 	/**
@@ -916,27 +956,18 @@ public class Img implements Iterable<Pixel> {
 	 * @since 1.2
 	 */
 	public Stream<Pixel> stream(final int xStart, final int yStart, final int width, final int height){
-		return StreamSupport.stream(spliterator(xStart, yStart, width, height), false);
+		return stream(false, xStart, yStart, width, height);
 	}
-
-
-	/**
-	 * Returns a parallel Pixel {@link Stream} for the specified area of this Img.<br>
-	 * This Img's {@link #spliterator(int,int,int,int)} is used to create
-	 * the Stream.
-	 * @param xStart left boundary of the area (inclusive)
-	 * @param yStart upper boundary of the area (inclusive)
-	 * @param width of the area
-	 * @param height of the area
-	 * @return parallel Pixel Stream for specified area.
-	 * @throws IllegalArgumentException if provided area is not within this
-	 * Img's bounds.
-	 * @see #stream(int x, int y, int w, int h)
-	 * @see #parallelStream()
-	 * @since 1.2
-	 */
-	public Stream<Pixel> parallelStream(final int xStart, final int yStart, final int width, final int height){
-		return StreamSupport.stream(spliterator(xStart, yStart, width, height), true);
+	
+	public Stream<Pixel> stream(boolean parallel, final int xStart, final int yStart, final int width, final int height){
+		return StreamSupport.stream(spliterator(xStart, yStart, width, height), parallel);
+	}
+	
+	public <T> Stream<T> stream(final PixelConverter<T> converter, boolean parallel, final int xStart, final int yStart, final int width, final int height){
+		Spliterator<T> spliterator = new PixelConvertingSpliterator<>(
+				spliterator(xStart, yStart, width, height), 
+				converter);
+		return StreamSupport.stream(spliterator, parallel);
 	}
 
 	/**
@@ -1368,12 +1399,6 @@ public class Img implements Iterable<Pixel> {
 			propagateCompletion();
 		}
 	}
-
-
-
-
-
-
 
 
 }

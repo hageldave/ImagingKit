@@ -54,31 +54,31 @@ public enum ColorSpaceTransformation implements Consumer<Pixel> {
 	 */
 	RGB_2_LAB(val->
 	{
-		float x,y,z; x=y=z=0;
+		double x,y,z; x=y=z=0;
 		{// first convert to CIEXYZ (assuming sRGB color space with D65 white)
-			float r = Pixel.r_normalized(val); float g = Pixel.g_normalized(val); float b = Pixel.b_normalized(val);
+			double r = Pixel.r_normalized(val); double g = Pixel.g_normalized(val); double b = Pixel.b_normalized(val);
 			x = r*0.4124564f + g*0.3575761f + b*0.1804375f;
 			y = r*0.2126729f + g*0.7151522f + b*0.0721750f;
 			z = r*0.0193339f + g*0.1191920f + b*0.9503041f;
 		}
-		float L,a,b; L=a=b=0;
+		double L,a,b; L=a=b=0;
 		{// now convert to Lab 
-			float temp = LAB.func(y/LAB.Yn);
+			double temp = LAB.func(y/LAB.Yn);
 			// with ranges L[0,100] ab[-100,100]
 			// L = 116*temp-16;
 			// a = 500*(LAB.func(x/LAB.Xn) - temp);
 			// b = 200*(temp - LAB.func(z/LAB.Zn));
 			
 			// with ranges L[0,255] ab[-127,127];
-			L = (116*temp-16)*(255.0f/100);
-			a = 500*(127.0f/100)*(LAB.func(x/LAB.Xn) - temp);
-			b = 200*(127.0f/100)*(temp - LAB.func(z/LAB.Zn));
+			L = (116*temp-16)*(255.0/100);
+			a = 500*(127.0/100)*(LAB.func(x/LAB.Xn) - temp);
+			b = 200*(127.0/100)*(temp - LAB.func(z/LAB.Zn));
 		}
 		
 		return Pixel.rgb_bounded(
-				Math.round(L),
-				Math.round(a+127),
-				Math.round(b+127));
+				(int)Math.round(L),
+				(int)Math.round(a+127),
+				(int)Math.round(b+127));
 	}),
 	
 	/**
@@ -95,21 +95,21 @@ public enum ColorSpaceTransformation implements Consumer<Pixel> {
 	 * @since 1.2
 	 */
 	LAB_2_RGB(val->{
-		float L = (Pixel.r_normalized(val)  )*100;
-		float A = ((Pixel.g(val)-127)/254.0f)*200;
-		float B = ((Pixel.b(val)-127)/254.0f)*200;
+		double L = (Pixel.r_normalized(val)  )*100;
+		double A = ((Pixel.g(val)-127)/254.0)*200;
+		double B = ((Pixel.b(val)-127)/254.0)*200;
 		
 		// LAB to XYZ
-		float temp = (L+16)/116;
-		float x =  LAB.Xn*LAB.funcInv(temp + (A/500));
-		float y =  LAB.Yn*LAB.funcInv(temp);
-		float z =  LAB.Zn*LAB.funcInv(temp - (B/200));
+		double temp = (L+16)/116;
+		double x =  LAB.Xn*LAB.funcInv(temp + (A/500));
+		double y =  LAB.Yn*LAB.funcInv(temp);
+		double z =  LAB.Zn*LAB.funcInv(temp - (B/200));
 		
 		return Pixel.rgb_bounded(
-				//                            X             Y             Z
-				Math.round(( 3.2404542f*x -1.5371385f*y -0.4985314f*z)*0xff ),  // R
-				Math.round((-0.9692660f*x +1.8760108f*y +0.0415560f*z)*0xff ),  // G
-				Math.round(( 0.0556434f*x -0.2040259f*y +1.0572252f*z)*0xff )); // B
+				//                           X             Y             Z
+				(int)Math.round(( 3.2404542f*x -1.5371385f*y -0.4985314f*z)*0xff ),  // R
+				(int)Math.round((-0.9692660f*x +1.8760108f*y +0.0415560f*z)*0xff ),  // G
+				(int)Math.round(( 0.0556434f*x -0.2040259f*y +1.0572252f*z)*0xff )); // B
 	}),
 	
 	/**
@@ -132,23 +132,23 @@ public enum ColorSpaceTransformation implements Consumer<Pixel> {
 	 */
 	RGB_2_HSV(val->
 	{
-		float r = Pixel.r_normalized(val);
-		float g = Pixel.g_normalized(val);
-		float b = Pixel.b_normalized(val);
+		double r = Pixel.r_normalized(val);
+		double g = Pixel.g_normalized(val);
+		double b = Pixel.b_normalized(val);
 		
-		float max,p,q,o; max=p=q=o=0;
+		double max,p,q,o; max=p=q=o=0;
 		if(r > max){ max=r; p=g; q=b; o=0; }
 		if(g > max){ max=g; p=b; q=r; o=2; }
 		if(b > max){ max=b; p=r; q=g; o=4; }
 		
-		float min = Math.min(Math.min(r,g),b);
+		double min = Math.min(Math.min(r,g),b);
 		if(max==min){
 			return Pixel.rgb(0,0,(int)(max*255));
 		} else {
-			r = 256+(256.0f/6) * (o + (p-q)/(max-min));
+			r = 256+(256.0/6) * (o + (p-q)/(max-min));
 			g = 255*((max-min)/max);
 			b = 255*max;
-			return Pixel.rgb(Math.round(r),Math.round(g),Math.round(b));
+			return Pixel.rgb((int)Math.round(r),(int)Math.round(g),(int)Math.round(b));
 		}
 	}),
 	
@@ -161,14 +161,14 @@ public enum ColorSpaceTransformation implements Consumer<Pixel> {
 	 */
 	HSV_2_RGB(val->
 	{
-		float h = Pixel.r(val) * (360.0f/256);
-		float s = Pixel.g_normalized(val);
-		float v = Pixel.b_normalized(val);
-		float hi = h/60;
-		float f = hi - (hi=(int)hi);
-		float p = v*(1-s);
-		float q = v*(1-s*f);
-		float t = v*(1-s*(1-f));
+		double h = Pixel.r(val) * (360.0/256);
+		double s = Pixel.g_normalized(val);
+		double v = Pixel.b_normalized(val);
+		double hi = h/60;
+		double f = hi - (hi=(int)hi);
+		double p = v*(1-s);
+		double q = v*(1-s*f);
+		double t = v*(1-s*(1-f));
 		switch((int)hi){
 		case 1:  return Pixel.rgb_fromNormalized(q,v,p);
 		case 2:  return Pixel.rgb_fromNormalized(p,v,t);
@@ -182,21 +182,21 @@ public enum ColorSpaceTransformation implements Consumer<Pixel> {
 	
 	RGB_2_YCbCr(val->
 	{
-		float r = Pixel.r(val), g = Pixel.g(val), b = Pixel.b(val);
+		double r = Pixel.r(val), g = Pixel.g(val), b = Pixel.b(val);
 		return Pixel.rgb_bounded(
-				Math.round( 0.2990f*r +0.5870f*g +0.1140f*b), 
-				Math.round(-0.1687f*r -0.3313f*g +0.5000f*b +128f), 
-				Math.round( 0.5000f*r -0.4187f*g +0.0813f*b +128f));
+				(int)Math.round( 0.2990f*r +0.5870f*g +0.1140f*b), 
+				(int)Math.round(-0.1687f*r -0.3313f*g +0.5000f*b +128f), 
+				(int)Math.round( 0.5000f*r -0.4187f*g +0.0813f*b +128f));
 	}),
 	
 	
 	YCbCr_2_RGB(val->
 	{
-		float y = Pixel.r(val), cb = Pixel.g(val)-128, cr = Pixel.b(val)-128;
+		double y = Pixel.r(val), cb = Pixel.g(val)-128, cr = Pixel.b(val)-128;
 		return Pixel.rgb_bounded(
-				Math.round(0.7720f*y -0.4030f*cb +1.4020f*cr),
-				Math.round(1.1161f*y -0.1384f*cb -0.7141f*cr),
-				Math.round(1.0000f*y +1.7720f*cb -0.0001f*cr));
+				(int)Math.round(0.7720f*y -0.4030f*cb +1.4020f*cr),
+				(int)Math.round(1.1161f*y -0.1384f*cb -0.7141f*cr),
+				(int)Math.round(1.0000f*y +1.7720f*cb -0.0001f*cr));
 	})
 	;
 	
@@ -277,20 +277,20 @@ public enum ColorSpaceTransformation implements Consumer<Pixel> {
 	
 	// CIE L*a*b* helper class
 	private static final class LAB {
-		static final float Xn = 0.95047f;
-		static final float Yn = 1.00000f;
-		static final float Zn = 1.08883f;
-		static final float lab6_29 = 6.0f/29.0f;
-		static final float lab6_29_3 = lab6_29*lab6_29*lab6_29;
-		static final float lab1_3_29_6_2 = (1.0f/3.0f) * (29.0f/6.0f) * (29.0f/6.0f);
+		static final double Xn = 0.95047f;
+		static final double Yn = 1.00000f;
+		static final double Zn = 1.08883f;
+		static final double lab6_29 = 6.0/29.0;
+		static final double lab6_29_3 = lab6_29*lab6_29*lab6_29;
+		static final double lab1_3_29_6_2 = (1.0/3.0) * (29.0/6.0) * (29.0/6.0);
 
-		static float func(float q){
-			return q > lab6_29_3 ? (float)Math.cbrt(q):lab1_3_29_6_2*q + (4.0f/29.0f);
-//			return (float)Math.cbrt(q);
+		static double func(double q){
+			return q > lab6_29_3 ? (double)Math.cbrt(q):lab1_3_29_6_2*q + (4.0/29.0);
+//			return (double)Math.cbrt(q);
 		}
 
-		static float funcInv(float q){
-			return q > lab6_29 ? q*q*q : 3*lab6_29*lab6_29*(q-(4.0f/29.0f));
+		static double funcInv(double q){
+			return q > lab6_29 ? q*q*q : 3*lab6_29*lab6_29*(q-(4.0/29.0));
 //			return q*q*q;
 		}
 	}

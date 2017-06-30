@@ -126,6 +126,13 @@ public class PixelConvertingSpliterator<T> implements Spliterator<T> {
 		this.fromPixelConverter = fromPixelConverter;
 		this.toPixelConverter = toPixelConverter;
 	}
+	
+	public PixelConvertingSpliterator(Spliterator<Pixel> delegate, PixelConverter<T> converter) {
+		this(	delegate,
+				converter::allocateElement, 
+				converter::convertPixelToElement, 
+				converter::convertElementToPixel);
+	}
 
 	@Override
 	public boolean tryAdvance(Consumer<? super T> action) {
@@ -162,30 +169,30 @@ public class PixelConvertingSpliterator<T> implements Spliterator<T> {
 	}
 	
 	/**
-	 * Example implementation of a {@code PixelConvertingSpliterator<float[]>}.
+	 * Example implementation of a {@code PixelConvertingSpliterator<double[]>}.
 	 * <p>
-	 * The elements of the returned spliterator will be {@code float[]} of length 3
+	 * The elements of the returned spliterator will be {@code double[]} of length 3
 	 * with normalized red, green and blue channels on index 0, 1 and 2.
 	 * <p>
 	 * <b>Code:</b>
 	 * <pre>
 	 * {@code
-	 * Supplier<float[]> arrayAllocator = () -> {
-	 *    return new float[3];
+	 * Supplier<double[]> arrayAllocator = () -> {
+	 *    return new double[3];
 	 * };
-	 * BiConsumer<Pixel, float[]> convertToArray = (px, array) -> {
+	 * BiConsumer<Pixel, double[]> convertToArray = (px, array) -> {
 	 *    array[0]=px.r_normalized();
 	 *    array[1]=px.g_normalized();
 	 *    array[2]=px.b_normalized();
 	 * };
-	 * BiConsumer<float[], Pixel> convertToPixel = (array, px) -> {
+	 * BiConsumer<double[], Pixel> convertToPixel = (array, px) -> {
 	 *    px.setRGB_fromNormalized_preserveAlpha(
 	 *       // clamp values between zero and one
 	 *       Math.min(1, Math.max(0, array[0])), 
 	 *       Math.min(1, Math.max(0, array[1])), 
 	 *       Math.min(1, Math.max(0, array[2])));
 	 * };
-	 * PixelConvertingSpliterator<float[]> arraySpliterator = new PixelConvertingSpliterator<>(
+	 * PixelConvertingSpliterator<double[]> arraySpliterator = new PixelConvertingSpliterator<>(
 	 *    pixelSpliterator, 
 	 *    arrayAllocator, 
 	 *    convertToArray, 
@@ -198,28 +205,36 @@ public class PixelConvertingSpliterator<T> implements Spliterator<T> {
 	 * 
 	 * @since 1.4 
 	 */
-	public static PixelConvertingSpliterator<float[]> getFloatArrayElementSpliterator(Spliterator<Pixel> pixelSpliterator){
-		Supplier<float[]> arrayAllocator = () -> {
-			return new float[3];
+	public static PixelConvertingSpliterator<double[]> getDoubletArrayElementSpliterator(Spliterator<Pixel> pixelSpliterator){
+		Supplier<double[]> arrayAllocator = () -> {
+			return new double[3];
 		};
-		BiConsumer<Pixel, float[]> convertToArray = (px, array) -> {
+		BiConsumer<Pixel, double[]> convertToArray = (px, array) -> {
 			array[0]=px.r_normalized();
 			array[1]=px.g_normalized();
 			array[2]=px.b_normalized();
 		};
-		BiConsumer<float[], Pixel> convertToPixel = (array, px) -> {
+		BiConsumer<double[], Pixel> convertToPixel = (array, px) -> {
 			px.setRGB_fromNormalized_preserveAlpha(
 					// clamp values between zero and one
 					Math.min(1, Math.max(0, array[0])), 
 					Math.min(1, Math.max(0, array[1])), 
 					Math.min(1, Math.max(0, array[2])));
 		};
-		PixelConvertingSpliterator<float[]> arraySpliterator = new PixelConvertingSpliterator<>(
+		PixelConvertingSpliterator<double[]> arraySpliterator = new PixelConvertingSpliterator<>(
 				pixelSpliterator, 
 				arrayAllocator, 
 				convertToArray, 
 				convertToPixel);
 		return arraySpliterator;
+	}
+	
+	
+
+	static interface PixelConverter<T> {
+		public T allocateElement();
+		public void convertPixelToElement(Pixel px, T element);
+		public void convertElementToPixel(T element, Pixel px);
 	}
 	
 }

@@ -151,8 +151,8 @@ public class Pixel {
 	 * @return normalized x coordinate within [0..1]
 	 * @since 1.2
 	 */
-	public float getXnormalized() {
-		return getX() * 1.0f / (img.getWidth()-1.0f);
+	public double getXnormalized() {
+		return getX() * 1.0 / (img.getWidth()-1.0);
 	}
 	
 	/**
@@ -163,8 +163,8 @@ public class Pixel {
 	 * @return normalized y coordinate within [0..1]
 	 * @since 1.2
 	 */
-	public float getYnormalized() {
-		return getY() * 1.0f / (img.getHeight()-1.0f);
+	public double getYnormalized() {
+		return getY() * 1.0 / (img.getHeight()-1.0);
 	}
 	
 	/**
@@ -293,7 +293,7 @@ public class Pixel {
 	 * @see #b_normalized()
 	 * @since 1.2
 	 */
-	public float a_normalized(){
+	public double a_normalized(){
 		return Pixel.a_normalized(getValue());
 	}
 	
@@ -309,7 +309,7 @@ public class Pixel {
 	 * @see #b_normalized()
 	 * @since 1.2
 	 */
-	public float r_normalized(){
+	public double r_normalized(){
 		return Pixel.r_normalized(getValue());
 	}
 	
@@ -325,7 +325,7 @@ public class Pixel {
 	 * @see #b_normalized()
 	 * @since 1.2
 	 */
-	public float g_normalized(){
+	public double g_normalized(){
 		return Pixel.g_normalized(getValue());
 	}
 	
@@ -341,7 +341,7 @@ public class Pixel {
 	 * @see #g_normalized()
 	 * @since 1.2
 	 */
-	public float b_normalized(){
+	public double b_normalized(){
 		return Pixel.b_normalized(getValue());
 	}
 	
@@ -395,7 +395,7 @@ public class Pixel {
 	 * @param b blue
 	 * @throws ArrayIndexOutOfBoundsException if this Pixel's index is not in 
 	 * range of the Img's data array.
-	 * @see #setRGB_fromNormalized_preserveAlpha(float, float, float)
+	 * @see #setRGB_fromNormalized_preserveAlpha(double, double, double)
 	 * @since 1.2
 	 */
 	public void setRGB_preserveAlpha(int r, int g, int b){
@@ -413,8 +413,8 @@ public class Pixel {
 	 * @throws ArrayIndexOutOfBoundsException if this Pixel's index is not in 
 	 * range of the Img's data array.
 	 * 
-	 * @see #setRGB_fromNormalized(float, float, float)
-	 * @see #setRGB_fromNormalized_preserveAlpha(float, float, float)
+	 * @see #setRGB_fromNormalized(double, double, double)
+	 * @see #setRGB_fromNormalized_preserveAlpha(double, double, double)
 	 * @see #setARGB(int, int, int, int)
 	 * @see #a_normalized()
 	 * @see #r_normalized()
@@ -422,7 +422,7 @@ public class Pixel {
 	 * @see #b_normalized()
 	 * @since 1.2
 	 */
-	public void setARGB_fromNormalized(float a, float r, float g, float b){
+	public void setARGB_fromNormalized(double a, double r, double g, double b){
 		setValue(Pixel.argb_fromNormalized(a, r, g, b));
 	}
 	
@@ -436,8 +436,8 @@ public class Pixel {
 	 * @throws ArrayIndexOutOfBoundsException if this Pixel's index is not in 
 	 * range of the Img's data array.
 	 * 
-	 * @see #setARGB_fromNormalized(float, float, float, float)
-	 * @see #setRGB_fromNormalized_preserveAlpha(float, float, float)
+	 * @see #setARGB_fromNormalized(double, double, double, double)
+	 * @see #setRGB_fromNormalized_preserveAlpha(double, double, double)
 	 * @see #setRGB(int, int, int)
 	 * @see #a_normalized()
 	 * @see #r_normalized()
@@ -445,7 +445,7 @@ public class Pixel {
 	 * @see #b_normalized()
 	 * @since 1.2
 	 */
-	public void setRGB_fromNormalized(float r, float g, float b){
+	public void setRGB_fromNormalized(double r, double g, double b){
 		setValue(Pixel.rgb_fromNormalized(r, g, b));
 	}
 	
@@ -463,7 +463,7 @@ public class Pixel {
 	 * @see #setRGB_preserveAlpha(int, int, int)
 	 * @since 1.2
 	 */
-	public void setRGB_fromNormalized_preserveAlpha(float r, float g, float b){
+	public void setRGB_fromNormalized_preserveAlpha(double r, double g, double b){
 		setValue((getValue() & 0xff000000) | Pixel.argb(0,(int)(0xff*r),(int)(0xff*g),(int)(0xff*b)) );
 	}
 	
@@ -682,7 +682,7 @@ public class Pixel {
 	 * @param b blue
 	 * @return packed ARGB value
 	 * 
-	 * @see #argb_fromNormalized(float, float, float, float)
+	 * @see #argb_fromNormalized(double, double, double, double)
 	 * @see #rgb(int, int, int)
 	 * @see #a_normalized(int)
 	 * @see #r_normalized(int)
@@ -690,7 +690,7 @@ public class Pixel {
 	 * @see #b_normalized(int)
 	 * @since 1.2
 	 */
-	public static final int rgb_fromNormalized(final float r, final float g, final float b){
+	public static final int rgb_fromNormalized(final double r, final double g, final double b){
 		return rgb_fast((int)(r*0xff), (int)(g*0xff), (int)(b*0xff));
 	}
 
@@ -782,7 +782,7 @@ public class Pixel {
 	 * @param b blue
 	 * @return packed ARGB value
 	 * 
-	 * @see #rgb_fromNormalized(float, float, float)
+	 * @see #rgb_fromNormalized(double, double, double)
 	 * @see #argb(int, int, int, int)
 	 * @see #a_normalized(int)
 	 * @see #r_normalized(int)
@@ -790,7 +790,7 @@ public class Pixel {
 	 * @see #b_normalized(int)
 	 * @since 1.2
 	 */
-	public static final int argb_fromNormalized(final float a, final float r, final float g, final float b){
+	public static final int argb_fromNormalized(final double a, final double r, final double g, final double b){
 		return argb_fast((int)(a*0xff), (int)(r*0xff), (int)(g*0xff), (int)(b*0xff));
 	}
 
@@ -860,8 +860,8 @@ public class Pixel {
 	 * @see #a_normalized(int)
 	 * @since 1.2
 	 */
-	public static final float b_normalized(final int color){
-		return b(color)/255.0f;
+	public static final double b_normalized(final int color){
+		return b(color)/255.0;
 	}
 	
 	/**
@@ -874,8 +874,8 @@ public class Pixel {
 	 * @see #a_normalized(int)
 	 * @since 1.2
 	 */
-	public static final float g_normalized(final int color){
-		return g(color)/255.0f;
+	public static final double g_normalized(final int color){
+		return g(color)/255.0;
 	}
 	
 	/**
@@ -888,8 +888,8 @@ public class Pixel {
 	 * @see #a_normalized(int)
 	 * @since 1.2
 	 */
-	public static final float r_normalized(final int color){
-		return r(color)/255.0f;
+	public static final double r_normalized(final int color){
+		return r(color)/255.0;
 	}
 	
 	/**
@@ -902,8 +902,8 @@ public class Pixel {
 	 * @see #a_normalized(int)
 	 * @since 1.2
 	 */
-	public static final float a_normalized(final int color){
-		return a(color)/255.0f;
+	public static final double a_normalized(final int color){
+		return a(color)/255.0;
 	}
 	
 	/**
