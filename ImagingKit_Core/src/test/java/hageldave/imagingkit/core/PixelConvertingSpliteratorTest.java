@@ -10,6 +10,8 @@ import java.util.stream.StreamSupport;
 
 import org.junit.Test;
 
+import hageldave.imagingkit.core.PixelConvertingSpliterator.PixelConverter;
+
 public class PixelConvertingSpliteratorTest {
 
 	@Test
@@ -36,7 +38,7 @@ public class PixelConvertingSpliteratorTest {
 					all.add(child);
 				} else {
 					idx++;
-				}	
+				}
 			}
 			for(Spliterator<double[]> iter: all){
 				iter.tryAdvance(rotateChannels);
@@ -60,7 +62,11 @@ public class PixelConvertingSpliteratorTest {
 				assertEquals("i="+i+" "+Integer.toHexString(img.getData()[i]), 0, Pixel.g(img.getData()[i]));
 			}
 		}
-		
+
+		{
+			PixelConverter<double[]> converter = PixelConverter.fromFunctions(()->new double[3], null, null);
+		}
+
 	}
-	
+
 }
