@@ -13,6 +13,8 @@ import hageldave.imagingkit.core.PixelConvertingSpliterator.PixelConverter;
 
 public class PixelConvertingSpliteratorTest {
 
+	static final double eps = 0.000001;
+
 	@Test
 	public void testAll(){
 		Img img = new Img(1000,1000);
@@ -64,13 +66,13 @@ public class PixelConvertingSpliteratorTest {
 			}
 		}
 
-		
+
 		PixelConverter<double[]> converter = PixelConverter.fromFunctions(
-				()->new double[3], 
-				(px,a)->{a[0]=px.r_normalized();a[1]=px.g_normalized();a[2]=px.b_normalized();}, 
+				()->new double[3],
+				(px,a)->{a[0]=px.r_normalized();a[1]=px.g_normalized();a[2]=px.b_normalized();},
 				(a,px)->{px.setRGB_fromNormalized_preserveAlpha(a[0], a[1], a[2]);});
-		
-		
+
+
 		{
 			img.forEach(converter, false, rotateChannels);
 			for(int i = 0; i < img.numValues(); i++){
@@ -113,20 +115,20 @@ public class PixelConvertingSpliteratorTest {
 				assertEquals("i="+i+" "+Integer.toHexString(img.getData()[i]), 0, Pixel.r(img.getData()[i]));
 			}
 		}
-		
+
 		{
 			double sumb1 = img.stream().mapToDouble(px->px.b_normalized()).sum();
 			double sumb2 = img.stream(converter, false).mapToDouble(a->a[2]).sum();
-			assertNotEquals(0, sumb1, 0);
-			assertEquals(sumb1, sumb2, 0);
+			assertNotEquals(0, sumb1, eps);
+			assertEquals(sumb1, sumb2, eps);
 			double sumg1 = img.stream().mapToDouble(px->px.g_normalized()).sum();
 			double sumg2 = img.stream(converter, true).mapToDouble(a->a[1]).sum();
-			assertNotEquals(0, sumg1, 0);
-			assertEquals(sumg1, sumg2, 0);
+			assertNotEquals(0, sumg1, eps);
+			assertEquals(sumg1, sumg2, eps);
 			double sumw1 = img.stream(0, 0, img.getWidth(), 1).mapToDouble(px->px.r_normalized()+px.g_normalized()+px.b_normalized()).sum();
 			double sumw2 = img.stream(converter, false, 0, 0, img.getWidth(), 1).mapToDouble(a->a[0]+a[1]+a[2]).sum();
-			assertNotEquals(0, sumw1, 0);
-			assertEquals(sumw1, sumw2, 0);
+			assertNotEquals(0, sumw1, eps);
+			assertEquals(sumw1, sumw2, eps);
 		}
 
 	}

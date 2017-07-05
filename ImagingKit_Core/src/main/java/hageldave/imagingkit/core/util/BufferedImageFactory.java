@@ -20,7 +20,7 @@
  * IN THE SOFTWARE.
  */
 
-package hageldave.imagingkit.core;
+package hageldave.imagingkit.core.util;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.Image;

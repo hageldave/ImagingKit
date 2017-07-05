@@ -194,27 +194,35 @@ public class PixelConvertingSpliterator<T> implements Spliterator<T> {
 	 * @since 1.4
 	 */
 	public static PixelConvertingSpliterator<double[]> getDoubletArrayElementSpliterator(Spliterator<Pixel> pixelSpliterator){
-		Supplier<double[]> arrayAllocator = () -> {
-			return new double[3];
-		};
-		BiConsumer<Pixel, double[]> convertToArray = (px, array) -> {
-			array[0]=px.r_normalized();
-			array[1]=px.g_normalized();
-			array[2]=px.b_normalized();
-		};
-		BiConsumer<double[], Pixel> convertToPixel = (array, px) -> {
-			px.setRGB_fromNormalized_preserveAlpha(
-					// clamp values between zero and one
-					Math.min(1, Math.max(0, array[0])),
-					Math.min(1, Math.max(0, array[1])),
-					Math.min(1, Math.max(0, array[2])));
-		};
 		PixelConvertingSpliterator<double[]> arraySpliterator = new PixelConvertingSpliterator<>(
-				pixelSpliterator,
-				arrayAllocator,
-				convertToArray,
-				convertToPixel);
+				pixelSpliterator, getDoubleArrayConverter());
 		return arraySpliterator;
+	}
+
+	public static PixelConverter<double[]> getDoubleArrayConverter(){
+		return new PixelConverter<double[]>() {
+
+			@Override
+			public void convertPixelToElement(Pixel px, double[] array) {
+				array[0]=px.r_normalized();
+				array[1]=px.g_normalized();
+				array[2]=px.b_normalized();
+			}
+
+			@Override
+			public void convertElementToPixel(double[] array, Pixel px) {
+				px.setRGB_fromNormalized_preserveAlpha(
+						// clamp values between zero and one
+						Math.min(1, Math.max(0, array[0])),
+						Math.min(1, Math.max(0, array[1])),
+						Math.min(1, Math.max(0, array[2])));
+			}
+
+			@Override
+			public double[] allocateElement() {
+				return new double[3];
+			}
+		};
 	}
 
 

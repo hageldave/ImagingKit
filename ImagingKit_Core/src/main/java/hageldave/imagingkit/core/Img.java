@@ -33,12 +33,13 @@ import java.awt.image.WritableRaster;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Spliterator;
-import java.util.concurrent.CountedCompleter;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import hageldave.imagingkit.core.PixelConvertingSpliterator.PixelConverter;
+import hageldave.imagingkit.core.util.BufferedImageFactory;
+import hageldave.imagingkit.core.util.ParallelForEachExecutor;
 
 /**
  * Image class with data stored in an int array.
@@ -1349,41 +1350,6 @@ public class Img implements Iterable<Pixel> {
 			return NONNULL | SIZED | CONCURRENT | SUBSIZED | IMMUTABLE;
 		}
 
-	}
-
-	/**
-	 * CountedCompleter class for multithreaded execution of a Consumer on a
-	 * Pixel Spliterator. Used to realise multithreaded forEach loop.
-	 * @author hageldave
-	 * @see Img#forEachParallel(Consumer)
-	 * @since 1.0
-	 */
-	final static class ParallelForEachExecutor<T> extends CountedCompleter<Void> {
-		private static final long serialVersionUID = 1L;
-
-		final Spliterator<T> spliterator;
-		final Consumer<? super T> action;
-
-		ParallelForEachExecutor(
-				ParallelForEachExecutor<T> parent,
-				Spliterator<T> spliterator,
-				Consumer<? super T> action)
-		{
-			super(parent);
-			this.spliterator = spliterator;
-			this.action = action;
-		}
-
-		@Override
-		public void compute() {
-			Spliterator<T> sub;
-			while ((sub = spliterator.trySplit()) != null) {
-				addToPendingCount(1);
-				new ParallelForEachExecutor<T>(this, sub, action).fork();
-			}
-			spliterator.forEachRemaining(action);
-			propagateCompletion();
-		}
 	}
 
 

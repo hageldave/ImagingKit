@@ -20,7 +20,7 @@
  * IN THE SOFTWARE.
  */
 
-package hageldave.imagingkit.core;
+package hageldave.imagingkit.core.scientific;
 
 /**
  * Pixel class for retrieving a value from an {@link DImg}.

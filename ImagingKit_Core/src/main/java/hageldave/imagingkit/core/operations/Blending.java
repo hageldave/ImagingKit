@@ -20,13 +20,14 @@
  * IN THE SOFTWARE.
  */
 
-package hageldave.imagingkit.core;
+package hageldave.imagingkit.core.operations;
 
 import static hageldave.imagingkit.core.Pixel.*;
 
 import java.util.function.Consumer;
 
 import hageldave.imagingkit.core.Img;
+import hageldave.imagingkit.core.Pixel;
 
 /**
  * This Enum class provides a variation of different blend functions to

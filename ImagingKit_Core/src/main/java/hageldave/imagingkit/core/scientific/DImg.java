@@ -20,7 +20,7 @@
  * IN THE SOFTWARE.
  */
 
-package hageldave.imagingkit.core;
+package hageldave.imagingkit.core.scientific;
 
 import java.awt.Dimension;
 import java.awt.Graphics2D;
@@ -42,6 +42,10 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+
+import hageldave.imagingkit.core.Img;
+import hageldave.imagingkit.core.Pixel;
+import hageldave.imagingkit.core.util.ParallelForEachExecutor;
 
 /**
  * Image class with data stored in an int array.
@@ -993,7 +997,7 @@ public class DImg implements Iterable<DPixel> {
 	 * @since 1.0
 	 */
 	public void forEachParallel(final Consumer<? super DPixel> action) {
-		Img.ParallelForEachExecutor<DPixel> exec = new Img.ParallelForEachExecutor<>(null, spliterator(), action);
+		ParallelForEachExecutor<DPixel> exec = new ParallelForEachExecutor<>(null, spliterator(), action);
 		exec.invoke();
 	}
 
@@ -1014,7 +1018,7 @@ public class DImg implements Iterable<DPixel> {
 	 * @since 1.1
 	 */
 	public void forEachParallel(final int xStart, final int yStart, final int width, final int height, final Consumer<? super DPixel> action) {
-		Img.ParallelForEachExecutor<DPixel> exec = new Img.ParallelForEachExecutor<>(null, spliterator(xStart, yStart, width, height), action);
+		ParallelForEachExecutor<DPixel> exec = new ParallelForEachExecutor<>(null, spliterator(xStart, yStart, width, height), action);
 		exec.invoke();
 	}
 

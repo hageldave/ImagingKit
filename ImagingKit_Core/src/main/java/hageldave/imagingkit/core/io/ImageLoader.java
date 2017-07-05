@@ -20,7 +20,7 @@
  * IN THE SOFTWARE.
  */
 
-package hageldave.imagingkit.core;
+package hageldave.imagingkit.core.io;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -30,6 +30,9 @@ import java.io.InputStream;
 import java.net.URL;
 
 import javax.imageio.ImageIO;
+
+import hageldave.imagingkit.core.Img;
+import hageldave.imagingkit.core.util.BufferedImageFactory;
 
 /**
  * Class providing convenience methods for loading Images with {@link ImageIO}.

@@ -20,9 +20,12 @@
  * IN THE SOFTWARE.
  */
 
-package hageldave.imagingkit.core;
+package hageldave.imagingkit.core.operations;
 
 import java.util.function.Consumer;
+
+import hageldave.imagingkit.core.Img;
+import hageldave.imagingkit.core.Pixel;
 
 /**
  * Enum providing multiple color space transformations.

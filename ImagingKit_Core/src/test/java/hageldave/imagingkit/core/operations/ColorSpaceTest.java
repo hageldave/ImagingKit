@@ -1,10 +1,14 @@
-package hageldave.imagingkit.core;
+package hageldave.imagingkit.core.operations;
 
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 import org.junit.Test;
+
+import hageldave.imagingkit.core.Img;
+import hageldave.imagingkit.core.Pixel;
+import hageldave.imagingkit.core.operations.ColorSpaceTransformation;
 
 public class ColorSpaceTest {
 

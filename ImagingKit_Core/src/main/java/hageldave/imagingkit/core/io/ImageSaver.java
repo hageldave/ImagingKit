@@ -20,7 +20,7 @@
  * IN THE SOFTWARE.
  */
 
-package hageldave.imagingkit.core;
+package hageldave.imagingkit.core.io;
 
 import java.awt.Image;
 import java.awt.image.BufferedImage;
@@ -32,6 +32,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 import javax.imageio.ImageIO;
+
+import hageldave.imagingkit.core.util.BufferedImageFactory;
 
 /**
  * Class providing convenience methods for saving Images to file.
