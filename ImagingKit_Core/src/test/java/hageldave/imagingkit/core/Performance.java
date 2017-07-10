@@ -3,6 +3,8 @@ package hageldave.imagingkit.core;
 import java.util.Random;
 import java.util.function.Consumer;
 
+import hageldave.imagingkit.core.scientific.DPixel;
+
 public class Performance {
 
 	public static void main(String[] args) {
@@ -13,14 +15,19 @@ public class Performance {
 		int numLoops = 15;
 
 		int contrastLuminance = 128;
+		double contrastLum = contrastLuminance/255.0;
 		float contrastIntensity = 0.21f;
 
-		Consumer<Pixel> action = px -> {
-			int lumDif = px.getLuminance()-contrastLuminance;
-			int r = (int) (px.r()+lumDif*contrastIntensity);
-			int g = (int) (px.g()+lumDif*contrastIntensity);
-			int b = (int) (px.b()+lumDif*contrastIntensity);
-			px.setValue(Pixel.argb_bounded(px.a(), r, g, b));
+		Consumer<PixelBase> action = px -> {
+			double r = px.r_normalized();
+			double g = px.g_normalized();
+			double b = px.b_normalized();
+			double luminance = r*0.2126 + g*0.7152 + b*0.0722;
+			double lumDif = luminance-contrastLum;
+			r += lumDif*contrastIntensity;
+			g += lumDif*contrastIntensity;
+			b += lumDif*contrastIntensity;
+			px.setRGB_fromNormalized_preserveAlpha(r, g, b);
 		};
 
 		Img img = new Img(6000, 4000);
@@ -42,11 +49,16 @@ public class Performance {
 			time = System.currentTimeMillis();
 			{
 				for(int k = 0; k < img.numValues(); k++){
-					int lumDif = Pixel.getLuminance(img.getData()[k])-contrastLuminance;
-					int r = (int) (Pixel.r(img.getData()[k])+lumDif*contrastIntensity);
-					int g = (int) (Pixel.g(img.getData()[k])+lumDif*contrastIntensity);
-					int b = (int) (Pixel.b(img.getData()[k])+lumDif*contrastIntensity);
-					img.getData()[k] = Pixel.argb(Pixel.a(img.getData()[k]), r, g, b);
+					int color = img.getData()[k];
+					double r = Pixel.r_normalized(color);
+					double g = Pixel.g_normalized(color);
+					double b = Pixel.b_normalized(color);
+					double luminance = r*0.2126 + g*0.7152 + b*0.0722;
+					double lumDif = luminance-contrastLum;
+					r += lumDif*contrastIntensity;
+					g += lumDif*contrastIntensity;
+					b += lumDif*contrastIntensity;
+					img.getData()[k] = Pixel.argb_fromNormalized(Pixel.a_normalized(color), r, g, b);
 				}
 			}
 			times[0] += System.currentTimeMillis()-time;
@@ -104,10 +116,9 @@ public class Performance {
 
 
 			methods[6] = "parallel converted";
-			System.out.println(methods[5]);
+			System.out.println(methods[6]);
 			time = System.currentTimeMillis();
 			{
-				double contrastLum = contrastLuminance/255.0;
 				img.forEach(PixelConvertingSpliterator.getDoubleArrayConverter(), true, arr-> {
 					double luminance = arr[0]*0.2126 + arr[1]*0.7152 + arr[2]*0.0722;
 					double lumDif = luminance-contrastLum;

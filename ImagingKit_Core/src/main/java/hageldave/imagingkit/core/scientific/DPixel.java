@@ -22,6 +22,8 @@
 
 package hageldave.imagingkit.core.scientific;
 
+import hageldave.imagingkit.core.PixelBase;
+
 /**
  * Pixel class for retrieving a value from an {@link DImg}.
  * A Pixel object stores a position and can be used to get and set values of
@@ -36,7 +38,7 @@ package hageldave.imagingkit.core.scientific;
  * @author hageldave
  * @since 1.0
  */
-public class DPixel {
+public class DPixel implements PixelBase {
 
 	public static final int R = DImg.channel_r;
 	public static final int G = DImg.channel_g;
@@ -157,8 +159,8 @@ public class DPixel {
 	 * @return normalized x coordinate within [0..1]
 	 * @since 1.2
 	 */
-	public float getXnormalized() {
-		return getX() * 1.0f / (img.getWidth()-1.0f);
+	public double getXnormalized() {
+		return getX() * 1.0 / (img.getWidth()-1.0);
 	}
 
 	/**
@@ -169,8 +171,8 @@ public class DPixel {
 	 * @return normalized y coordinate within [0..1]
 	 * @since 1.2
 	 */
-	public float getYnormalized() {
-		return getY() * 1.0f / (img.getHeight()-1.0f);
+	public double getYnormalized() {
+		return getY() * 1.0 / (img.getHeight()-1.0);
 	}
 
 	/**
@@ -334,7 +336,7 @@ public class DPixel {
 		this.img.getDataG()[index] = g;
 		this.img.getDataB()[index] = b;
 		if(this.img.hasAlpha())
-		this.img.getDataA()[index] = 1;
+			this.img.getDataA()[index] = 1;
 		return this;
 	}
 
@@ -596,6 +598,41 @@ public class DPixel {
 	 */
 	public static final double getGrey(final double r, final double g, final double b, final double redWeight, final double greenWeight, final double blueWeight){
 		return r*redWeight+g*greenWeight+b*blueWeight;
+	}
+
+	@Override
+	public void setARGB_fromNormalized(double a, double r, double g, double b) {
+		if(img.hasAlpha()) setARGB(a, r, g, b); else setRGB_fromNormalized_preserveAlpha(r, g, b);
+	}
+
+	@Override
+	public void setRGB_fromNormalized(double r, double g, double b) {
+		setRGB(r, g, b);
+	}
+
+	@Override
+	public void setRGB_fromNormalized_preserveAlpha(double r, double g, double b) {
+		setRGB_preserveAlpha(r, g, b);
+	}
+
+	@Override
+	public double a_normalized() {
+		return img.hasAlpha() ? a():1;
+	}
+
+	@Override
+	public double r_normalized() {
+		return r();
+	}
+
+	@Override
+	public double g_normalized() {
+		return g();
+	}
+
+	@Override
+	public double b_normalized() {
+		return b();
 	}
 
 }
