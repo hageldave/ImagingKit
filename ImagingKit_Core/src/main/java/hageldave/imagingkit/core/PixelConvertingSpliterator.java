@@ -22,6 +22,7 @@
 
 package hageldave.imagingkit.core;
 
+import java.util.Objects;
 import java.util.Spliterator;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -76,18 +77,18 @@ import java.util.stream.Stream;
  * @param <T> the type of elements returned by this Spliterator
  * @since 1.4
  */
-public class PixelConvertingSpliterator<T> implements Spliterator<T> {
+public class PixelConvertingSpliterator<P extends PixelBase, T> implements Spliterator<T> {
 
 	/** {@code Spliterator<Pixel>} acting as delegate of this spliterator
 	 * @since 1.4 */
-	protected final Spliterator<? extends PixelBase> delegate;
+	protected final Spliterator<? extends P> delegate;
 
 	/** the element of this spliterator (reused on each pixel of the delegate)
 	 * @since 1.4 */
 	protected final T element;
 
 
-	protected PixelConverter<T> converter;
+	protected PixelConverter<P,T> converter;
 
 
 	/**
@@ -104,10 +105,10 @@ public class PixelConvertingSpliterator<T> implements Spliterator<T> {
 	 * @since 1.4
 	 */
 	public PixelConvertingSpliterator(
-			Spliterator<? extends PixelBase> delegate,
+			Spliterator<? extends P> delegate,
 			Supplier<T> elementAllocator,
-			BiConsumer<PixelBase, T> fromPixelConverter,
-			BiConsumer<T, PixelBase> toPixelConverter)
+			BiConsumer<P, T> fromPixelConverter,
+			BiConsumer<T, P> toPixelConverter)
 	{
 		this(delegate, PixelConverter.fromFunctions(
 				elementAllocator,
@@ -116,7 +117,7 @@ public class PixelConvertingSpliterator<T> implements Spliterator<T> {
 			);
 	}
 
-	public PixelConvertingSpliterator(Spliterator<? extends PixelBase> delegate, PixelConverter<T> converter) {
+	public PixelConvertingSpliterator(Spliterator<? extends P> delegate, PixelConverter<P,T> converter) {
 		this.converter = converter;
 		this.delegate=delegate;
 		this.element = converter.allocateElement();
@@ -142,8 +143,8 @@ public class PixelConvertingSpliterator<T> implements Spliterator<T> {
 
 	@Override
 	public Spliterator<T> trySplit() {
-		Spliterator<? extends PixelBase> del = delegate.trySplit();
-		return del == null ? null:new PixelConvertingSpliterator<T>(del,converter);
+		Spliterator<? extends P> del = delegate.trySplit();
+		return del == null ? null:new PixelConvertingSpliterator<P,T>(del,converter);
 	}
 
 	@Override
@@ -193,14 +194,15 @@ public class PixelConvertingSpliterator<T> implements Spliterator<T> {
 	 *
 	 * @since 1.4
 	 */
-	public static PixelConvertingSpliterator<double[]> getDoubletArrayElementSpliterator(Spliterator<Pixel> pixelSpliterator){
-		PixelConvertingSpliterator<double[]> arraySpliterator = new PixelConvertingSpliterator<>(
+	public static PixelConvertingSpliterator<PixelBase, double[]> getDoubletArrayElementSpliterator(
+			Spliterator<? extends PixelBase> pixelSpliterator){
+		PixelConvertingSpliterator<PixelBase, double[]> arraySpliterator = new PixelConvertingSpliterator<>(
 				pixelSpliterator, getDoubleArrayConverter());
 		return arraySpliterator;
 	}
 
-	public static PixelConverter<double[]> getDoubleArrayConverter(){
-		return new PixelConverter<double[]>() {
+	public static PixelConverter<PixelBase, double[]> getDoubleArrayConverter(){
+		return new PixelConverter<PixelBase, double[]>() {
 
 			@Override
 			public void convertPixelToElement(PixelBase px, double[] array) {
@@ -227,7 +229,7 @@ public class PixelConvertingSpliterator<T> implements Spliterator<T> {
 
 
 
-	static interface PixelConverter<T> {
+	static interface PixelConverter<P extends PixelBase, T> {
 		/**
 		 * Allocates a new element for the PixelConvertingSpliterator
 		 * (will be called once per split)
@@ -241,7 +243,7 @@ public class PixelConvertingSpliterator<T> implements Spliterator<T> {
 		 * @param px to used for setting up the element
 		 * @param element to be set up
 		 */
-		public void convertPixelToElement(PixelBase px, T element);
+		public void convertPixelToElement(P px, T element);
 		/**
 		 * converts the specified element back to the specified pixel
 		 * (set pixel value according to element).
@@ -249,20 +251,24 @@ public class PixelConvertingSpliterator<T> implements Spliterator<T> {
 		 * @param element to be used for setting the pixel value
 		 * @param px to be set
 		 */
-		public void convertElementToPixel(T element, PixelBase px);
+		public void convertElementToPixel(T element, P px);
 
-		public static <T> PixelConverter<T> fromFunctions(
+		public static <P extends PixelBase, T> PixelConverter<P,T> fromFunctions(
 				Supplier<T> allocator,
-				BiConsumer<PixelBase,T> pixelToElement,
-				BiConsumer<T,PixelBase> elementToPixel)
+				BiConsumer<P,T> pixelToElement,
+				BiConsumer<T,P> elementToPixel)
 		{
-			return new PixelConverter<T>(){
+			Objects.requireNonNull(allocator);
+			BiConsumer<P,T> px_2_el = pixelToElement==null ? (px,e)->{}:pixelToElement;
+			BiConsumer<T,P> el_2_px = elementToPixel==null ? (e,px)->{}:elementToPixel;
+
+			return new PixelConverter<P,T>(){
 				@Override
 				public T allocateElement() {return allocator.get();}
 				@Override
-				public void convertPixelToElement(PixelBase px, T element) {pixelToElement.accept(px, element);}
+				public void convertPixelToElement(P px, T element) {px_2_el.accept(px, element);}
 				@Override
-				public void convertElementToPixel(T element, PixelBase px) {elementToPixel.accept(element, px);}
+				public void convertElementToPixel(T element, P px) {el_2_px.accept(element, px);}
 
 			};
 		}

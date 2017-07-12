@@ -1,6 +1,8 @@
 package hageldave.imagingkit.core;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.LinkedList;
 import java.util.Spliterator;
@@ -10,6 +12,7 @@ import java.util.stream.StreamSupport;
 import org.junit.Test;
 
 import hageldave.imagingkit.core.PixelConvertingSpliterator.PixelConverter;
+import hageldave.imagingkit.core.scientific.DImg;
 
 public class PixelConvertingSpliteratorTest {
 
@@ -67,7 +70,7 @@ public class PixelConvertingSpliteratorTest {
 		}
 
 
-		PixelConverter<double[]> converter = PixelConverter.fromFunctions(
+		PixelConverter<PixelBase, double[]> converter = PixelConverter.fromFunctions(
 				()->new double[3],
 				(px,a)->{a[0]=px.r_normalized();a[1]=px.g_normalized();a[2]=px.b_normalized();},
 				(a,px)->{px.setRGB_fromNormalized_preserveAlpha(a[0], a[1], a[2]);});
@@ -129,6 +132,44 @@ public class PixelConvertingSpliteratorTest {
 			double sumw2 = img.stream(converter, false, 0, 0, img.getWidth(), 1).mapToDouble(a->a[0]+a[1]+a[2]).sum();
 			assertNotEquals(0, sumw1, eps);
 			assertEquals(sumw1, sumw2, eps);
+		}
+		
+		{	// this is rather a test for correct generic definition
+			Consumer<int[]> rotateChannelsInt = (px) -> {int t=px[0]; px[0]=px[1]; px[1]=px[2]; px[2]=t;};
+			// test if its possible to infer correct types <Pixel,int[]> instead of <PixelBase,int[]> for PixelConverter
+			// conclusion: yes this compiles so its all good
+			img.forEach(PixelConverter.fromFunctions(
+						()->new int[3], 
+						(px,a)->{a[0]=px.r();a[1]=px.g();a[2]=px.b();}, 
+						(a,px)->px.setRGB_preserveAlpha(a[0], a[1], a[2])), 
+					true, 0, 0, img.getWidth(), 1, rotateChannelsInt);
+			for(int i = img.getWidth(); i < img.numValues(); i++){
+				// g for all except first row
+				assertEquals("i="+i+" "+Integer.toHexString(img.getData()[i]), 0, Pixel.r(img.getData()[i]));
+				assertEquals("i="+i+" "+Integer.toHexString(img.getData()[i]), 1+(i%0xfe), Pixel.g(img.getData()[i]));
+				assertEquals("i="+i+" "+Integer.toHexString(img.getData()[i]), 0, Pixel.b(img.getData()[i]));
+			}
+			for(int i = 0; i < img.getWidth(); i++){
+				// g for first row
+				assertEquals("i="+i+" "+Integer.toHexString(img.getData()[i]), 0, Pixel.r(img.getData()[i]));
+				assertEquals("i="+i+" "+Integer.toHexString(img.getData()[i]), 1+(i%0xfe), Pixel.g(img.getData()[i]));
+				assertEquals("i="+i+" "+Integer.toHexString(img.getData()[i]), 0, Pixel.b(img.getData()[i]));
+			}
+		}
+		
+		{
+			DImg dimg = new DImg(40, 40, true);
+			dimg.setValueR(1, 2, -3);
+			dimg.setValueB(22, 33, -1);
+			long numNegativeSums = dimg.stream(
+					PixelConverter.fromFunctions(
+							()->new float[1], 
+							(px,f)->f[0]=(float)(px.r()+px.g()+px.b()), 
+							null), 
+					true)
+			.filter(f->f[0] < 0)
+			.count();
+			assertEquals(2, numNegativeSums);
 		}
 
 	}

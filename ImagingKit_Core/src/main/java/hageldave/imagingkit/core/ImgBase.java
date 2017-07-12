@@ -311,9 +311,9 @@ public interface ImgBase<P extends PixelBase> extends Iterable<P> {
 		}
 	}
 
-	public default <T> void forEach(final PixelConverter<T> converter, boolean parallel, final Consumer<? super T> action) {
+	public default <T> void forEach(final PixelConverter<? super P,T> converter, boolean parallel, final Consumer<? super T> action) {
 		if(parallel){
-			Spliterator<T> spliterator = new PixelConvertingSpliterator<T>(
+			Spliterator<T> spliterator = new PixelConvertingSpliterator<>(
 					spliterator(),
 					converter);
 	 		ParallelForEachExecutor<T> exec = new ParallelForEachExecutor<>(null, spliterator, action);
@@ -329,9 +329,9 @@ public interface ImgBase<P extends PixelBase> extends Iterable<P> {
 		}
 	}
 
-	public default <T> void forEach(final PixelConverter<T> converter, boolean parallel, final int xStart, final int yStart, final int width, final int height, final Consumer<? super T> action) {
+	public default <T> void forEach(final PixelConverter<? super P, T> converter, boolean parallel, final int xStart, final int yStart, final int width, final int height, final Consumer<? super T> action) {
 		if(parallel){
-			Spliterator<T> spliterator = new PixelConvertingSpliterator<T>(
+			Spliterator<T> spliterator = new PixelConvertingSpliterator<>(
 					spliterator(xStart, yStart, width, height),
 					converter);
 			ParallelForEachExecutor<T> exec = new ParallelForEachExecutor<>(null, spliterator, action);
@@ -421,12 +421,12 @@ public interface ImgBase<P extends PixelBase> extends Iterable<P> {
 		return StreamSupport.stream(spliterator(xStart, yStart, width, height), parallel);
 	}
 
-	public default <T> Stream<T> stream(PixelConverter<T> converter, boolean parallel) {
-		Spliterator<T> spliterator = new PixelConvertingSpliterator<T>(spliterator(), converter);
+	public default <T> Stream<T> stream(PixelConverter<? super P, T> converter, boolean parallel) {
+		Spliterator<T> spliterator = new PixelConvertingSpliterator<>(spliterator(), converter);
 		return StreamSupport.stream(spliterator, parallel);
 	}
 
-	public default <T> Stream<T> stream(final PixelConverter<T> converter, boolean parallel, final int xStart, final int yStart, final int width, final int height){
+	public default <T> Stream<T> stream(final PixelConverter<? super P, T> converter, boolean parallel, final int xStart, final int yStart, final int width, final int height){
 		Spliterator<T> spliterator = new PixelConvertingSpliterator<>(
 				spliterator(xStart, yStart, width, height),
 				converter);
