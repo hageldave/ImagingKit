@@ -33,7 +33,9 @@ import java.awt.image.WritableRaster;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Spliterator;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.function.IntFunction;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -674,7 +676,7 @@ public class Img implements Iterable<Pixel> {
 
 	@Override
 	public Spliterator<Pixel> spliterator() {
-		return new ImgSpliterator(0, numValues()-1, spliteratorMinimumSplitSize);
+		return new ImgSpliterator<Pixel>(0, numValues()-1, spliteratorMinimumSplitSize,(index)->new Pixel(this, index));
 	}
 
 	/**
@@ -691,7 +693,7 @@ public class Img implements Iterable<Pixel> {
 	 * @since 1.3
 	 */
 	public Spliterator<Pixel> rowSpliterator() {
-		return new RowSpliterator(0, getWidth(), 0, getHeight()-1, this);
+		return new RowSpliterator<Pixel>(0, getWidth(), 0, getHeight()-1, (x,y)->new Pixel(this, x, y));
 	}
 
 	/**
@@ -708,7 +710,7 @@ public class Img implements Iterable<Pixel> {
 	 * @since 1.3
 	 */
 	public Spliterator<Pixel> colSpliterator() {
-		return new ColSpliterator(0, getWidth()-1, 0, getHeight(), this);
+		return new ColSpliterator<Pixel>(0, getWidth()-1, 0, getHeight(), (x,y)->new Pixel(this, x, y));
 	}
 
 	/**
@@ -731,7 +733,7 @@ public class Img implements Iterable<Pixel> {
 							"provided area [%d,%d][%d,%d] is not within bounds of the image [%d,%d]",
 							xStart,yStart,width,height, getWidth(), getHeight()));
 		}
-		return new ImgAreaSpliterator(xStart,yStart,width,height, spliteratorMinimumSplitSize);
+		return new ImgAreaSpliterator<Pixel>(xStart,yStart,width,height, spliteratorMinimumSplitSize, (x,y)->new Pixel(this, x, y));
 	}
 
 	/**
@@ -998,17 +1000,18 @@ public class Img implements Iterable<Pixel> {
 	 * @author hageldave
 	 * @since 1.1
 	 */
-	private final class ImgAreaSpliterator implements Spliterator<Pixel> {
+	public static final class ImgAreaSpliterator<T extends PixelBase> implements Spliterator<T> {
 
-		final Pixel px;
+		private final BiFunction<Integer, Integer, T> pixelSupplier;
+		private final T px;
 		/* start x coord and end x coord of a row */
-		final int startX, endXexcl;
+		private final int startX, endXexcl;
 		/* current coords of this spliterator */
-		int x,y;
+		private int x,y;
 		/* final coords of this spliterator */
-		int finalXexcl, finalYincl;
+		private int finalXexcl, finalYincl;
 
-		final int minimumSplitSize;
+		private final int minimumSplitSize;
 
 		/**
 		 * Constructs a new ImgAreaSpliterator for the specified area
@@ -1019,24 +1022,25 @@ public class Img implements Iterable<Pixel> {
 		 * @param minSplitSize the minimum number of elements in a split
 		 * @since 1.1
 		 */
-		private ImgAreaSpliterator(int xStart, int yStart, int width, int height, int minSplitSize){
-			this(xStart, xStart+width, xStart, yStart, xStart+width, yStart+height-1, minSplitSize);
+		public ImgAreaSpliterator(int xStart, int yStart, int width, int height, int minSplitSize, BiFunction<Integer, Integer, T> pixelSupplier){
+			this(xStart, xStart+width, xStart, yStart, xStart+width, yStart+height-1, minSplitSize, pixelSupplier);
 		}
 
-		private ImgAreaSpliterator(int xStart, int endXexcl, int x, int y, int finalXexcl, int finalYincl, int minSplitSize){
+		private ImgAreaSpliterator(int xStart, int endXexcl, int x, int y, int finalXexcl, int finalYincl, int minSplitSize, BiFunction<Integer, Integer, T> pixelSupplier){
 			this.startX = xStart;
 			this.endXexcl = endXexcl;
 			this.x = x;
 			this.y = y;
 			this.finalXexcl = finalXexcl;
 			this.finalYincl = finalYincl;
-			this.px = Img.this.getPixel(x, y);
+			this.pixelSupplier = pixelSupplier;
+			this.px = pixelSupplier.apply(x, y);
 			this.minimumSplitSize = minSplitSize;
 		}
 
 
 		@Override
-		public boolean tryAdvance(final Consumer<? super Pixel> action) {
+		public boolean tryAdvance(final Consumer<? super T> action) {
 			if(y > finalYincl || (y == finalYincl && x >= finalXexcl)){
 				return false;
 			} else {
@@ -1053,7 +1057,7 @@ public class Img implements Iterable<Pixel> {
 		}
 
 		@Override
-		public void forEachRemaining(final Consumer<? super Pixel> action) {
+		public void forEachRemaining(final Consumer<? super T> action) {
 			if(this.y == finalYincl){
 				for(int x = this.x; x < finalXexcl; x++){
 					px.setPosition(x, finalYincl);
@@ -1081,7 +1085,7 @@ public class Img implements Iterable<Pixel> {
 		}
 
 		@Override
-		public Spliterator<Pixel> trySplit() {
+		public Spliterator<T> trySplit() {
 			int width = (this.endXexcl-this.startX);
 			int idx = this.x - this.startX;
 			int finalIdx_excl = (this.finalYincl-this.y)*width + (this.finalXexcl-startX);
@@ -1091,14 +1095,15 @@ public class Img implements Iterable<Pixel> {
 
 				int newFinalX_excl = startX + (midIdx_excl%width);
 				int newFinalY_incl = this.y + midIdx_excl/width;
-				ImgAreaSpliterator split = new ImgAreaSpliterator(
+				ImgAreaSpliterator<T> split = new ImgAreaSpliterator<>(
 						startX,         // start of a row
 						endXexcl,       // end of a row
 						newFinalX_excl, // x coord of new spliterator
 						newFinalY_incl, // y coord of new spliterator
 						finalXexcl,     // final x coord of new spliterator
 						finalYincl,    // final y coord of new spliterator
-						minimumSplitSize);
+						minimumSplitSize,
+						pixelSupplier);
 
 				// shorten this spliterator because new one takes care of the rear part
 				this.finalXexcl = newFinalX_excl;
@@ -1129,21 +1134,25 @@ public class Img implements Iterable<Pixel> {
 	 * @author hageldave
 	 * @since 1.0
 	 */
-	private final class ImgSpliterator implements Spliterator<Pixel> {
+	public static final class ImgSpliterator<T extends PixelBase> implements Spliterator<T> {
 
-		final Pixel px;
-		int endIndex;
-		final int minimumSplitSize;
+		private final IntFunction<T> pixelSupplier;
+		private final T px;
+		private int endIndex;
+		private final int minimumSplitSize;
 
 		/**
 		 * Constructs a new ImgSpliterator for the specified index range
 		 * @param startIndex first index of the range (inclusive)
 		 * @param endIndex last index of the range (inclusive)
 		 * @param minSplitSize minimum split size for this spliterator (minimum number of elements in a split)
+		 * @param pixelSupplier a function that allocates a new Pixel (T)
+		 * that points to the index given by the function argument
 		 * @since 1.0
 		 */
-		private ImgSpliterator(int startIndex, int endIndex, int minSplitSize) {
-			px = new Pixel(Img.this, startIndex);
+		public ImgSpliterator(int startIndex, int endIndex, int minSplitSize, IntFunction<T> pixelSupplier) {
+			this.pixelSupplier = pixelSupplier;
+			this.px = pixelSupplier.apply(startIndex);
 			this.endIndex = endIndex;
 			this.minimumSplitSize = minSplitSize;
 		}
@@ -1153,7 +1162,7 @@ public class Img implements Iterable<Pixel> {
 		}
 
 		@Override
-		public boolean tryAdvance(final Consumer<? super Pixel> action) {
+		public boolean tryAdvance(final Consumer<? super T> action) {
 			if(px.getIndex() <= endIndex){
 				int index = px.getIndex();
 				action.accept(px);
@@ -1165,7 +1174,7 @@ public class Img implements Iterable<Pixel> {
 		}
 
 		@Override
-		public void forEachRemaining(final Consumer<? super Pixel> action) {
+		public void forEachRemaining(final Consumer<? super T> action) {
 			int idx = px.getIndex();
 			for(;idx <= endIndex; px.setIndex(++idx)){
 				action.accept(px);
@@ -1173,11 +1182,11 @@ public class Img implements Iterable<Pixel> {
 		}
 
 		@Override
-		public Spliterator<Pixel> trySplit() {
+		public Spliterator<T> trySplit() {
 			int currentIdx = Math.min(px.getIndex(), endIndex);
 			int midIdx = currentIdx + (endIndex-currentIdx)/2;
 			if(midIdx > currentIdx+minimumSplitSize){
-				ImgSpliterator split = new ImgSpliterator(midIdx, endIndex, minimumSplitSize);
+				ImgSpliterator<T> split = new ImgSpliterator<>(midIdx, endIndex, minimumSplitSize, pixelSupplier);
 				setEndIndex(midIdx-1);
 				return split;
 			} else {
@@ -1205,27 +1214,29 @@ public class Img implements Iterable<Pixel> {
 	 * @author hageldave
 	 * @since 1.3
 	 */
-	private static final class RowSpliterator implements Spliterator<Pixel> {
+	public static final class RowSpliterator<T extends PixelBase> implements Spliterator<T> {
 
-		int startX;
-		int endXinclusive;
-		int x;
-		int y;
-		int endYinclusive;
-		Pixel px;
+		private final int startX;
+		private final int endXinclusive;
+		private int x;
+		private int y;
+		private int endYinclusive;
+		private final BiFunction<Integer, Integer, T> pixelSupplier;
+		private final T px;
 
-		public RowSpliterator(int startX, int width, int startY, int endYincl, Img img) {
+		public RowSpliterator(int startX, int width, int startY, int endYincl, BiFunction<Integer, Integer, T> pixelSupplier) {
 			this.startX = startX;
 			this.x = startX;
 			this.endXinclusive = startX+width-1;
 			this.y = startY;
 			this.endYinclusive = endYincl;
-			this.px = img.getPixel(x, y);
+			this.pixelSupplier = pixelSupplier;
+			this.px = pixelSupplier.apply(x, y);
 		}
 
 
 		@Override
-		public boolean tryAdvance(Consumer<? super Pixel> action) {
+		public boolean tryAdvance(Consumer<? super T> action) {
 			if(x <= endXinclusive){
 				px.setPosition(x, y);
 				x++;
@@ -1242,7 +1253,7 @@ public class Img implements Iterable<Pixel> {
 		}
 
 		@Override
-		public void forEachRemaining(Consumer<? super Pixel> action) {
+		public void forEachRemaining(Consumer<? super T> action) {
 			int x_ = x;
 			for(int y_ = y; y_ <= endYinclusive; y_++){
 				for(;x_ <= endXinclusive; x_++){
@@ -1254,10 +1265,10 @@ public class Img implements Iterable<Pixel> {
 		}
 
 		@Override
-		public Spliterator<Pixel> trySplit() {
+		public Spliterator<T> trySplit() {
 			if(this.y < endYinclusive){
 				int newY = y + 1 + (endYinclusive-y)/2;
-				RowSpliterator split = new RowSpliterator(startX, endXinclusive-startX+1, newY, endYinclusive, px.getImg());
+				RowSpliterator<T> split = new RowSpliterator<>(startX, endXinclusive-startX+1, newY, endYinclusive, pixelSupplier);
 				this.endYinclusive = newY-1;
 				return split;
 			} else return null;
@@ -1282,27 +1293,29 @@ public class Img implements Iterable<Pixel> {
 	 * @author hageldave
 	 * @since 1.3
 	 */
-	private static final class ColSpliterator implements Spliterator<Pixel> {
+	public static final class ColSpliterator<T extends PixelBase> implements Spliterator<T> {
 
-		int startY;
-		int endXinclusive;
-		int x;
-		int y;
-		int endYinclusive;
-		Pixel px;
+		private final int startY;
+		private int endXinclusive;
+		private int x;
+		private int y;
+		private final int endYinclusive;
+		private final BiFunction<Integer, Integer, T> pixelSupplier;
+		private final T px;
 
-		public ColSpliterator(int startX, int endXincl, int startY, int height, Img img) {
+		public ColSpliterator(int startX, int endXincl, int startY, int height, BiFunction<Integer, Integer, T> pixelSupplier) {
 			this.startY = startY;
 			this.y = startY;
 			this.endYinclusive = startY+height-1;
 			this.x = startX;
 			this.endXinclusive = endXincl;
-			this.px = img.getPixel(x, y);
+			this.pixelSupplier = pixelSupplier;
+			this.px = pixelSupplier.apply(x, y);
 		}
 
 
 		@Override
-		public boolean tryAdvance(Consumer<? super Pixel> action) {
+		public boolean tryAdvance(Consumer<? super T> action) {
 			if(y <= endYinclusive){
 				px.setPosition(x, y);
 				y++;
@@ -1319,7 +1332,7 @@ public class Img implements Iterable<Pixel> {
 		}
 
 		@Override
-		public void forEachRemaining(Consumer<? super Pixel> action) {
+		public void forEachRemaining(Consumer<? super T> action) {
 			int y_ = y;
 			for(int x_ = x; x_ <= endXinclusive; x_++){
 				for(;y_ <= endYinclusive; y_++){
@@ -1331,10 +1344,10 @@ public class Img implements Iterable<Pixel> {
 		}
 
 		@Override
-		public Spliterator<Pixel> trySplit() {
+		public Spliterator<T> trySplit() {
 			if(this.x < endXinclusive){
 				int newX = x + 1 + (endXinclusive-x)/2;
-				ColSpliterator split = new ColSpliterator(newX, endXinclusive, startY, endYinclusive-startY+1, px.getImg());
+				ColSpliterator<T> split = new ColSpliterator<>(newX, endXinclusive, startY, endYinclusive-startY+1, pixelSupplier);
 				this.endXinclusive = newX-1;
 				return split;
 			} else return null;

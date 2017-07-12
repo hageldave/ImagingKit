@@ -23,5 +23,11 @@ public interface PixelBase {
 	public double getXnormalized();
 
 	public double getYnormalized();
+	
+	public int getIndex();
+	
+	public void setIndex(int index);
+	
+	public void setPosition(int x, int y);
 
 }

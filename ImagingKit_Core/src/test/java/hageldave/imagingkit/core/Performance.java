@@ -3,8 +3,6 @@ package hageldave.imagingkit.core;
 import java.util.Random;
 import java.util.function.Consumer;
 
-import hageldave.imagingkit.core.scientific.DPixel;
-
 public class Performance {
 
 	public static void main(String[] args) {
