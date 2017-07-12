@@ -767,7 +767,7 @@ public class DImg implements Iterable<DPixel> {
 				ColorSpace.getInstance(ColorSpace.CS_sRGB),
 				hasAlpha(),
 				false,
-				ComponentColorModel.TRANSLUCENT,
+				hasAlpha() ? ComponentColorModel.TRANSLUCENT:ComponentColorModel.OPAQUE,
 				DataBuffer.TYPE_DOUBLE
 		);
 		BufferedImage bimg = new BufferedImage(colormodel, raster, false, null);
@@ -809,29 +809,7 @@ public class DImg implements Iterable<DPixel> {
 
 	@Override
 	public Iterator<DPixel> iterator() {
-		Iterator<DPixel> pxIter = new Iterator<DPixel>() {
-			DPixel px = new DPixel(DImg.this, -1);
-
-			@Override
-			public DPixel next() {
-				px.setIndex(px.getIndex()+1);
-				return px;
-			}
-
-			@Override
-			public boolean hasNext() {
-				return px.getIndex()+1 < numValues();
-			}
-
-			@Override
-			public void forEachRemaining(Consumer<? super DPixel> action) {
-				px.setIndex(px.getIndex()+1);
-				for(int i = px.getIndex(); i < DImg.this.numValues(); px.setIndex(++i)){
-					action.accept(px);
-				}
-			}
-		};
-		return pxIter;
+		return new Img.ImgIterator<DPixel>(numValues(), getDPixel());
 	}
 
 	/**
@@ -854,45 +832,12 @@ public class DImg implements Iterable<DPixel> {
 							"provided area [%d,%d][%d,%d] is not within bounds of the image [%d,%d]",
 							xStart,yStart,width,height, getWidth(), getHeight()));
 		}
-		return new Iterator<DPixel>() {
-			DPixel px = new DPixel(DImg.this, -1);
-			int x = 0;
-			int y = 0;
-			@Override
-			public DPixel next() {
-				px.setPosition(x+xStart, y+yStart);
-				x++;
-				if(x >= width){
-					x=0;
-					y++;
-				}
-				return px;
-			}
-
-			@Override
-			public boolean hasNext() {
-				return y < height;
-			}
-
-			@Override
-			public void forEachRemaining(Consumer<? super DPixel> action) {
-				int xEnd = xStart+width;
-				int yEnd = yStart+height;
-				int x = this.x+xStart;
-				for(int y=this.y+yStart; y < yEnd; y++){
-					for(; x < xEnd; x++){
-						px.setPosition(x, y);
-						action.accept(px);
-					}
-					x = xStart;
-				}
-			}
-		};
+		return new Img.ImgAreaIterator<DPixel>(xStart, yStart, width, height, getDPixel());
 	}
 
 	@Override
 	public Spliterator<DPixel> spliterator() {
-		return new Img.ImgSpliterator<DPixel>(0, numValues()-1, spliteratorMinimumSplitSize, (index)->new DPixel(this, index));
+		return new Img.ImgSpliterator<DPixel>(0, numValues()-1, spliteratorMinimumSplitSize, this::getDPixel);
 	}
 
 	/**
@@ -909,7 +854,7 @@ public class DImg implements Iterable<DPixel> {
 	 * @since 1.3
 	 */
 	public Spliterator<DPixel> rowSpliterator() {
-		return new Img.RowSpliterator<DPixel>(0, getWidth(), 0, getHeight()-1, (x,y)->new DPixel(this, x, y));
+		return new Img.RowSpliterator<DPixel>(0, getWidth(), 0, getHeight()-1, this::getDPixel);
 	}
 
 	/**
@@ -926,7 +871,7 @@ public class DImg implements Iterable<DPixel> {
 	 * @since 1.3
 	 */
 	public Spliterator<DPixel> colSpliterator() {
-		return new Img.ColSpliterator<DPixel>(0, getWidth()-1, 0, getHeight(), (x,y)->new DPixel(this, x, y));
+		return new Img.ColSpliterator<DPixel>(0, getWidth()-1, 0, getHeight(), this::getDPixel);
 	}
 
 	/**
@@ -949,7 +894,7 @@ public class DImg implements Iterable<DPixel> {
 							"provided area [%d,%d][%d,%d] is not within bounds of the image [%d,%d]",
 							xStart,yStart,width,height, getWidth(), getHeight()));
 		}
-		return new Img.ImgAreaSpliterator<DPixel>(xStart,yStart,width,height, spliteratorMinimumSplitSize, (x,y)->new DPixel(this, x, y));
+		return new Img.ImgAreaSpliterator<DPixel>(xStart,yStart,width,height, spliteratorMinimumSplitSize, this::getDPixel);
 	}
 
 	/**
@@ -1194,140 +1139,6 @@ public class DImg implements Iterable<DPixel> {
 		paintInstructions.accept(g2d);
 		g2d.dispose();
 	}
-
-
-//	/**
-//	 * Spliterator class for Img bound to a specific area
-//	 * @author hageldave
-//	 * @since 1.1
-//	 */
-//	private final class DImgAreaSpliterator implements Spliterator<DPixel> {
-//
-//		final DPixel px;
-//		/* start x coord and end x coord of a row */
-//		final int startX, endXexcl;
-//		/* current coords of this spliterator */
-//		int x,y;
-//		/* final coords of this spliterator */
-//		int finalXexcl, finalYincl;
-//
-//		final int minimumSplitSize;
-//
-//		/**
-//		 * Constructs a new ImgAreaSpliterator for the specified area
-//		 * @param xStart left boundary of the area (inclusive)
-//		 * @param yStart upper boundary of the area (inclusive)
-//		 * @param width of the area
-//		 * @param height of the area
-//		 * @param minSplitSize the minimum number of elements in a split
-//		 * @since 1.1
-//		 */
-//		private DImgAreaSpliterator(int xStart, int yStart, int width, int height, int minSplitSize){
-//			this(xStart, xStart+width, xStart, yStart, xStart+width, yStart+height-1, minSplitSize);
-//		}
-//
-//		private DImgAreaSpliterator(int xStart, int endXexcl, int x, int y, int finalXexcl, int finalYincl, int minSplitSize){
-//			this.startX = xStart;
-//			this.endXexcl = endXexcl;
-//			this.x = x;
-//			this.y = y;
-//			this.finalXexcl = finalXexcl;
-//			this.finalYincl = finalYincl;
-//			this.px = DImg.this.getDPixel(x, y);
-//			this.minimumSplitSize = minSplitSize;
-//		}
-//
-//
-//		@Override
-//		public boolean tryAdvance(final Consumer<? super DPixel> action) {
-//			if(y > finalYincl || (y == finalYincl && x >= finalXexcl)){
-//				return false;
-//			} else {
-//				action.accept(px);
-//				if(x+1 >= endXexcl){
-//					x = startX;
-//					y++;
-//				} else {
-//					x++;
-//				}
-//				px.setPosition(x, y);
-//				return true;
-//			}
-//		}
-//
-//		@Override
-//		public void forEachRemaining(final Consumer<? super DPixel> action) {
-//			if(this.y == finalYincl){
-//				for(int x = this.x; x < finalXexcl; x++){
-//					px.setPosition(x, finalYincl);
-//					action.accept(px);
-//				}
-//			} else {
-//				// end current row
-//				for(int x = this.x; x < endXexcl; x++){
-//					px.setPosition(x, this.y);
-//					action.accept(px);
-//				}
-//				// do next rows right before final row
-//				for(int y = this.y+1; y < this.finalYincl; y++){
-//					for(int x = startX; x < endXexcl; x++ ){
-//						px.setPosition(x, y);
-//						action.accept(px);
-//					}
-//				}
-//				// do final row
-//				for(int x = startX; x < finalXexcl; x++){
-//					px.setPosition(x, finalYincl);
-//					action.accept(px);
-//				}
-//			}
-//		}
-//
-//		@Override
-//		public Spliterator<DPixel> trySplit() {
-//			int width = (this.endXexcl-this.startX);
-//			int idx = this.x - this.startX;
-//			int finalIdx_excl = (this.finalYincl-this.y)*width + (this.finalXexcl-startX);
-//			int midIdx_excl = idx + (finalIdx_excl-idx)/2;
-//			if(midIdx_excl > idx+minimumSplitSize){
-////				int midIdx_excl = idx + (finalIdx_excl-idx)/2;
-//
-//				int newFinalX_excl = startX + (midIdx_excl%width);
-//				int newFinalY_incl = this.y + midIdx_excl/width;
-//				DImgAreaSpliterator split = new DImgAreaSpliterator(
-//						startX,         // start of a row
-//						endXexcl,       // end of a row
-//						newFinalX_excl, // x coord of new spliterator
-//						newFinalY_incl, // y coord of new spliterator
-//						finalXexcl,     // final x coord of new spliterator
-//						finalYincl,    // final y coord of new spliterator
-//						minimumSplitSize);
-//
-//				// shorten this spliterator because new one takes care of the rear part
-//				this.finalXexcl = newFinalX_excl;
-//				this.finalYincl = newFinalY_incl;
-//
-//				return split;
-//			} else {
-//				return null;
-//			}
-//		}
-//
-//		@Override
-//		public long estimateSize() {
-//			int idx = this.x - this.startX;
-//			int finalIdx_excl = (this.finalYincl-this.y)*(this.endXexcl-this.startX) + (this.finalXexcl-startX);
-//			return finalIdx_excl-idx;
-//		}
-//
-//		@Override
-//		public int characteristics() {
-//			return NONNULL | SIZED | CONCURRENT | SUBSIZED | IMMUTABLE;
-//		}
-//
-//	}
-
-
 
 
 	public static interface TransferFunction {
