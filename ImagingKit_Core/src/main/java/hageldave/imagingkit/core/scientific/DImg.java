@@ -23,7 +23,6 @@
 package hageldave.imagingkit.core.scientific;
 
 import java.awt.Dimension;
-import java.awt.Graphics2D;
 import java.awt.color.ColorSpace;
 import java.awt.image.BandedSampleModel;
 import java.awt.image.BufferedImage;
@@ -35,17 +34,14 @@ import java.awt.image.Raster;
 import java.awt.image.SampleModel;
 import java.awt.image.WritableRaster;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.Objects;
 import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 import hageldave.imagingkit.core.Img;
+import hageldave.imagingkit.core.ImgBase;
 import hageldave.imagingkit.core.Pixel;
-import hageldave.imagingkit.core.util.ParallelForEachExecutor;
 
 /**
  * Image class with data stored in an int array.
@@ -100,7 +96,7 @@ import hageldave.imagingkit.core.util.ParallelForEachExecutor;
  * @author hageldave
  * @since 1.0
  */
-public class DImg implements Iterable<DPixel> {
+public class DImg implements ImgBase<DPixel> {
 
 	/** boundary mode that will return 0 for out of bounds positions.
 	 * @see #getValue(int, int, int)
@@ -511,7 +507,7 @@ public class DImg implements Iterable<DPixel> {
 	 * @return a DPixel object for this DImg.
 	 * @since 1.0
 	 */
-	public DPixel getDPixel(){
+	public DPixel getPixel(){
 		return new DPixel(this, 0);
 	}
 
@@ -532,7 +528,7 @@ public class DImg implements Iterable<DPixel> {
 	 * @see #getValue(int, int)
 	 * @since 1.0
 	 */
-	public DPixel getDPixel(int x, int y){
+	public DPixel getPixel(int x, int y){
 		return new DPixel(this, x,y);
 	}
 
@@ -695,16 +691,6 @@ public class DImg implements Iterable<DPixel> {
 				hasAlpha() ? Arrays.copyOf(getDataA(), numValues()):null);
 	}
 
-	/**
-	 * @return a BufferedImage of type INT_ARGB with this Img's data copied to it.
-	 * @see #toBufferedImage(BufferedImage)
-	 * @see #getRemoteBufferedImage()
-	 * @since 1.0
-	 */
-	public BufferedImage toBufferedImage(){
-		return toBufferedImage(TransferFunction.normalizedInput());
-	}
-
 	public BufferedImage toBufferedImage(TransferFunction transferFunc){
 		return toImg(transferFunc).getRemoteBufferedImage();
 	}
@@ -774,138 +760,9 @@ public class DImg implements Iterable<DPixel> {
 		return bimg;
 	}
 
-	/**
-	 * Creates an Img sharing the specified BufferedImage's data. Changes in
-	 * the BufferdImage are reflected in the created Img and vice versa.
-	 * <p>
-	 * Only BufferedImages with DataBuffer of {@link DataBuffer#TYPE_INT} can
-	 * be used since the Img class uses an int[] to store its data. An
-	 * IllegalArgumentException will be thrown if a BufferedImage with a
-	 * different DataBufferType is provided.
-	 * @param bimg BufferedImage with TYPE_INT DataBuffer.
-	 * @return Img sharing the BufferedImages data.
-	 * @throws IllegalArgumentException if a BufferedImage with a DataBufferType
-	 * other than {@link DataBuffer#TYPE_INT} is provided.
-	 * @see #getRemoteBufferedImage()
-	 * @see #Img(BufferedImage)
-	 * @since 1.0
-	 */
-// TODO: figure out if this is even possible
-//	public static DImg createRemoteImg(BufferedImage bimg){
-//		int type = bimg.getRaster().getDataBuffer().getDataType();
-//		if(type != DataBuffer.TYPE_INT){
-//			throw new IllegalArgumentException(
-//					String.format("cannot create Img as remote of provided BufferedImage!%n"
-//							+ "Need BufferedImage with DataBuffer of type TYPE_INT (%d). Provided type: %d",
-//							DataBuffer.TYPE_INT, type));
-//		}
-//		DImg img = new DImg(
-//				new Dimension(bimg.getWidth(),bimg.getHeight()),
-//				((DataBufferInt)bimg.getRaster().getDataBuffer()).getData()
-//			);
-//		return img;
-//	}
-
-
 	@Override
-	public Iterator<DPixel> iterator() {
-		return new Img.ImgIterator<DPixel>(numValues(), getDPixel());
-	}
-
-	/**
-	 * Returns an iterator for the specified area of the image.
-	 * @param xStart left boundary of the area (inclusive)
-	 * @param yStart upper boundary of the area (inclusive)
-	 * @param width of the area
-	 * @param height of the area
-	 * @return iterator for iterating over the DPixels in the specified area.
-	 * @throws IllegalArgumentException if provided area is not within this
-	 * Img's bounds.
-	 * @since 1.1
-	 */
-	public Iterator<DPixel> iterator(final int xStart, final int yStart, final int width, final int height) {
-		if(		width <= 0 || height <= 0 ||
-				xStart < 0 || yStart < 0 ||
-				xStart+width > getWidth() || yStart+height > getHeight() )
-		{
-			throw new IllegalArgumentException(String.format(
-							"provided area [%d,%d][%d,%d] is not within bounds of the image [%d,%d]",
-							xStart,yStart,width,height, getWidth(), getHeight()));
-		}
-		return new Img.ImgAreaIterator<DPixel>(xStart, yStart, width, height, getDPixel());
-	}
-
-	@Override
-	public Spliterator<DPixel> spliterator() {
-		return new Img.ImgSpliterator<DPixel>(0, numValues()-1, spliteratorMinimumSplitSize, this::getDPixel);
-	}
-
-	/**
-	 * Creates a {@link Spliterator} that guarantees that each split will
-	 * at least cover an entire row of the Img. It also guarantes that each
-	 * row will be iterated starting at the least index of that row
-	 * (e.g.starts at index 0 then continues with index 1, then 2, until
-	 * the end of the row, then continuing with the next row).
-	 * This Spliterator iterates in row-major order.
-	 * @return Spliterator that splits at beginning of rows.
-	 * @see #colSpliterator()
-	 * @see #spliterator()
-	 * @see #stream(Spliterator, boolean)
-	 * @since 1.3
-	 */
-	public Spliterator<DPixel> rowSpliterator() {
-		return new Img.RowSpliterator<DPixel>(0, getWidth(), 0, getHeight()-1, this::getDPixel);
-	}
-
-	/**
-	 * Creates a {@link Spliterator} that guarantees that each split will
-	 * at least cover an entire column of the Img. It also guarantes that each
-	 * column will be iterated starting at the least index of that column
-	 * (e.g.starts at index 0 then continues with index 1, then 2, until
-	 * the end of the column, then continuing with the next column).
-	 * This Spliterator iterates in column-major order.
-	 * @return Spliterator that splits at beginning of columns.
-	 * @see #rowSpliterator()
-	 * @see #spliterator()
-	 * @see #stream(Spliterator, boolean)
-	 * @since 1.3
-	 */
-	public Spliterator<DPixel> colSpliterator() {
-		return new Img.ColSpliterator<DPixel>(0, getWidth()-1, 0, getHeight(), this::getDPixel);
-	}
-
-	/**
-	 * Creates a {@link Spliterator} over the DPixels within the specified area.
-	 * @param xStart left boundary of the area (inclusive)
-	 * @param yStart upper boundary of the area (inclusive)
-	 * @param width of the area
-	 * @param height of the area
-	 * @return spliterator for the specified area.
-	 * @throws IllegalArgumentException if provided area is not within this
-	 * Img's bounds.
-	 * @since 1.1
-	 */
-	public Spliterator<DPixel> spliterator(final int xStart, final int yStart, final int width, final int height) {
-		if(		width <= 0 || height <= 0 ||
-				xStart < 0 || yStart < 0 ||
-				xStart+width > getWidth() || yStart+height > getHeight() )
-		{
-			throw new IllegalArgumentException(String.format(
-							"provided area [%d,%d][%d,%d] is not within bounds of the image [%d,%d]",
-							xStart,yStart,width,height, getWidth(), getHeight()));
-		}
-		return new Img.ImgAreaSpliterator<DPixel>(xStart,yStart,width,height, spliteratorMinimumSplitSize, this::getDPixel);
-	}
-
-	/**
-	 * Returns the minimum number of elements in a split of a {@link Spliterator}
-	 * of this Img. Spliterators will only split if they contain more elements than
-	 * specified by this value. Default is 1024.
-	 * @return minimum number of elements of a Spliterator to allow for splitting.
-	 * @since 1.3
-	 */
-	public int getSpliteratorMinimumSplitSize() {
-		return spliteratorMinimumSplitSize;
+	public boolean supportsRemoteBufferedImage() {
+		return true;
 	}
 
 	/**
@@ -932,214 +789,10 @@ public class DImg implements Iterable<DPixel> {
 		this.spliteratorMinimumSplitSize = size;
 	}
 
-	/**
-	 * {@link #forEach(Consumer)} method but with multithreaded execution.
-	 * This Img's {@link #spliterator()} is used to parallelize the workload.
-	 * As the threaded execution comes with a certain overhead it is only
-	 * suitable for more sophisticated consumer actions and large Images (1MP+)
-	 * @param action to be performed on each DPixel
-	 * @see #forEach(Consumer action)
-	 * @since 1.0
-	 */
-	public void forEachParallel(final Consumer<? super DPixel> action) {
-		ParallelForEachExecutor<DPixel> exec = new ParallelForEachExecutor<>(null, spliterator(), action);
-		exec.invoke();
-	}
-
-	/**
-	 * Applies the specified action to every DPixel in the specified area of
-	 * this image during a multithreaded execution.
-	 * This Img's {@link #spliterator(int,int,int,int)} is used to parallelize the workload.
-	 * As the threaded execution comes with a certain overhead it is only
-	 * suitable for more sophisticated consumer actions and large Images (1MP+)
-	 * @param xStart left boundary of the area (inclusive)
-	 * @param yStart upper boundary of the area (inclusive)
-	 * @param width of the area
-	 * @param height of the area
-	 * @param action to be performed on each DPixel
-	 * @throws IllegalArgumentException if provided area is not within this
-	 * Img's bounds.
-	 * @see #forEach(int x, int y, int w, int h, Consumer action)
-	 * @since 1.1
-	 */
-	public void forEachParallel(final int xStart, final int yStart, final int width, final int height, final Consumer<? super DPixel> action) {
-		ParallelForEachExecutor<DPixel> exec = new ParallelForEachExecutor<>(null, spliterator(xStart, yStart, width, height), action);
-		exec.invoke();
-	}
-
-	/**
-	 * @see #forEachParallel(Consumer action)
-	 * @since 1.0
-	 */
 	@Override
-	public void forEach(final Consumer<? super DPixel> action) {
-		DPixel p = getDPixel();
-		for(int i = 0; i < numValues(); p.setIndex(++i)){
-			action.accept(p);
-		}
+	public int getSpliteratorMinimumSplitSize() {
+		return this.spliteratorMinimumSplitSize;
 	}
-
-	/**
-	 * Applies the specified action to every DPixel in the specified area of this image.
-	 * @param xStart left boundary of the area (inclusive)
-	 * @param yStart upper boundary of the area (inclusive)
-	 * @param width of the area
-	 * @param height of the area
-	 * @param action to be performed on each DPixel
-	 * @throws IllegalArgumentException if provided area is not within this
-	 * Img's bounds.
-	 * @see #forEachParallel(int x, int y, int w, int h, Consumer action)
-	 * @since 1.1
-	 */
-	public void forEach(final int xStart, final int yStart, final int width, final int height, final Consumer<? super DPixel> action) {
-		DPixel p = getDPixel();
-		int yEnd = yStart+height;
-		int xEnd = xStart+width;
-		for(int y = yStart; y < yEnd; y++){
-			for(int x = xStart; x < xEnd; x++){
-				p.setPosition(x, y);
-				action.accept(p);
-			}
-		}
-	}
-
-	/** default implementation of {@link Iterable#forEach(Consumer)} <br>
-	 * only for performance test purposes as it is slower than the
-	 * {@link DImg#forEach(Consumer)} implementation
-	 * @since 1.0
-	 */
-	void forEach_defaultimpl(final Consumer<? super DPixel> action) {
-		Iterable.super.forEach(action);
-	}
-
-	/**
-	 * Returns a DPixel {@link Stream} of this Img.
-	 * This Img's {@link #spliterator()} is used to create the Stream.
-	 * @return DPixel Stream of this Img.
-	 * @see #parallelStream()
-	 * @see #stream(int x, int y, int w, int h)
-	 * @since 1.2
-	 */
-	public Stream<DPixel> stream() {
-		return DImg.stream(spliterator(), false);
-	}
-
-	/**
-	 * Returns a parallel DPixel {@link Stream} of this Img.
-	 * This Img's {@link #spliterator()} is used to create the Stream.
-	 * @return parallel DPixel Stream of this Img.
-	 * @see #stream()
-	 * @see #parallelStream(int x, int y, int w, int h)
-	 * @since 1.2
-	 */
-	public Stream<DPixel> parallelStream() {
-		return DImg.stream(spliterator(), true);
-	}
-
-	/**
-	 * Returns a {@code Stream<DPixel>} for the specified {@code Spliterator<DPixel>}.
-	 * This is just a wrapper method arround {@link StreamSupport#stream(Spliterator, boolean)}
-	 * mainly used as syntactic sugar for the use with the non default Spliterators
-	 * ({@link #rowSpliterator()} and {@link #colSpliterator()}. When the default spliterator
-	 * of the Img is sufficient the non-static {@link #stream()} can be used.
-	 * <p>
-	 * For example (horizontal edge detection in parallel using forward difference):
-	 * <pre>
-	 * {@code
-	 * Img myImg = ...;
-	 * Img.stream(myImg.rowSpliterator(), true).forEach( px -> {
-	 *     int next = px.getImg().getValue(px.getX()+1, px.getY(), Img.boundary_mode_repeat_edge);
-	 *     int forwardDiff = Math.abs( DPixel.getLuminance(next) - px.getLuminance() );
-	 *     px.setRGB(forwardDiff, forwardDiff, forwardDiff);
-	 * });
-	 * }
-	 * </pre>
-	 * @param spliterator Spliterator of Img to be streamed
-	 * @param parallel whether parallel or sequential stream is returned
-	 * @return a new sequential or parallel DPixel stream.
-	 *
-	 * @see #stream()
-	 * @see #parallelStream()
-	 * @since 1.3
-	 */
-	public static Stream<DPixel> stream(Spliterator<DPixel> spliterator, boolean parallel){
-		return StreamSupport.stream(spliterator, parallel);
-	}
-
-	/**
-	 * Returns a DPixel {@link Stream} for the specified area of this Img.<br>
-	 * This Img's {@link #spliterator(int,int,int,int)} is used to create
-	 * the Stream.
-	 * @param xStart left boundary of the area (inclusive)
-	 * @param yStart upper boundary of the area (inclusive)
-	 * @param width of the area
-	 * @param height of the area
-	 * @return DPixel Stream for specified area.
-	 * @throws IllegalArgumentException if provided area is not within this
-	 * Img's bounds.
-	 * @see #parallelStream(int x, int y, int w, int h)
-	 * @see #stream()
-	 * @since 1.2
-	 */
-	public Stream<DPixel> stream(final int xStart, final int yStart, final int width, final int height){
-		return StreamSupport.stream(spliterator(xStart, yStart, width, height), false);
-	}
-
-
-	/**
-	 * Returns a parallel DPixel {@link Stream} for the specified area of this Img.<br>
-	 * This Img's {@link #spliterator(int,int,int,int)} is used to create
-	 * the Stream.
-	 * @param xStart left boundary of the area (inclusive)
-	 * @param yStart upper boundary of the area (inclusive)
-	 * @param width of the area
-	 * @param height of the area
-	 * @return parallel DPixel Stream for specified area.
-	 * @throws IllegalArgumentException if provided area is not within this
-	 * Img's bounds.
-	 * @see #stream(int x, int y, int w, int h)
-	 * @see #parallelStream()
-	 * @since 1.2
-	 */
-	public Stream<DPixel> parallelStream(final int xStart, final int yStart, final int width, final int height){
-		return StreamSupport.stream(spliterator(xStart, yStart, width, height), true);
-	}
-
-	/**
-	 * Creates a {@link Graphics2D}, which can be used to draw into this Img.
-	 * @return Graphics2D object to draw into this image.
-	 * @see #paint(Consumer)
-	 * @since 1.3
-	 */
-	public Graphics2D createGraphics(){
-		return getRemoteBufferedImage().createGraphics();
-	}
-
-	/**
-	 * Uses the specified paintInstructions to draw into this Img.
-	 * This method will pass a {@link Graphics2D} object of this Img to the
-	 * specified {@link Consumer}. The {@link Consumer#accept(Object)} method
-	 * can then draw into this Image. When the accept method return, the
-	 * Graphics2D object is disposed.
-	 * <p>
-	 * For example (using lambda expression for Consumers accept method):
-	 * <pre>
-	 * {@code
-	 * Img img = new Img(100, 100);
-	 * img.paint( g2d -> { g2d.drawLine(0, 0, 100, 100); } );
-	 * }
-	 * </pre>
-	 * @param paintInstructions to be executed on a this Graphics2D object
-	 * of this Img.
-	 * @see #createGraphics()
-	 * @since 1.3
-	 */
-	public void paint(Consumer<Graphics2D> paintInstructions){
-		Graphics2D g2d = createGraphics();
-		paintInstructions.accept(g2d);
-		g2d.dispose();
-	}
-
 
 	public static interface TransferFunction {
 
@@ -1162,10 +815,5 @@ public class DImg implements Iterable<DPixel> {
 		}
 
 	}
-
-
-
-
-
 
 }
