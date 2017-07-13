@@ -35,15 +35,36 @@ import hageldave.imagingkit.core.PixelConvertingSpliterator.PixelConverter;
 import hageldave.imagingkit.core.util.BufferedImageFactory;
 import hageldave.imagingkit.core.util.ParallelForEachExecutor;
 
+/**
+ * Base interface for imagingkit's Img classes.
+ * <p>
+ * This interface defines the most basic methods like getting the dimensions 
+ * of an image and converting an image to {@link BufferedImage}. 
+ * <p>
+ * Appart from that it defines and implements all the {@link Iterable} functionality 
+ * which is based on {@link PixelBase}. The Iterable Functionality also comprises
+ * {@link Spliterator}s as well as the {@link #forEach(Consumer)} and {@link #stream()}
+ * functionality.
+ * <p>
+ * The {@link Graphics2D} related functionality like {@link #createGraphics()}
+ * and {@link #paint(Consumer)} is by default based on {@link #getRemoteBufferedImage()}.
+ * If it is possible to create a remote BufferedImage from the implemented
+ * data structure, the method should be overridden to enable the mentioned funtionality.
+ *
+ * @param <P>
+ * 
+ * @author hageldave
+ * @since 2.0
+ */
 public interface ImgBase<P extends PixelBase> extends Iterable<P> {
 
 	public Dimension getDimension();
 
-	public int getWidth();
+	public default int getWidth(){return getDimension().width;}
 
-	public int getHeight();
+	public default int getHeight(){return getDimension().height;}
 
-	public int numValues();
+	public default int numValues(){return getWidth()*getHeight();}
 
 	/**
 	 * Creates a new Pixel object for this Img with position {0,0}.
