@@ -47,7 +47,7 @@ import hageldave.imagingkit.core.Pixel;
  * Image class with data stored in an int array.
  * <p>
  * In contrast to {@link BufferedImage} the Img class only offers
- * DPixel data to be stored as integer values simplifying data retrieval
+ * ColorPixel data to be stored as integer values simplifying data retrieval
  * and increasing performance due to less overhead and omitting color
  * model conversions. <br>
  * However the Img class can be easily used together with BufferedImages
@@ -55,7 +55,7 @@ import hageldave.imagingkit.core.Pixel;
  * {@link #toBufferedImage()} or {@link #createRemoteImg(BufferedImage)}.
  * <p>
  * Moreover the Img class targets lambda expressions introduced in Java 8
- * useful for per DPixel operations by implementing the {@link Iterable}
+ * useful for per ColorPixel operations by implementing the {@link Iterable}
  * interface and providing
  * <ul>
  * <li> {@link #iterator()} </li>
@@ -73,7 +73,7 @@ import hageldave.imagingkit.core.Pixel;
  * <li> and {@link #forEachParallel(int, int, int, int, Consumer)}. </li>
  * </ul>
  * <p>
- * Here is an example of a parallelized per DPixel operation:
+ * Here is an example of a parallelized per ColorPixel operation:
  * <pre>
  * {@code
  * Img img = new Img(1024, 1024);
@@ -96,7 +96,7 @@ import hageldave.imagingkit.core.Pixel;
  * @author hageldave
  * @since 1.0
  */
-public class DImg implements ImgBase<DPixel> {
+public class ColorImg implements ImgBase<ColorPixel> {
 
 	/** boundary mode that will return 0 for out of bounds positions.
 	 * @see #getValue(int, int, int)
@@ -129,7 +129,7 @@ public class DImg implements ImgBase<DPixel> {
 	public static final int channel_a = 3;
 
 
-	/** data array of this Img containing a value for each DPixel in row major order
+	/** data array of this Img containing a value for each ColorPixel in row major order
 	 * @since 1.0 */
 	private final double[] dataR;
 	private final double[] dataG;
@@ -151,23 +151,23 @@ public class DImg implements ImgBase<DPixel> {
 
 
 	/**
-	 * Creates a new DImg of specified dimensions.
+	 * Creates a new ColorImg of specified dimensions.
 	 * Values are initialized to 0.
-	 * @param width of the DImg
-	 * @param height of the DImg
+	 * @param width of the ColorImg
+	 * @param height of the ColorImg
 	 * @since 1.0
 	 */
-	public DImg(int width, int height, boolean alpha){
+	public ColorImg(int width, int height, boolean alpha){
 		this(new Dimension(width, height), alpha);
 	}
 
 	/**
-	 * Creates a new DImg of specified Dimension.
+	 * Creates a new ColorImg of specified Dimension.
 	 * Values are initilaized to 0.
-	 * @param dimension extend of the DImg (width and height)
+	 * @param dimension extend of the ColorImg (width and height)
 	 * @since 1.0
 	 */
-	public DImg(Dimension dimension, boolean alpha){
+	public ColorImg(Dimension dimension, boolean alpha){
 		this.dataR = new double[dimension.width*dimension.height];
 		this.dataG = new double[dimension.width*dimension.height];
 		this.dataB = new double[dimension.width*dimension.height];
@@ -178,13 +178,13 @@ public class DImg implements ImgBase<DPixel> {
 	}
 
 	/**
-	 * Creates a new DImg of same dimensions as provided BufferedImage.
+	 * Creates a new ColorImg of same dimensions as provided BufferedImage.
 	 * Values are copied from argument Image
 	 * @param bimg the BufferedImage
 	 * @see #createRemoteImg(BufferedImage)
 	 * @since 1.0
 	 */
-	public DImg(Img img, boolean alpha){
+	public ColorImg(Img img, boolean alpha){
 		this(img.getWidth(), img.getHeight(), alpha);
 		for(int i=0; i<img.numValues();i++){
 			int val = img.getData()[i];
@@ -198,31 +198,31 @@ public class DImg implements ImgBase<DPixel> {
 	}
 
 	/**
-	 * Creates a new DImg of specified dimensions.
+	 * Creates a new ColorImg of specified dimensions.
 	 * Provided data array will be used as this images data.
-	 * @param width of the DImg
-	 * @param height of the DImg
-	 * @param data values (DPixels) that will be used as the content of this Img
-	 * @throws IllegalArgumentException when the number of DPixels of this Img
+	 * @param width of the ColorImg
+	 * @param height of the ColorImg
+	 * @param data values (ColorPixels) that will be used as the content of this Img
+	 * @throws IllegalArgumentException when the number of ColorPixels of this Img
 	 * resulting from width*height does not match the number of provided data values.
 	 * @throws NullPointerException if any of dataR, dataG or dataB is null.
 	 * @since 1.5
 	 */
-	public DImg(int width, int height, double[] dataR, double[] dataG, double[] dataB, double[] dataA){
+	public ColorImg(int width, int height, double[] dataR, double[] dataG, double[] dataB, double[] dataA){
 		this(new Dimension(width, height), dataR,dataG,dataB,dataA);
 	}
 
 	/**
-	 * Creates a new DImg of specified dimensions.
+	 * Creates a new ColorImg of specified dimensions.
 	 * Provided data array will be used as this images data.
 	 * @param dim extend of the image (width and height)
-	 * @param data values (DPixels) that will be used as the content of this Img
-	 * @throws IllegalArgumentException when the number of DPixels of this Img
+	 * @param data values (ColorPixels) that will be used as the content of this Img
+	 * @throws IllegalArgumentException when the number of ColorPixels of this Img
 	 * resulting from width*height does not match the number of provided data values.
 	 * @throws NullPointerException if any of dataR, dataG or dataB is null.
 	 * @since 1.0
 	 */
-	public DImg(Dimension dim, double[] dataR, double[] dataG, double[] dataB, double[] dataA){
+	public ColorImg(Dimension dim, double[] dataR, double[] dataG, double[] dataB, double[] dataA){
 		Objects.requireNonNull(dataR);
 		Objects.requireNonNull(dataG);
 		Objects.requireNonNull(dataB);
@@ -242,7 +242,7 @@ public class DImg implements ImgBase<DPixel> {
 	}
 
 
-	public DImg (BufferedImage bimg){
+	public ColorImg (BufferedImage bimg){
 		this(bimg.getWidth(),bimg.getHeight(),bimg.getColorModel().hasAlpha());
 		this.paint(g->g.drawImage(bimg, 0, 0, getWidth(), getHeight(), 0, 0, getWidth(), getHeight(), null));
 	}
@@ -276,7 +276,7 @@ public class DImg implements ImgBase<DPixel> {
 	}
 
 	/**
-	 * @return number of values (DPixels) of this Img
+	 * @return number of values (ColorPixels) of this Img
 	 * @since 1.0
 	 */
 	public int numValues(){
@@ -318,7 +318,7 @@ public class DImg implements ImgBase<DPixel> {
 	 * @throws ArrayIndexOutOfBoundsException if resulting index from x and y
 	 * is not within the data arrays bounds.
 	 * @see #getValue(int, int, int)
-	 * @see #getDPixel(int, int)
+	 * @see #getColorPixel(int, int)
 	 * @see #setValue(int, int, int)
 	 * @since 1.0
 	 */
@@ -425,7 +425,7 @@ public class DImg implements ImgBase<DPixel> {
 	 * Returns a bilinearly interpolated ARGB value of the image for the
 	 * specified normalized position (x and y within [0,1]). Position {0,0}
 	 * denotes the image's origin (top left corner), position {1,1} denotes the
-	 * opposite corner (DPixel at {width-1, height-1}).
+	 * opposite corner (ColorPixel at {width-1, height-1}).
 	 * <p>
 	 * An ArrayIndexOutOfBoundsException may be thrown for x and y greater than 1
 	 * or less than 0.
@@ -503,33 +503,33 @@ public class DImg implements ImgBase<DPixel> {
 	}
 
 	/**
-	 * Creates a new DPixel object for this DImg with position {0,0}.
-	 * @return a DPixel object for this DImg.
+	 * Creates a new ColorPixel object for this ColorImg with position {0,0}.
+	 * @return a ColorPixel object for this ColorImg.
 	 * @since 1.0
 	 */
-	public DPixel getPixel(){
-		return new DPixel(this, 0);
+	public ColorPixel getPixel(){
+		return new ColorPixel(this, 0);
 	}
 
 	/**
-	 * Creates a new DPixel object for this DImg at specified position.
+	 * Creates a new ColorPixel object for this ColorImg at specified position.
 	 * No bounds checks are performed for x and y.
 	 * <p>
 	 * <b>Tip:</b><br>
 	 * Do not use this method repeatedly while iterating the image.
-	 * Use {@link DPixel#setPosition(int, int)} instead to avoid excessive
-	 * allocation of DPixel objects.
+	 * Use {@link ColorPixel#setPosition(int, int)} instead to avoid excessive
+	 * allocation of ColorPixel objects.
 	 * <p>
-	 * You can also use <code>for(DPixel px: img){...}</code> syntax or the
+	 * You can also use <code>for(ColorPixel px: img){...}</code> syntax or the
 	 * {@link #forEach(Consumer)} method to iterate this image.
 	 * @param x coordinate
 	 * @param y coordinate
-	 * @return a DPixel object for this DImg at {x,y}.
+	 * @return a ColorPixel object for this ColorImg at {x,y}.
 	 * @see #getValue(int, int)
 	 * @since 1.0
 	 */
-	public DPixel getPixel(int x, int y){
-		return new DPixel(this, x,y);
+	public ColorPixel getPixel(int x, int y){
+		return new ColorPixel(this, x,y);
 	}
 
 	/**
@@ -555,7 +555,7 @@ public class DImg implements ImgBase<DPixel> {
 	 * the bounds of this Img or if the size of the area is not positive.
 	 * @since 1.0
 	 */
-	public DImg copyArea(int x, int y, int w, int h, DImg dest, int destX, int destY){
+	public ColorImg copyArea(int x, int y, int w, int h, ColorImg dest, int destX, int destY){
 		if(w <= 0 || h <= 0){
 			throw new IllegalArgumentException(String.format(
 					"specified area size is not positive! specified size w,h = [%dx%d]",
@@ -567,7 +567,7 @@ public class DImg implements ImgBase<DPixel> {
 					x,y,w,h,getWidth(),getHeight()));
 		}
 		if(dest == null){
-			return copyArea(x, y, w, h, new DImg(w,h,this.hasAlpha()), 0, 0);
+			return copyArea(x, y, w, h, new ColorImg(w,h,this.hasAlpha()), 0, 0);
 		}
 		if(x==0 && destX==0 && w==dest.getWidth() && w==this.getWidth()){
 			if(destY < 0){
@@ -682,8 +682,8 @@ public class DImg implements ImgBase<DPixel> {
 	 * @return a deep copy of this Img.
 	 * @since 1.0
 	 */
-	public DImg copy(){
-		return new DImg(
+	public ColorImg copy(){
+		return new ColorImg(
 				getDimension(),
 				Arrays.copyOf(getDataR(), numValues()),
 				Arrays.copyOf(getDataG(), numValues()),

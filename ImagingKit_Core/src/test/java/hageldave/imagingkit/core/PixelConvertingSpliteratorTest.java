@@ -12,7 +12,7 @@ import java.util.stream.StreamSupport;
 import org.junit.Test;
 
 import hageldave.imagingkit.core.PixelConvertingSpliterator.PixelConverter;
-import hageldave.imagingkit.core.scientific.DImg;
+import hageldave.imagingkit.core.scientific.ColorImg;
 
 public class PixelConvertingSpliteratorTest {
 
@@ -72,8 +72,8 @@ public class PixelConvertingSpliteratorTest {
 
 		PixelConverter<PixelBase, double[]> converter = PixelConverter.fromFunctions(
 				()->new double[3],
-				(px,a)->{a[0]=px.r_normalized();a[1]=px.g_normalized();a[2]=px.b_normalized();},
-				(a,px)->{px.setRGB_fromNormalized_preserveAlpha(a[0], a[1], a[2]);});
+				(px,a)->{a[0]=px.r_asDouble();a[1]=px.g_asDouble();a[2]=px.b_asDouble();},
+				(a,px)->{px.setRGB_fromDouble_preserveAlpha(a[0], a[1], a[2]);});
 
 
 		{
@@ -158,7 +158,7 @@ public class PixelConvertingSpliteratorTest {
 		}
 		
 		{
-			DImg dimg = new DImg(40, 40, true);
+			ColorImg dimg = new ColorImg(40, 40, true);
 			dimg.setValueR(1, 2, -3);
 			dimg.setValueB(22, 33, -1);
 			long numNegativeSums = dimg.stream(

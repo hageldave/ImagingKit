@@ -25,8 +25,6 @@ public class ImgTest {
 		assertEquals(0xaa, Pixel.r(color));
 		assertEquals(0x12, Pixel.g(color));
 		assertEquals(0x44, Pixel.b(color));
-		assertEquals(0xa124, Pixel.ch(color, 4, 16));
-		assertEquals(0x44, Pixel.ch(color, 0, 8));
 		assertEquals(1.0, Pixel.a_normalized(color), 0);
 		assertEquals(0xaa/255.0, Pixel.r_normalized(color), eps);
 		assertEquals(0x12/255.0, Pixel.g_normalized(color), eps);
@@ -44,7 +42,6 @@ public class ImgTest {
 		assertEquals(0xffffffff, Pixel.argb_bounded(1022, 260, 256, 258));
 		assertEquals(0xffffffff, Pixel.rgb(0x15ff, 0xaff, 0x5cff));
 		assertEquals(0x44770122, Pixel.argb(0x44, 0x177, 0x101, 0x222));
-		assertEquals(0b10101110, Pixel.combineCh(2, 0b10, 0b10, 0b11, 0b10));
 		assertEquals(0xffff00ff, Pixel.argb_fromNormalized(1, 1, 0, 1));
 		assertEquals(0x0000ff00, Pixel.argb_fromNormalized(0, 0, 1, 0));
 		assertEquals(0x66778899, Pixel.argb_fromNormalized(0x66/255.0, 0x77/255.0, 0x88/255.0, 0x99/255.0));
@@ -58,7 +55,7 @@ public class ImgTest {
 
 		Img img = new Img(11,11);
 		Pixel p = new Pixel(img, 0);
-		assertEquals(img, p.getImg());
+		assertEquals(img, p.getSource());
 		assertEquals(0, p.getValue());
 		p.setR(0xff);
 		assertEquals(0x00ff0000, p.getValue());

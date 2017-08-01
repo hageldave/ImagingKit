@@ -17,15 +17,15 @@ public class Performance {
 		float contrastIntensity = 0.21f;
 
 		Consumer<PixelBase> action = px -> {
-			double r = px.r_normalized();
-			double g = px.g_normalized();
-			double b = px.b_normalized();
+			double r = px.r_asDouble();
+			double g = px.g_asDouble();
+			double b = px.b_asDouble();
 			double luminance = r*0.2126 + g*0.7152 + b*0.0722;
 			double lumDif = luminance-contrastLum;
 			r += lumDif*contrastIntensity;
 			g += lumDif*contrastIntensity;
 			b += lumDif*contrastIntensity;
-			px.setRGB_fromNormalized_preserveAlpha(r, g, b);
+			px.setRGB_fromDouble_preserveAlpha(r, g, b);
 		};
 
 		Img img = new Img(6000, 4000);

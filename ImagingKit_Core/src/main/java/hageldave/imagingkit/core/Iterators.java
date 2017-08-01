@@ -31,7 +31,7 @@ import java.util.function.Supplier;
 public final class Iterators {
 
 	static{new Iterators();}
-	private Iterators(){/*not to be instanciated*/}
+	private Iterators(){/*not to be instantiated*/}
 
 	public static class ImgIterator<P extends PixelBase> implements Iterator<P> {
 		final P px;

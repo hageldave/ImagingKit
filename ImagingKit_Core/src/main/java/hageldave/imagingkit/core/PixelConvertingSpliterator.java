@@ -206,14 +206,14 @@ public class PixelConvertingSpliterator<P extends PixelBase, T> implements Split
 
 			@Override
 			public void convertPixelToElement(PixelBase px, double[] array) {
-				array[0]=px.r_normalized();
-				array[1]=px.g_normalized();
-				array[2]=px.b_normalized();
+				array[0]=px.r_asDouble();
+				array[1]=px.g_asDouble();
+				array[2]=px.b_asDouble();
 			}
 
 			@Override
 			public void convertElementToPixel(double[] array, PixelBase px) {
-				px.setRGB_fromNormalized_preserveAlpha(
+				px.setRGB_fromDouble_preserveAlpha(
 						// clamp values between zero and one
 						Math.min(1, Math.max(0, array[0])),
 						Math.min(1, Math.max(0, array[1])),

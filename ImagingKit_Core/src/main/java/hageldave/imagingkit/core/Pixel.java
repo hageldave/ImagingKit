@@ -83,7 +83,7 @@ public class Pixel implements PixelBase {
 	 * @return the Img this Pixel belongs to.
 	 * @since 1.0
 	 */
-	public Img getImg() {
+	public Img getSource() {
 		return img;
 	}
 
@@ -141,30 +141,6 @@ public class Pixel implements PixelBase {
 	 */
 	public int getY() {
 		return index / img.getWidth();
-	}
-
-	/**
-	 * Returns the normalized x coordinate of this Pixel.
-	 * This will return 0 for Pixels at the left boundary and 1 for Pixels
-	 * at the right boundary of the Img.<br>
-	 * <em>For Img's that are only 1 Pixel wide, <u>NaN</u> is returned.</em>
-	 * @return normalized x coordinate within [0..1]
-	 * @since 1.2
-	 */
-	public double getXnormalized() {
-		return getX() * 1.0 / (img.getWidth()-1.0);
-	}
-
-	/**
-	 * Returns the normalized y coordinate of this Pixel.
-	 * This will return 0 for Pixels at the upper boundary and 1 for Pixels
-	 * at the lower boundary of the Img.<br>
-	 * <em>For Img's that are only 1 Pixel high, <u>NaN</u> is returned.</em>
-	 * @return normalized y coordinate within [0..1]
-	 * @since 1.2
-	 */
-	public double getYnormalized() {
-		return getY() * 1.0 / (img.getHeight()-1.0);
 	}
 
 	/**
@@ -906,54 +882,40 @@ public class Pixel implements PixelBase {
 		return a(color)/255.0;
 	}
 
-	/**
-	 * Generalized channel packing method similar to {@link #argb(int, int, int, int)}
-	 * but for arbitrary channel sizes and number of channels.
-	 * This method calculates the bitwise OR concatenation of all channels with
-	 * the last channel occupying the least significant bits of the result and
-	 * former channels the following bits so that there wont be any collisions.
-	 * Each channel is assumed to be in the specified number of bits. <br>
-	 * E.g. ARGB would be realised like this: <code>combineCh(8,a,r,g,b)</code>
-	 * or 30bit YCbCr could be realized like this: <code>combineCh(10,y,cb,cr)</code>
-	 * <p>
-	 * From a performance point of view this method is not optimal. A custom
-	 * method tailored to the specific packing task will certainly be superior.
-	 *
-	 * @param bitsPerChannel number of bits per channel
-	 * @param channels value for each channel (varargs)
-	 * @return packed channel values
-	 * @see #ch(int, int, int)
-	 * @since 1.0
-	 */
-	public static final int combineCh(int bitsPerChannel, int ... channels){
-		int result = 0;
-		int startBit = 0;
-		for(int i = channels.length-1; i >= 0; i--){
-			result |= channels[i] << startBit;
-			startBit += bitsPerChannel;
-		}
-		return result;
+	@Override
+	public double a_asDouble() {
+		return a_normalized();
 	}
 
-	/**
-	 * Extracts a channel value of arbitrary bitsize and bit position
-	 * from an integer color value. This method bit shifts the requested
-	 * channel area to the least significant bits and truncates the resulting
-	 * value to match the number of bits of the channel area. <br>
-	 * E.g. blue from ARGB would be realised like this: <code>ch(argb, 0, 8)</code>
-	 * red would be: <code>ch(argb, 16, 8)</code>
-	 * <p>
-	 * From a performance point of view this method is not optimal. A custom
-	 * method tailored to the specific extraction task will probably be superior.
-	 *
-	 * @param color from which a channel should be extracted
-	 * @param startBit starting bit of the channel
-	 * @param numBits number of bits of the channel
-	 * @return channel value
-	 * @see #combineCh(int, int...) combineCh(int, int...)
-	 * @since 1.0
-	 */
-	public static final int ch(final int color, final int startBit, final int numBits){
-		return (color >> startBit) & ((1 << numBits)-1);
+	@Override
+	public double r_asDouble() {
+		return r_normalized();
 	}
+
+	@Override
+	public double g_asDouble() {
+		return g_normalized();
+	}
+
+	@Override
+	public double b_asDouble() {
+		return b_normalized();
+	}
+
+	@Override
+	public void setARGB_fromDouble(double a, double r, double g, double b) {
+		setARGB_fromNormalized(a, r, g, b);
+	}
+
+	@Override
+	public void setRGB_fromDouble(double r, double g, double b) {
+		setRGB_fromNormalized(r, g, b);
+	}
+
+	@Override
+	public void setRGB_fromDouble_preserveAlpha(double r, double g, double b) {
+		setRGB_fromNormalized_preserveAlpha(r, g, b);
+	}
+
+
 }
