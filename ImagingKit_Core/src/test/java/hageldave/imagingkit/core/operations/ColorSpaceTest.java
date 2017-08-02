@@ -44,12 +44,12 @@ public class ColorSpaceTest {
 
 			// test black and white transformation accuracy
 			int color; 
-			color = forward.transform(white);
-			color = backward.transform(color);
+			color = forward.discreteTransform(white);
+			color = backward.discreteTransform(color);
 			assertEquals(white, color);
 
-			color = forward.transform(black);
-			color = backward.transform(color);
+			color = forward.discreteTransform(black);
+			color = backward.discreteTransform(color);
 			assertEquals(black, color);
 		}
 		
@@ -75,12 +75,12 @@ public class ColorSpaceTest {
 			
 			// test black and white transformation accuracy
 			int color; 
-			color = forward.transform(white);
-			color = backward.transform(color);
+			color = forward.discreteTransform(white);
+			color = backward.discreteTransform(color);
 			assertEquals(white, color);
 
-			color = forward.transform(black);
-			color = backward.transform(color);
+			color = forward.discreteTransform(black);
+			color = backward.discreteTransform(color);
 			assertEquals(black, color);
 		}
 

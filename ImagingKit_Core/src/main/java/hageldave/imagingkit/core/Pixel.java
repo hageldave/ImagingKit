@@ -440,7 +440,7 @@ public class Pixel implements PixelBase {
 	 * @since 1.2
 	 */
 	public void setRGB_fromNormalized_preserveAlpha(double r, double g, double b){
-		setValue((getValue() & 0xff000000) | Pixel.argb(0,(int)(0xff*r),(int)(0xff*g),(int)(0xff*b)) );
+		setValue((getValue() & 0xff000000) | Pixel.argb_fast(0,(int)Math.round(0xff*r),(int)Math.round(0xff*g),(int)Math.round(0xff*b)) );
 	}
 
 	/**
@@ -667,7 +667,7 @@ public class Pixel implements PixelBase {
 	 * @since 1.2
 	 */
 	public static final int rgb_fromNormalized(final double r, final double g, final double b){
-		return rgb_fast((int)(r*0xff), (int)(g*0xff), (int)(b*0xff));
+		return rgb_fast((int)Math.round(r*0xff), (int)Math.round(g*0xff), (int)Math.round(b*0xff));
 	}
 
 	/**
@@ -767,7 +767,7 @@ public class Pixel implements PixelBase {
 	 * @since 1.2
 	 */
 	public static final int argb_fromNormalized(final double a, final double r, final double g, final double b){
-		return argb_fast((int)(a*0xff), (int)(r*0xff), (int)(g*0xff), (int)(b*0xff));
+		return argb_fast((int)Math.round(a*0xff), (int)Math.round(r*0xff), (int)Math.round(g*0xff), (int)Math.round(b*0xff));
 	}
 
 	/**

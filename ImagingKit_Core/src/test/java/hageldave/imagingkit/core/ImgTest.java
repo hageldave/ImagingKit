@@ -72,7 +72,12 @@ public class ImgTest {
 		p.setRGB_fromNormalized_preserveAlpha(0, 0, 0);
 		assertEquals(0x44000000, p.getValue());
 		p.setRGB_fromNormalized_preserveAlpha(0.4f, 0.7f, 0.3f);
-		assertEquals(Pixel.argb(0x44,(int)(255*0.4f),(int)(255*0.7f),(int)(255*0.3f)), p.getValue());
+		assertEquals(p.getValue(), Pixel.argb_fromNormalized(p.a_asDouble(), p.r_asDouble(), p.g_asDouble(), p.b_asDouble()));
+		{
+			int temp = p.getValue();
+			p.setARGB_fromDouble(p.a_asDouble(), p.r_asDouble(), p.g_asDouble(), p.b_asDouble());
+			assertEquals(temp, p.getValue());
+		}
 		assertEquals(0x44/255f, p.a_normalized(), eps);
 		assertEquals(0.4f, p.r_normalized(), 0.01);
 		assertEquals(0.7f, p.g_normalized(), 0.01);
