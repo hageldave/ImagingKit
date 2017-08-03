@@ -530,7 +530,7 @@ public class Pixel implements PixelBase {
 
 	@Override
 	public String toString() {
-		return String.format("%s at %d (%d,%d)", getClass().getSimpleName(), getIndex(), getX(), getY());
+		return asString();
 	}
 
 

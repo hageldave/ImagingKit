@@ -426,7 +426,7 @@ public class ColorPixel implements PixelBase {
 
 	@Override
 	public String toString() {
-		return String.format("%s at %d (%d,%d)", getClass().getSimpleName(), getIndex(), getX(), getY());
+		return asString();
 	}
 
 	public ColorPixel convertRange(double lowerLimitNow, double upperLimitNow, double lowerLimitAfter, double upperLimitAfter){

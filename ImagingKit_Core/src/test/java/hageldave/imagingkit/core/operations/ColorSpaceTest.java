@@ -9,6 +9,9 @@ import org.junit.Test;
 import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.Pixel;
 import hageldave.imagingkit.core.operations.ColorSpaceTransformation;
+import hageldave.imagingkit.core.scientific.ColorImg;
+import hageldave.imagingkit.core.scientific.ColorPixel;
+import hageldave.imagingkit.core.util.ImageFrame;
 
 public class ColorSpaceTest {
 
@@ -16,12 +19,12 @@ public class ColorSpaceTest {
 	static final int greyErrorThreshold = 7;
 	static final int white = 0xffffffff;
 	static final int black = 0xff000000;
-	
+
 	@Test
-	public void test(){
+	public void test_discrete(){
 		Img reference = getTestImg();
 
-		
+
 		// test RGB <-> HSV
 		{
 			ColorSpaceTransformation forward = ColorSpaceTransformation.RGB_2_HSV;
@@ -32,18 +35,18 @@ public class ColorSpaceTest {
 			img.forEach(true, backward);
 			int[] error = getMaxGreyError(reference, img);
 			assertTrue(error[0] >= 0);
-			assertTrue(String.format("LAB Error: %d %s %s", error[0], 
+			assertTrue(String.format("LAB Error: %d %s %s", error[0],
 					Integer.toHexString(error[1]),
-					Integer.toHexString(error[2])), 
+					Integer.toHexString(error[2])),
 					error[0] < greyErrorThreshold);
-			
+
 			// test alpha preservation
 			for(int color: img.getData()){
 				assertEquals(alphaTestImg, color & 0xff000000);
 			}
 
 			// test black and white transformation accuracy
-			int color; 
+			int color;
 			color = forward.discreteTransform(white);
 			color = backward.discreteTransform(color);
 			assertEquals(white, color);
@@ -52,7 +55,7 @@ public class ColorSpaceTest {
 			color = backward.discreteTransform(color);
 			assertEquals(black, color);
 		}
-		
+
 		// test RGB <-> LAB
 		{
 			ColorSpaceTransformation forward = ColorSpaceTransformation.RGB_2_LAB;
@@ -63,18 +66,18 @@ public class ColorSpaceTest {
 			img.forEach(true, backward);
 			int[] error = getMaxGreyError(reference, img);
 			assertTrue(error[0] >= 0);
-			assertTrue(String.format("LAB Error: %d %s %s", error[0], 
+			assertTrue(String.format("LAB Error: %d %s %s", error[0],
 					Integer.toHexString(error[1]),
-					Integer.toHexString(error[2])), 
+					Integer.toHexString(error[2])),
 					error[0] < greyErrorThreshold);
-			
+
 			// test alpha preservation
 			for(int color: img.getData()){
 				assertEquals(alphaTestImg, color & 0xff000000);
 			}
-			
+
 			// test black and white transformation accuracy
-			int color; 
+			int color;
 			color = forward.discreteTransform(white);
 			color = backward.discreteTransform(color);
 			assertEquals(white, color);
@@ -85,6 +88,7 @@ public class ColorSpaceTest {
 		}
 
 	}
+
 
 	static Img getTestImg(){
 		Img img = new Img(5000,5000);
@@ -113,6 +117,47 @@ public class ColorSpaceTest {
 		}
 
 		return new int[]{maxError, col1, col2};
+	}
+
+
+	@Test
+	public void test_continuous(){
+		ColorImg img = getTestColorImg();
+		for(ColorSpaceTransformation cst: ColorSpaceTransformation.values()){
+			ColorImg testimg = img.copy();
+			testimg.forEach(true, cst);
+			testimg.forEach(true, cst.inverse());
+			testimg.forEach(px->{
+				double lum1 = px.getLuminance();
+				double lum2 = ColorPixel.getLuminance(img.getDataR()[px.getIndex()], img.getDataG()[px.getIndex()], img.getDataB()[px.getIndex()]);
+//				if(Math.abs(lum1-lum2) > 0.001)
+//					assertEquals(cst.name() +" "+ px.asString() +" "+ img.getPixel(px.getX(), px.getY()).asString(), lum2, lum1, 0.001);
+			});
+//			double error = getMaxGreyError(img, testimg);
+//			assertEquals(cst.name(), 0, error, 0.001);
+		}
+	}
+
+	static ColorImg getTestColorImg(){
+		ColorImg img = new ColorImg(5000,5000, true);
+		img.forEach(px->{
+			int col = alphaTestImg | (px.getIndex()&0xffffff);
+			px.setARGB_fromDouble(
+					Pixel.a_normalized(col),
+					Pixel.r_normalized(col),
+					Pixel.g_normalized(col),
+					Pixel.b_normalized(col));
+		});
+		return img;
+	}
+
+	static double getMaxGreyError(ColorImg img1, ColorImg img2){
+		return img1.stream(true)
+		.mapToDouble(px->{
+			double lum1 = px.getLuminance();
+			double lum2 = ColorPixel.getLuminance(img2.getDataR()[px.getIndex()], img2.getDataG()[px.getIndex()], img2.getDataB()[px.getIndex()]);
+			return Math.abs(lum1-lum2);
+		}).max().getAsDouble();
 	}
 
 }
