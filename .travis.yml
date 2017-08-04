@@ -10,7 +10,7 @@ before_script:
   - "sh -e /etc/init.d/xvfb start"
   - sleep 3 # give xvfb some time to start (x virtual frame buffer for gui testing)
 
-script: mvn -pl -X :imagingkit-core clean test
+script: mvn -X -pl :imagingkit-core clean test
 
 env:
   global:
