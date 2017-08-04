@@ -12,6 +12,7 @@ import hageldave.imagingkit.core.operations.ColorSpaceTransformation;
 import hageldave.imagingkit.core.scientific.ColorImg;
 import hageldave.imagingkit.core.scientific.ColorPixel;
 import hageldave.imagingkit.core.util.ImageFrame;
+import static hageldave.imagingkit.core.operations.ColorSpaceTransformation.*;
 
 public class ColorSpaceTest {
 
@@ -123,18 +124,24 @@ public class ColorSpaceTest {
 	@Test
 	public void test_continuous(){
 		ColorImg img = getTestColorImg();
-		for(ColorSpaceTransformation cst: ColorSpaceTransformation.values()){
+		ColorSpaceTransformation[] toTest = {RGB_2_HSV, /*NOT HSV_2_RGB since it is not injective ,*/ RGB_2_LAB, LAB_2_RGB, RGB_2_YCbCr, YCbCr_2_RGB};
+		for(ColorSpaceTransformation cst: toTest){
 			ColorImg testimg = img.copy();
-			testimg.forEach(true, cst);
-			testimg.forEach(true, cst.inverse());
-			testimg.forEach(px->{
+			testimg.stream(true)
+			.forEach(cst);
+			// test alpha preservation
+			testimg.forEach(true, px->assertEquals(img.getDataA()[px.getIndex()], px.a(), 0));
+			testimg.stream(true)
+			.forEach(cst.inverse());
+			// test alpha preservation
+			testimg.forEach(true, px->assertEquals(img.getDataA()[px.getIndex()], px.a(), 0));
+			// test if forward transform and backwards transform preserves lumanance to a high degree (max 0.001 error tolerance)
+			testimg.forEach(true, px->{
 				double lum1 = px.getLuminance();
 				double lum2 = ColorPixel.getLuminance(img.getDataR()[px.getIndex()], img.getDataG()[px.getIndex()], img.getDataB()[px.getIndex()]);
-//				if(Math.abs(lum1-lum2) > 0.001)
-//					assertEquals(cst.name() +" "+ px.asString() +" "+ img.getPixel(px.getX(), px.getY()).asString(), lum2, lum1, 0.001);
+				if(Math.abs(lum1-lum2) > 0.001)
+					assertEquals(cst.name() +" "+ img.getPixel(px.getX(), px.getY()).asString()+" "+ px.asString(), lum2, lum1, 0.001);
 			});
-//			double error = getMaxGreyError(img, testimg);
-//			assertEquals(cst.name(), 0, error, 0.001);
 		}
 	}
 
@@ -149,15 +156,6 @@ public class ColorSpaceTest {
 					Pixel.b_normalized(col));
 		});
 		return img;
-	}
-
-	static double getMaxGreyError(ColorImg img1, ColorImg img2){
-		return img1.stream(true)
-		.mapToDouble(px->{
-			double lum1 = px.getLuminance();
-			double lum2 = ColorPixel.getLuminance(img2.getDataR()[px.getIndex()], img2.getDataG()[px.getIndex()], img2.getDataB()[px.getIndex()]);
-			return Math.abs(lum1-lum2);
-		}).max().getAsDouble();
 	}
 
 }

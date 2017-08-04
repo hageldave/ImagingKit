@@ -394,12 +394,12 @@ public enum ColorSpaceTransformation implements Consumer<PixelBase> {
 		double q = v*(1-s*f);
 		double t = v*(1-s*(1-f));
 		switch((int)hi){
-		case 1:  px.setRGB_fromDouble_preserveAlpha(q,v,p);
-		case 2:  px.setRGB_fromDouble_preserveAlpha(p,v,t);
-		case 3:  px.setRGB_fromDouble_preserveAlpha(p,q,v);
-		case 4:  px.setRGB_fromDouble_preserveAlpha(t,p,v);
-		case 5:  px.setRGB_fromDouble_preserveAlpha(v,p,q);
-		default: px.setRGB_fromDouble_preserveAlpha(v,t,p);
+		case 1:  px.setRGB_fromDouble_preserveAlpha(q,v,p);break;
+		case 2:  px.setRGB_fromDouble_preserveAlpha(p,v,t);break;
+		case 3:  px.setRGB_fromDouble_preserveAlpha(p,q,v);break;
+		case 4:  px.setRGB_fromDouble_preserveAlpha(t,p,v);break;
+		case 5:  px.setRGB_fromDouble_preserveAlpha(v,p,q);break;
+		default: px.setRGB_fromDouble_preserveAlpha(v,t,p);break;
 		}
 	}
 
