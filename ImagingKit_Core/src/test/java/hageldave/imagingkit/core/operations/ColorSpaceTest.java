@@ -11,7 +11,6 @@ import hageldave.imagingkit.core.Pixel;
 import hageldave.imagingkit.core.operations.ColorSpaceTransformation;
 import hageldave.imagingkit.core.scientific.ColorImg;
 import hageldave.imagingkit.core.scientific.ColorPixel;
-import hageldave.imagingkit.core.util.ImageFrame;
 import static hageldave.imagingkit.core.operations.ColorSpaceTransformation.*;
 
 public class ColorSpaceTest {
