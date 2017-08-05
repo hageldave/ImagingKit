@@ -167,12 +167,7 @@ public enum ColorSpaceTransformation implements Consumer<PixelBase> {
 	 */
 	@Override
 	public void accept(PixelBase px) {
-		if(px instanceof Pixel){
-			Pixel pxl = (Pixel) px;
-			pxl.setValue(discreteTransform(pxl.getValue()));
-		} else {
-			continousTransform.accept(px);
-		}
+		continousTransform.accept(px);
 	}
 
 	public ColorSpaceTransformation inverse() {
@@ -220,6 +215,7 @@ public enum ColorSpaceTransformation implements Consumer<PixelBase> {
 	static double clamp_0_1(double val){
 		return Math.max(0.0, Math.min(val, 1.0));
 	}
+
 
 	////// TRANSFORMS //////
 

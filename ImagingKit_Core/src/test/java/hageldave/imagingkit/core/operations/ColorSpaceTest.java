@@ -1,17 +1,21 @@
 package hageldave.imagingkit.core.operations;
 
 
+import static hageldave.imagingkit.core.operations.ColorSpaceTransformation.LAB_2_RGB;
+import static hageldave.imagingkit.core.operations.ColorSpaceTransformation.RGB_2_HSV;
+import static hageldave.imagingkit.core.operations.ColorSpaceTransformation.RGB_2_LAB;
+import static hageldave.imagingkit.core.operations.ColorSpaceTransformation.RGB_2_YCbCr;
+import static hageldave.imagingkit.core.operations.ColorSpaceTransformation.YCbCr_2_RGB;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
+
 import org.junit.Test;
 
 import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.Pixel;
-import hageldave.imagingkit.core.operations.ColorSpaceTransformation;
 import hageldave.imagingkit.core.scientific.ColorImg;
 import hageldave.imagingkit.core.scientific.ColorPixel;
-import static hageldave.imagingkit.core.operations.ColorSpaceTransformation.*;
 
 public class ColorSpaceTest {
 
@@ -62,13 +66,19 @@ public class ColorSpaceTest {
 			ColorSpaceTransformation backward = ColorSpaceTransformation.LAB_2_RGB;
 			// test image transformation (image covers all RGB values)
 			Img img = reference.copy();
-			img.forEach(true, forward);
-			img.forEach(true, backward);
+			img.stream()
+			.forEach(forward);
+			img.stream()
+			.forEach(backward);
 			int[] error = getMaxGreyError(reference, img);
 			assertTrue(error[0] >= 0);
-			assertTrue(String.format("LAB Error: %d %s %s", error[0],
+			assertTrue(String.format("LAB Error:%d reference:%s actual:%s index:%d (x,y)=(%d,%d)",
+					error[0],
 					Integer.toHexString(error[1]),
-					Integer.toHexString(error[2])),
+					Integer.toHexString(error[2]),
+					error[3],
+					error[4],
+					error[5]),
 					error[0] < greyErrorThreshold);
 
 			// test alpha preservation
@@ -89,6 +99,46 @@ public class ColorSpaceTest {
 
 	}
 
+	@Test
+	public void testConvergence(){
+
+		ColorSpaceTransformation[] toTest = {
+				ColorSpaceTransformation.RGB_2_LAB,
+				ColorSpaceTransformation.RGB_2_HSV,
+				ColorSpaceTransformation.RGB_2_YCbCr
+		};
+
+		{ // discrete
+			Img ref = getTestImg();
+			Img img = new Img(ref.getDimension());
+
+			for(ColorSpaceTransformation cst : toTest){
+				ref.copyArea(0, 0, img.getWidth(), img.getHeight(), img, 0, 0);
+				for(int i = 0; i < 2+greyErrorThreshold; i++){
+					img.forEach(true, cst);
+					img.forEach(true, cst.inverse());
+				}
+				int[] error = getMaxGreyError(ref, img);
+				assertTrue(error[0]< greyErrorThreshold);
+			}
+		}
+
+		// TODO
+//		{ // continuous
+//			ColorImg ref = getTestColorImg();
+//			ColorImg img = new ColorImg(ref.getDimension(), ref.hasAlpha());
+//
+//			for(ColorSpaceTransformation cst : toTest){
+//				ref.copyArea(0, 0, img.getWidth(), img.getHeight(), img, 0, 0);
+//				for(int i = 0; i < 5; i++){
+//					img.forEach(true, cst);
+//					img.forEach(true, cst.inverse());
+//				}
+//			}
+//		}
+
+	}
+
 
 	static Img getTestImg(){
 		// img with all colors (2^24)
@@ -106,6 +156,7 @@ public class ColorSpaceTest {
 		int col1 = 0;
 		int col2 = 0;
 		int size = img1.numValues();
+		int index = 0;
 		for(int i = 0; i < size; i++){
 			int color1 = img1.getData()[i];
 			int color2 = img2.getData()[i];
@@ -114,10 +165,11 @@ public class ColorSpaceTest {
 				maxError = err;
 				col1 = color1;
 				col2 = color2;
+				index = i;
 			}
 		}
 
-		return new int[]{maxError, col1, col2};
+		return new int[]{maxError, col1, col2, index, index%img1.getWidth(), index/img1.getHeight()};
 	}
 
 

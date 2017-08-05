@@ -381,7 +381,7 @@ public class Pixel implements PixelBase {
 	/**
 	 * Sets an ARGB value at the position currently referenced by this Pixel. <br>
 	 * Each channel value is assumed to be within [0.0 .. 1.0]. Channel values
-	 * outside these bounds will result in a broken, malformed ARBG value.
+	 * outside these bounds will be clamped to them.
 	 * @param a normalized alpha
 	 * @param r normalized red
 	 * @param g normalized green
@@ -405,7 +405,7 @@ public class Pixel implements PixelBase {
 	/**
 	 * Sets an opaque RGB value at the position currently referenced by this Pixel. <br>
 	 * Each channel value is assumed to be within [0.0 .. 1.0]. Channel values
-	 * outside these bounds will result in a broken, malformed ARBG value.
+	 * outside these bounds will be clamped to them.
 	 * @param r normalized red
 	 * @param g normalized green
 	 * @param b normalized blue
@@ -429,7 +429,7 @@ public class Pixel implements PixelBase {
 	 * Sets an RGB value at the position currently referenced by this Pixel.
 	 * The present alpha value will not be altered by this operation. <br>
 	 * Each channel value is assumed to be within [0.0 .. 1.0]. Channel values
-	 * outside these bounds will result in a broken, malformed ARBG value.
+	 * outside these bounds will be clamped to them.
 	 * @param r normalized red
 	 * @param g normalized green
 	 * @param b normalized blue
@@ -440,7 +440,7 @@ public class Pixel implements PixelBase {
 	 * @since 1.2
 	 */
 	public void setRGB_fromNormalized_preserveAlpha(double r, double g, double b){
-		setValue((getValue() & 0xff000000) | Pixel.argb_fast(0,(int)Math.round(0xff*r),(int)Math.round(0xff*g),(int)Math.round(0xff*b)) );
+		setValue((getValue() & 0xff000000) | (0x00ffffff & Pixel.rgb_fromNormalized(r, g, b)));
 	}
 
 	/**
@@ -651,8 +651,7 @@ public class Pixel implements PixelBase {
 	/**
 	 * Packs normalized ARGB color components (values in [0.0 .. 1.0]) into a
 	 * single 32bit integer value with alpha=255 (opaque).
-	 * Component values less than 0 or greater than 1 are NOT truncated and will
-	 * result in a broken, malformed value.
+	 * Component values less than 0 or greater than 1 clamped to fit the range.
 	 * @param r red
 	 * @param g green
 	 * @param b blue
@@ -667,7 +666,7 @@ public class Pixel implements PixelBase {
 	 * @since 1.2
 	 */
 	public static final int rgb_fromNormalized(final double r, final double g, final double b){
-		return rgb_fast((int)Math.round(r*0xff), (int)Math.round(g*0xff), (int)Math.round(b*0xff));
+		return rgb_bounded((int)Math.round(r*0xff), (int)Math.round(g*0xff), (int)Math.round(b*0xff));
 	}
 
 	/**
@@ -750,8 +749,7 @@ public class Pixel implements PixelBase {
 	/**
 	 * Packs normalized ARGB color components (values in [0.0 .. 1.0]) into a
 	 * single 32bit integer value.
-	 * Component values less than 0 or greater than 1 are NOT truncated and will
-	 * result in a broken, malformed value.
+	 * Component values less than 0 or greater than 1 are clamped to fit the range.
 	 * @param a alpha
 	 * @param r red
 	 * @param g green
@@ -767,7 +765,7 @@ public class Pixel implements PixelBase {
 	 * @since 1.2
 	 */
 	public static final int argb_fromNormalized(final double a, final double r, final double g, final double b){
-		return argb_fast((int)Math.round(a*0xff), (int)Math.round(r*0xff), (int)Math.round(g*0xff), (int)Math.round(b*0xff));
+		return argb_bounded((int)Math.round(a*0xff), (int)Math.round(r*0xff), (int)Math.round(g*0xff), (int)Math.round(b*0xff));
 	}
 
 	/**
