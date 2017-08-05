@@ -91,7 +91,8 @@ public class ColorSpaceTest {
 
 
 	static Img getTestImg(){
-		Img img = new Img(5000,5000);
+		// img with all colors (2^24)
+		Img img = new Img(4096,4096);
 		img.forEach(px->{
 			px.setValue(alphaTestImg | (px.getIndex()&0xffffff));
 		});
@@ -145,7 +146,7 @@ public class ColorSpaceTest {
 	}
 
 	static ColorImg getTestColorImg(){
-		ColorImg img = new ColorImg(5000,5000, true);
+		ColorImg img = new ColorImg(4096,4096, true);
 		img.forEach(px->{
 			int col = alphaTestImg | (px.getIndex()&0xffffff);
 			px.setARGB_fromDouble(
