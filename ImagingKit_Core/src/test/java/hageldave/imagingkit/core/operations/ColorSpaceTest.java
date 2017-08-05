@@ -124,19 +124,20 @@ public class ColorSpaceTest {
 	@Test
 	public void test_continuous(){
 		ColorImg img = getTestColorImg();
+		ColorImg testimg = new ColorImg(getTestImg(), img.hasAlpha());
 		ColorSpaceTransformation[] toTest = {RGB_2_HSV, /*NOT HSV_2_RGB since it is not injective ,*/ RGB_2_LAB, LAB_2_RGB, RGB_2_YCbCr, YCbCr_2_RGB};
 		for(ColorSpaceTransformation cst: toTest){
-			ColorImg testimg = img.copy();
+			img.copyArea(0, 0, img.getWidth(), img.getHeight(), testimg, 0, 0);
 			testimg.stream(true)
 			.forEach(cst);
 			// test alpha preservation
-			testimg.forEach(true, px->assertEquals(img.getDataA()[px.getIndex()], px.a(), 0));
+			testimg.forEach(px->assertEquals(img.getDataA()[px.getIndex()], px.a(), 0));
 			testimg.stream(true)
 			.forEach(cst.inverse());
 			// test alpha preservation
-			testimg.forEach(true, px->assertEquals(img.getDataA()[px.getIndex()], px.a(), 0));
+			testimg.forEach(px->assertEquals(img.getDataA()[px.getIndex()], px.a(), 0));
 			// test if forward transform and backwards transform preserves lumanance to a high degree (max 0.001 error tolerance)
-			testimg.forEach(true, px->{
+			testimg.forEach(px->{
 				double lum1 = px.getLuminance();
 				double lum2 = ColorPixel.getLuminance(img.getDataR()[px.getIndex()], img.getDataG()[px.getIndex()], img.getDataB()[px.getIndex()]);
 				if(Math.abs(lum1-lum2) > 0.001)
