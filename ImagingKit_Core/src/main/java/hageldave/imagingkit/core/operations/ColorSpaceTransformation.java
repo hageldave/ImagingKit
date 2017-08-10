@@ -57,7 +57,6 @@ public enum ColorSpaceTransformation implements Consumer<PixelBase> {
 	 * @since 1.2
 	 */
 	RGB_2_LAB(
-			ColorSpaceTransformation::rgb2lab_discrete,
 			ColorSpaceTransformation::rgb2lab_continuous
 	),
 
@@ -75,7 +74,6 @@ public enum ColorSpaceTransformation implements Consumer<PixelBase> {
 	 * @since 1.2
 	 */
 	LAB_2_RGB(
-			ColorSpaceTransformation::lab2rgb_discrete,
 			ColorSpaceTransformation::lab2rgb_continuous
 	),
 
@@ -98,7 +96,6 @@ public enum ColorSpaceTransformation implements Consumer<PixelBase> {
 	 * @since 1.2
 	 */
 	RGB_2_HSV(
-			ColorSpaceTransformation::rgb2hsv_discrete,
 			ColorSpaceTransformation::rgb2hsv_continuous
 	),
 
@@ -110,19 +107,16 @@ public enum ColorSpaceTransformation implements Consumer<PixelBase> {
 	 * @since 1.2
 	 */
 	HSV_2_RGB(
-			ColorSpaceTransformation::hsv2rgb_discrete,
 			ColorSpaceTransformation::hsv2rgb_continuous
 	),
 
 
 	RGB_2_YCbCr(
-			ColorSpaceTransformation::rgb2ycbcr_discrete,
 			ColorSpaceTransformation::rgb2ycbcr_continuous
 	),
 
 
 	YCbCr_2_RGB(
-			ColorSpaceTransformation::ycbcr2rgb_discrete,
 			ColorSpaceTransformation::ycbcr2rgb_continuous
 	)
 	;
@@ -139,26 +133,13 @@ public enum ColorSpaceTransformation implements Consumer<PixelBase> {
 	}
 
 	////// ATTRIBUTES / METHODS //////
-	private final DiscreteTransformation discreteTransform;
 	private final Consumer<PixelBase> continousTransform;
 	private ColorSpaceTransformation inverse;
 
-	private ColorSpaceTransformation(DiscreteTransformation discreteTransform, Consumer<PixelBase> continousTransform) {
-		this.discreteTransform = discreteTransform;
+	private ColorSpaceTransformation(Consumer<PixelBase> continousTransform) {
 		this.continousTransform = continousTransform;
 	}
 
-	/**
-	 * Transforms the specified value according to this color space transformation.
-	 * It is assumed that all information is stored in the first 24 bits of the value,
-	 * the last 8 bits are preserved and can be used for alpha like ARGB does.
-	 * @param color to be transformed.
-	 * @return transformed color.
-	 * @since 1.2
-	 */
-	public final int discreteTransform(int color){
-		return (color & 0xff000000) | (discreteTransform.transform(color) & 0x00ffffff);
-	}
 
 	/**
 	 * Applies this transformation to the specified pixel
@@ -170,6 +151,10 @@ public enum ColorSpaceTransformation implements Consumer<PixelBase> {
 		continousTransform.accept(px);
 	}
 
+	/**
+	 * Returns the inverse transformation of this.
+	 * @return the transform that reverses this one.
+	 */
 	public ColorSpaceTransformation inverse() {
 		return inverse;
 	}
@@ -177,20 +162,6 @@ public enum ColorSpaceTransformation implements Consumer<PixelBase> {
 
 	////// STATIC //////
 
-
-	/** Interface for a transformation function from int to int */
-	private static interface DiscreteTransformation {
-		/**
-		 * Transforms the value.
-		 * It is assumed that the value stores information in 24 bits which will
-		 * be transformed to another value also storing 24 bits of information.
-		 * The last 8 bits of the integer are reserved for information about alpha.
-		 * E.g. RGB stores 8 bits for each color channel.
-		 * @param value (24 bits of information).
-		 * @return transformed value (24 bits of information).
-		 */
-		public int transform(int value);
-	}
 
 	// CIE L*a*b* helper class
 	private static final class LAB {
@@ -218,37 +189,9 @@ public enum ColorSpaceTransformation implements Consumer<PixelBase> {
 
 
 	////// TRANSFORMS //////
-
-	private static int rgb2lab_discrete(int val)
-	{
-		double x,y,z; x=y=z=0;
-		{// first convert to CIEXYZ (assuming sRGB color space with D65 white)
-			double r = Pixel.r_normalized(val); double g = Pixel.g_normalized(val); double b = Pixel.b_normalized(val);
-			x = r*0.4124564f + g*0.3575761f + b*0.1804375f;
-			y = r*0.2126729f + g*0.7151522f + b*0.0721750f;
-			z = r*0.0193339f + g*0.1191920f + b*0.9503041f;
-		}
-		double L,a,b; L=a=b=0;
-		{// now convert to Lab
-			double temp = LAB.func(y/LAB.Yn);
-			// with ranges L[0,100] ab[-100,100]
-			// L = 116*temp-16;
-			// a = 500*(LAB.func(x/LAB.Xn) - temp);
-			// b = 200*(temp - LAB.func(z/LAB.Zn));
-
-			 // with ranges L[0,255] ab[-127,127];
-			 L = (116*temp-16)*(255.0/100);
-			 a = 500*(127.0/100)*(LAB.func(x/LAB.Xn) - temp);
-			 b = 200*(127.0/100)*(temp - LAB.func(z/LAB.Zn));
-		}
-		return Pixel.rgb_bounded(
-				(int)Math.round(L),
-				(int)Math.round(a+127),
-				(int)Math.round(b+127));
-	}
-
 	private static void rgb2lab_continuous(PixelBase px)
 	{
+
 		double x,y,z; x=y=z=0;
 		{// first convert to CIEXYZ (assuming sRGB color space with D65 white)
 			double r = px.r_asDouble(); double g = px.g_asDouble(); double b = px.b_asDouble();
@@ -259,43 +202,79 @@ public enum ColorSpaceTransformation implements Consumer<PixelBase> {
 		double L,a,b; L=a=b=0;
 		{// now convert to Lab
 			double temp = LAB.func(y/LAB.Yn);
-			// with ranges L[0,100] ab[-100,100]
-			// L = 116*temp-16;
-			// a = 500*(LAB.func(x/LAB.Xn) - temp);
-			// b = 200*(temp - LAB.func(z/LAB.Zn));
+//			 with ranges L[0,100] ab[-100,100]
+//			 L = 116*temp-16;
+//			 a = 500*(LAB.func(x/LAB.Xn) - temp);
+//			 b = 200*(temp - LAB.func(z/LAB.Zn));
 
-			 // with ranges L[0,1] ab[-0.5,0.5];
-			 L = (116*temp-16)*(0.01);
-			 a = 2.5*(LAB.func(x/LAB.Xn) - temp);
-			 b = 1.0*(temp - LAB.func(z/LAB.Zn));
+//			 // with ranges L[0,1] ab[-0.5,0.5];
+//			 L = (116*temp-16)*(0.01);
+//			 a = 2.5*(LAB.func(x/LAB.Xn) - temp);
+//			 b = 1.0*(temp - LAB.func(z/LAB.Zn));
+
+			if(px instanceof Pixel){
+				/* this is special:
+				 * Pixels value range per channel is [0,255] (discrete).
+				 * We want to map an interval [-1.0, 1.0] to [0,255] for the a and b channels.
+				 * It is mandatory that the range [-1.0, 0.0[ and ]0.0, 1.0] are mapped to the same amount of
+				 * discrete values and that 0 is directly mapped to a value as it corresponds to zero
+				 * chromaticity (i.e. grey level values).
+				 * The problem with this requirement is that the number of values in [0,255] is even (256)
+				 * and therefore having a zero mapping and two ranges of equal size left and right to it cannot
+				 * use the full range.
+				 * We will thus map negative values to [0,126] 0 to [127] and positive values to [128,254],
+				 * leaving out the last value (255) so actually [-1.0, 1.0] is mapped to [0,254]
+				 */
+
+				// with ranges L[0,255] ab[-127,127];
+				L = (116*temp-16)*(255.0/100);
+				a = 500*(127.0/100)*(LAB.func(x/LAB.Xn) - temp);
+				b = 200*(127.0/100)*(temp - LAB.func(z/LAB.Zn));
+
+				L /= 255;
+				a = (a+127)/255;
+				b = (b+127)/255;
+			} else {
+				 // with ranges L[0,1] ab[-0.5,0.5];
+				 L = (116*temp-16)*(0.01);
+				 a = 2.5*(LAB.func(x/LAB.Xn) - temp);
+				 b = 1.0*(temp - LAB.func(z/LAB.Zn));
+
+				 a = a+0.5;
+				 b = b+0.5;
+			}
+
 		}
-		px.setRGB_fromDouble_preserveAlpha(L, a+0.5, b+0.5);
-	}
-
-	private static int lab2rgb_discrete(int val)
-	{
-		double L = (Pixel.r_normalized(val)  )*100;
-		double A = ((Pixel.g(val)-127)/254.0)*200;
-		double B = ((Pixel.b(val)-127)/254.0)*200;
-
-		// LAB to XYZ
-		double temp = (L+16)/116;
-		double x =  LAB.Xn*LAB.funcInv(temp + (A/500));
-		double y =  LAB.Yn*LAB.funcInv(temp);
-		double z =  LAB.Zn*LAB.funcInv(temp - (B/200));
-
-		return Pixel.rgb_bounded(
-				//                           X             Y             Z
-				(int)Math.round(( 3.2404542f*x -1.5371385f*y -0.4985314f*z)*0xff ),  // R
-				(int)Math.round((-0.9692660f*x +1.8760108f*y +0.0415560f*z)*0xff ),  // G
-				(int)Math.round(( 0.0556434f*x -0.2040259f*y +1.0572252f*z)*0xff )); // B
+		px.setRGB_fromDouble_preserveAlpha(L, a, b);
 	}
 
 	private static void lab2rgb_continuous(PixelBase px)
 	{
-		double L = (px.r_asDouble()  )*100;
-		double A = (px.g_asDouble()-0.5)*200;
-		double B = (px.b_asDouble()-0.5)*200;
+		double L,A,B;
+		if(px instanceof Pixel){
+			/* this is special:
+			 * Pixels value range per channel is [0,255] (discrete).
+			 * But we mapped an interval [-1.0, 1.0] to [0,254] for the a and b channels.
+			 * This was done because the range [-1.0, 0.0[ and ]0.0, 1.0] has to be mapped to the same amount of
+			 * discrete values and 0 has to be directly mapped to a value as it corresponds to zero
+			 * chromaticity (i.e. grey level values).
+			 * The problem with this requirement was that the number of values in [0,255] is even (256)
+			 * and therefore having a zero mapping and two ranges of equal size left and right to it cannot
+			 * use the full range of [0,255].
+			 * We thus mapped negative values of a and b to [0,126] 0 to [127] and positive values to [128,254],
+			 * leaving out the last value (255).
+			 */
+			L = (px.r_asDouble()        )*100.0;
+			A = (px.g_asDouble()*255-127)*(200.0/254);
+			B = (px.b_asDouble()*255-127)*(200.0/254);
+		} else {
+			L = (px.r_asDouble()    )*100.0;
+			A = (px.g_asDouble()-0.5)*200.0;
+			B = (px.b_asDouble()-0.5)*200.0;
+		}
+
+		// L in range [0,100] a,b in range [-100,100]
+
 
 		// LAB to XYZ
 		double temp = (L+16)/116;
@@ -308,29 +287,6 @@ public enum ColorSpaceTransformation implements Consumer<PixelBase> {
 				( 3.2404542f*x -1.5371385f*y -0.4985314f*z),  // R
 				(-0.9692660f*x +1.8760108f*y +0.0415560f*z),  // G
 				( 0.0556434f*x -0.2040259f*y +1.0572252f*z)); // B
-	}
-
-
-	private static int rgb2hsv_discrete(int val)
-	{
-		double r = Pixel.r_normalized(val);
-		double g = Pixel.g_normalized(val);
-		double b = Pixel.b_normalized(val);
-
-		double max,p,q,o; max=p=q=o=0;
-		if(r > max){ max=r; p=g; q=b; o=0; }
-		if(g > max){ max=g; p=b; q=r; o=2; }
-		if(b > max){ max=b; p=r; q=g; o=4; }
-
-		double min = Math.min(Math.min(r,g),b);
-		if(max==min){
-			return Pixel.rgb(0,0,(int)(max*255));
-		} else {
-			r = 256+(256.0/6) * (o + (p-q)/(max-min));
-			g = 255*((max-min)/max);
-			b = 255*max;
-			return Pixel.rgb((int)Math.round(r),(int)Math.round(g),(int)Math.round(b));
-		}
 	}
 
 	private static void rgb2hsv_continuous(PixelBase px)
@@ -357,26 +313,6 @@ public enum ColorSpaceTransformation implements Consumer<PixelBase> {
 		}
 	}
 
-	private static int hsv2rgb_discrete(int val)
-	{
-		double h = Pixel.r(val) * (360.0/256);
-		double s = Pixel.g_normalized(val);
-		double v = Pixel.b_normalized(val);
-		double hi = h/60;
-		double f = hi - (hi=(int)hi);
-		double p = v*(1-s);
-		double q = v*(1-s*f);
-		double t = v*(1-s*(1-f));
-		switch((int)hi){
-		case 1:  return Pixel.rgb_fromNormalized(q,v,p);
-		case 2:  return Pixel.rgb_fromNormalized(p,v,t);
-		case 3:  return Pixel.rgb_fromNormalized(p,q,v);
-		case 4:  return Pixel.rgb_fromNormalized(t,p,v);
-		case 5:  return Pixel.rgb_fromNormalized(v,p,q);
-		default: return Pixel.rgb_fromNormalized(v,t,p);
-		}
-	}
-
 	private static void hsv2rgb_continuous(PixelBase px)
 	{
 		double h = px.r_asDouble();
@@ -399,15 +335,6 @@ public enum ColorSpaceTransformation implements Consumer<PixelBase> {
 		}
 	}
 
-	private static int rgb2ycbcr_discrete(int val)
-	{
-		double r = Pixel.r(val), g = Pixel.g(val), b = Pixel.b(val);
-		return Pixel.rgb_bounded(
-				(int)Math.round( 0.2990f*r +0.5870f*g +0.1140f*b),
-				(int)Math.round(-0.1687f*r -0.3313f*g +0.5000f*b +128f),
-				(int)Math.round( 0.5000f*r -0.4187f*g +0.0813f*b +128f));
-	}
-
 	private static void rgb2ycbcr_continuous(PixelBase px)
 	{
 		double r = px.r_asDouble(), g = px.g_asDouble(), b = px.b_asDouble();
@@ -415,15 +342,6 @@ public enum ColorSpaceTransformation implements Consumer<PixelBase> {
 				(0.2990f*r +0.5870f*g +0.1140f*b),
 				(-0.1687f*r -0.3313f*g +0.5000f*b +0.5),
 				( 0.5000f*r -0.4187f*g +0.0813f*b +0.5));
-	}
-
-	private static int ycbcr2rgb_discrete(int val)
-	{
-		double y = Pixel.r(val), cb = Pixel.g(val)-128, cr = Pixel.b(val)-128;
-		return Pixel.rgb_bounded(
-				(int)Math.round(0.7720f*y -0.4030f*cb +1.4020f*cr),
-				(int)Math.round(1.1161f*y -0.1384f*cb -0.7141f*cr),
-				(int)Math.round(1.0000f*y +1.7720f*cb -0.0001f*cr));
 	}
 
 	private static void ycbcr2rgb_continuous(PixelBase px)

@@ -50,14 +50,11 @@ public class ColorSpaceTest {
 			}
 
 			// test black and white transformation accuracy
-			int color;
-			color = forward.discreteTransform(white);
-			color = backward.discreteTransform(color);
-			assertEquals(white, color);
-
-			color = forward.discreteTransform(black);
-			color = backward.discreteTransform(color);
-			assertEquals(black, color);
+			Img blackandwhite = new Img(2, 1, new int[]{black,white});
+			blackandwhite.forEach(forward);
+			blackandwhite.forEach(backward);
+			assertEquals(black, blackandwhite.getData()[0]);
+			assertEquals(white, blackandwhite.getData()[1]);
 		}
 
 		// test RGB <-> LAB
@@ -87,14 +84,11 @@ public class ColorSpaceTest {
 			}
 
 			// test black and white transformation accuracy
-			int color;
-			color = forward.discreteTransform(white);
-			color = backward.discreteTransform(color);
-			assertEquals(white, color);
-
-			color = forward.discreteTransform(black);
-			color = backward.discreteTransform(color);
-			assertEquals(black, color);
+			Img blackandwhite = new Img(2, 1, new int[]{black,white});
+			blackandwhite.forEach(forward);
+			blackandwhite.forEach(backward);
+			assertEquals(black, blackandwhite.getData()[0]);
+			assertEquals(Integer.toHexString(blackandwhite.getData()[1]),white, blackandwhite.getData()[1]);
 		}
 
 	}
