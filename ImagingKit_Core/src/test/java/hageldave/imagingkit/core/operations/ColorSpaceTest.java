@@ -170,7 +170,8 @@ public class ColorSpaceTest {
 	@Test
 	public void test_continuous(){
 		ColorImg img = getTestColorImg();
-		ColorImg testimg = new ColorImg(getTestImg(), img.hasAlpha());
+		ColorImg testimg = img.copy();
+		testimg.setSpliteratorMinimumSplitSize(1024*8);
 		ColorSpaceTransformation[] toTest = {RGB_2_HSV, /*NOT HSV_2_RGB since it is not injective ,*/ RGB_2_LAB, LAB_2_RGB, RGB_2_YCbCr, YCbCr_2_RGB};
 		for(ColorSpaceTransformation cst: toTest){
 			img.copyArea(0, 0, img.getWidth(), img.getHeight(), testimg, 0, 0);
