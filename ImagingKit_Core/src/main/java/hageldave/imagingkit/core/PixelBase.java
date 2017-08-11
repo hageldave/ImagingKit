@@ -26,6 +26,14 @@ public interface PixelBase {
 	 */
 	public double b_asDouble();
 
+	public PixelBase setA_fromDouble(double a);
+
+	public PixelBase setR_fromDouble(double r);
+
+	public PixelBase setG_fromDouble(double g);
+
+	public PixelBase setB_fromDouble(double b);
+
 	/**
 	 * Sets the alpha, red, green and blue value of this pixel.
 	 * Assumed minimum and maximum value for each channel is 0.0 and 1.0
@@ -35,7 +43,12 @@ public interface PixelBase {
 	 * @param g green value
 	 * @param b blue value
 	 */
-	public void setARGB_fromDouble(double a, double r, double g, double b);
+	public default void setARGB_fromDouble(double a, double r, double g, double b){
+		setA_fromDouble(a);
+		setR_fromDouble(r);
+		setG_fromDouble(g);
+		setB_fromDouble(b);
+	}
 
 	/**
 	 * Sets the red, green and blue value of this pixel. The alpha value is set to 1.0 (opaque).
@@ -45,7 +58,12 @@ public interface PixelBase {
 	 * @param g green value
 	 * @param b blue value
 	 */
-	public void setRGB_fromDouble(double r, double g, double b);
+	public default void setRGB_fromDouble(double r, double g, double b){
+		setA_fromDouble(1.0);
+		setR_fromDouble(r);
+		setG_fromDouble(g);
+		setB_fromDouble(b);
+	}
 
 	/**
 	 * Sets the red, green and blue value of this pixel. The alpha value is preserved.
@@ -55,7 +73,11 @@ public interface PixelBase {
 	 * @param g green value
 	 * @param b blue value
 	 */
-	public void setRGB_fromDouble_preserveAlpha(double r, double g, double b);
+	public default void setRGB_fromDouble_preserveAlpha(double r, double g, double b){
+		setR_fromDouble(r);
+		setG_fromDouble(g);
+		setB_fromDouble(b);
+	}
 
 	public int getX();
 

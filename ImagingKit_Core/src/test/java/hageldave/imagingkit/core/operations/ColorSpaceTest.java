@@ -177,11 +177,11 @@ public class ColorSpaceTest {
 			testimg.stream(true)
 			.forEach(cst);
 			// test alpha preservation
-			testimg.forEach(px->assertEquals(img.getDataA()[px.getIndex()], px.a(), 0));
+			testimg.forEach(px->assertEquals(img.getDataA()[px.getIndex()], px.a_asDouble(), 0));
 			testimg.stream(true)
 			.forEach(cst.inverse());
 			// test alpha preservation
-			testimg.forEach(px->assertEquals(img.getDataA()[px.getIndex()], px.a(), 0));
+			testimg.forEach(px->assertEquals(img.getDataA()[px.getIndex()], px.a_asDouble(), 0));
 			// test if forward transform and backwards transform preserves lumanance to a high degree (max 0.001 error tolerance)
 			testimg.forEach(px->{
 				double lum1 = px.getLuminance();

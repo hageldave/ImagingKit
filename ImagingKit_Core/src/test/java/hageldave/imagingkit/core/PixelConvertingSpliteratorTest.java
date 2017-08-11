@@ -120,28 +120,28 @@ public class PixelConvertingSpliteratorTest {
 		}
 
 		{
-			double sumb1 = img.stream().mapToDouble(px->px.b_normalized()).sum();
+			double sumb1 = img.stream().mapToDouble(px->px.b_asDouble()).sum();
 			double sumb2 = img.stream(converter, false).mapToDouble(a->a[2]).sum();
 			assertNotEquals(0, sumb1, eps);
 			assertEquals(sumb1, sumb2, eps);
-			double sumg1 = img.stream().mapToDouble(px->px.g_normalized()).sum();
+			double sumg1 = img.stream().mapToDouble(px->px.g_asDouble()).sum();
 			double sumg2 = img.stream(converter, true).mapToDouble(a->a[1]).sum();
 			assertNotEquals(0, sumg1, eps);
 			assertEquals(sumg1, sumg2, eps);
-			double sumw1 = img.stream(0, 0, img.getWidth(), 1).mapToDouble(px->px.r_normalized()+px.g_normalized()+px.b_normalized()).sum();
+			double sumw1 = img.stream(0, 0, img.getWidth(), 1).mapToDouble(px->px.r_asDouble()+px.g_asDouble()+px.b_asDouble()).sum();
 			double sumw2 = img.stream(converter, false, 0, 0, img.getWidth(), 1).mapToDouble(a->a[0]+a[1]+a[2]).sum();
 			assertNotEquals(0, sumw1, eps);
 			assertEquals(sumw1, sumw2, eps);
 		}
-		
+
 		{	// this is rather a test for correct generic definition
 			Consumer<int[]> rotateChannelsInt = (px) -> {int t=px[0]; px[0]=px[1]; px[1]=px[2]; px[2]=t;};
 			// test if its possible to infer correct types <Pixel,int[]> instead of <PixelBase,int[]> for PixelConverter
 			// conclusion: yes this compiles so its all good
 			img.forEach(PixelConverter.fromFunctions(
-						()->new int[3], 
-						(px,a)->{a[0]=px.r();a[1]=px.g();a[2]=px.b();}, 
-						(a,px)->px.setRGB_preserveAlpha(a[0], a[1], a[2])), 
+						()->new int[3],
+						(px,a)->{a[0]=px.r();a[1]=px.g();a[2]=px.b();},
+						(a,px)->px.setRGB_preserveAlpha(a[0], a[1], a[2])),
 					true, 0, 0, img.getWidth(), 1, rotateChannelsInt);
 			for(int i = img.getWidth(); i < img.numValues(); i++){
 				// g for all except first row
@@ -156,16 +156,16 @@ public class PixelConvertingSpliteratorTest {
 				assertEquals("i="+i+" "+Integer.toHexString(img.getData()[i]), 0, Pixel.b(img.getData()[i]));
 			}
 		}
-		
+
 		{
 			ColorImg dimg = new ColorImg(40, 40, true);
 			dimg.setValueR(1, 2, -3);
 			dimg.setValueB(22, 33, -1);
 			long numNegativeSums = dimg.stream(
 					PixelConverter.fromFunctions(
-							()->new float[1], 
-							(px,f)->f[0]=(float)(px.r()+px.g()+px.b()), 
-							null), 
+							()->new float[1],
+							(px,f)->f[0]=(float)(px.r_asDouble()+px.g_asDouble()+px.b_asDouble()),
+							null),
 					true)
 			.filter(f->f[0] < 0)
 			.count();

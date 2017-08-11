@@ -69,26 +69,26 @@ public class ImgTest {
 		p.setA(0x44);
 		p.setRGB_preserveAlpha(0x88, 0x77, 0x66);
 		assertEquals(0x44887766, p.getValue());
-		p.setRGB_fromNormalized_preserveAlpha(0, 0, 0);
+		p.setRGB_fromDouble_preserveAlpha(0, 0, 0);
 		assertEquals(0x44000000, p.getValue());
-		p.setRGB_fromNormalized_preserveAlpha(0.4f, 0.7f, 0.3f);
+		p.setRGB_fromDouble_preserveAlpha(0.4f, 0.7f, 0.3f);
 		assertEquals(p.getValue(), Pixel.argb_fromNormalized(p.a_asDouble(), p.r_asDouble(), p.g_asDouble(), p.b_asDouble()));
 		{
 			int temp = p.getValue();
 			p.setARGB_fromDouble(p.a_asDouble(), p.r_asDouble(), p.g_asDouble(), p.b_asDouble());
 			assertEquals(temp, p.getValue());
 		}
-		assertEquals(0x44/255f, p.a_normalized(), eps);
-		assertEquals(0.4f, p.r_normalized(), 0.01);
-		assertEquals(0.7f, p.g_normalized(), 0.01);
-		assertEquals(0.3f, p.b_normalized(), 0.01);
+		assertEquals(0x44/255f, p.a_asDouble(), eps);
+		assertEquals(0.4f, p.r_asDouble(), 0.01);
+		assertEquals(0.7f, p.g_asDouble(), 0.01);
+		assertEquals(0.3f, p.b_asDouble(), 0.01);
 		p.setARGB(0x22, 0x11, 0x44, 0x33);
 		assertEquals(0x22114433, p.getValue());
-		p.setARGB_fromNormalized(1, 0x33/255.0, 0x70/255.0, 0);
+		p.setARGB_fromDouble(1, 0x33/255.0, 0x70/255.0, 0);
 		assertEquals(0xff337000, p.getValue());
 		p.setRGB(0x22, 0x33, 0x44);
 		assertEquals(0xff223344, p.getValue());
-		p.setRGB_fromNormalized(0x88/255d, 0xee/255d, 0xcc/255f);
+		p.setRGB_fromDouble(0x88/255d, 0xee/255d, 0xcc/255f);
 		assertEquals(0xff88eecc, p.getValue());
 		p.setA(0x44);
 		assertEquals(0x44, p.a());

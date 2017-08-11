@@ -208,8 +208,8 @@ public class ColorPixel implements PixelBase {
 	 * @see #getValue()
 	 * @since 1.0
 	 */
-	public double a(){
-		return this.img.getDataA()[index];
+	public double a_asDouble(){
+		return img.hasAlpha() ? this.img.getDataA()[index]:1;
 	}
 
 	/**
@@ -226,7 +226,7 @@ public class ColorPixel implements PixelBase {
 	 * @see #getValue()
 	 * @since 1.0
 	 */
-	public double r(){
+	public double r_asDouble(){
 		return this.img.getDataR()[index];
 	}
 
@@ -244,7 +244,7 @@ public class ColorPixel implements PixelBase {
 	 * @see #getValue()
 	 * @since 1.0
 	 */
-	public double g(){
+	public double g_asDouble(){
 		return this.img.getDataG()[index];
 	}
 
@@ -262,77 +262,8 @@ public class ColorPixel implements PixelBase {
 	 * @see #getValue()
 	 * @since 1.0
 	 */
-	public double b(){
+	public double b_asDouble(){
 		return this.img.getDataB()[index];
-	}
-
-	/**
-	 * Sets an ARGB value at the position currently referenced by this Pixel.
-	 * Each channel value is assumed to be 8bit and otherwise truncated.
-	 * @param a alpha
-	 * @param r red
-	 * @param g green
-	 * @param b blue
-	 * @throws ArrayIndexOutOfBoundsException if this Pixel's index is not in
-	 * range of the ColorImg's data array.
-	 * @see #setRGB(int, int, int)
-	 * @see #setRGB_preserveAlpha(int, int, int)
-	 * @see #argb(int, int, int, int)
-	 * @see #argb_bounded(int, int, int, int)
-	 * @see #argb_fast(int, int, int, int)
-	 * @see #setValue(int)
-	 * @since 1.0
-	 */
-	public ColorPixel setARGB(double a, double r, double g, double b){
-		this.img.getDataR()[index] = r;
-		this.img.getDataG()[index] = g;
-		this.img.getDataB()[index] = b;
-		this.img.getDataA()[index] = a;
-		return this;
-	}
-
-	/**
-	 * Sets an opaque RGB value at the position currently referenced by this Pixel.
-	 * Each channel value is assumed to be 8bit and otherwise truncated.
-	 * @param r red
-	 * @param g green
-	 * @param b blue
-	 * @throws ArrayIndexOutOfBoundsException if this Pixel's index is not in
-	 * range of the ColorImg's data array.
-	 * @see #setARGB(int, int, int, int)
-	 * @see #setRGB_preserveAlpha(int, int, int)
-	 * @see #argb(int, int, int, int)
-	 * @see #argb_bounded(int, int, int, int)
-	 * @see #argb_fast(int, int, int, int)
-	 * @see #setValue(int)
-	 * @since 1.0
-	 */
-	public ColorPixel setRGB(double r, double g, double b){
-		this.img.getDataR()[index] = r;
-		this.img.getDataG()[index] = g;
-		this.img.getDataB()[index] = b;
-		if(this.img.hasAlpha())
-			this.img.getDataA()[index] = 1;
-		return this;
-	}
-
-	/**
-	 * Sets an RGB value at the position currently referenced by this Pixel.
-	 * The present alpha value will not be altered by this operation.
-	 * Each channel value is assumed to be 8bit and otherwise truncated.
-	 * @param r red
-	 * @param g green
-	 * @param b blue
-	 * @throws ArrayIndexOutOfBoundsException if this Pixel's index is not in
-	 * range of the ColorImg's data array.
-	 * @see #setRGB_fromNormalized_preserveAlpha(float, float, float)
-	 * @since 1.2
-	 */
-	public ColorPixel setRGB_preserveAlpha(double r, double g, double b){
-		this.img.getDataR()[index] = r;
-		this.img.getDataG()[index] = g;
-		this.img.getDataB()[index] = b;
-		return this;
 	}
 
 	/**
@@ -344,8 +275,9 @@ public class ColorPixel implements PixelBase {
 	 * @see #setARGB(int a, int r, int g, int b)
 	 * @since 1.2
 	 */
-	public ColorPixel setA(double a){
-		this.img.getDataA()[index] = a;
+	public ColorPixel setA_fromDouble(double a){
+		if(img.hasAlpha())
+			this.img.getDataA()[index] = a;
 		return this;
 	}
 
@@ -359,7 +291,7 @@ public class ColorPixel implements PixelBase {
 	 * @see #setRGB(int r, int g, int b)
 	 * @since 1.2
 	 */
-	public ColorPixel setR(double r){
+	public ColorPixel setR_fromDouble(double r){
 		this.img.getDataR()[index] = r;
 		return this;
 	}
@@ -374,7 +306,7 @@ public class ColorPixel implements PixelBase {
 	 * @see #setRGB(int r, int g, int b)
 	 * @since 1.2
 	 */
-	public ColorPixel setG(double g){
+	public ColorPixel setG_fromDouble(double g){
 		this.img.getDataG()[index] = g;
 		return this;
 	}
@@ -389,7 +321,7 @@ public class ColorPixel implements PixelBase {
 	 * @see #setRGB(int r, int g, int b)
 	 * @since 1.2
 	 */
-	public ColorPixel setB(double b){
+	public ColorPixel setB_fromDouble(double b){
 		this.img.getDataB()[index] = b;
 		return this;
 	}
@@ -404,7 +336,7 @@ public class ColorPixel implements PixelBase {
 	 * @since 1.2
 	 */
 	public double getLuminance(){
-		return ColorPixel.getLuminance(r(),g(),b());
+		return ColorPixel.getLuminance(r_asDouble(),g_asDouble(),b_asDouble());
 	}
 
 	/**
@@ -421,7 +353,7 @@ public class ColorPixel implements PixelBase {
 	 * @since 1.2
 	 */
 	public double getGrey(final double redWeight, final double greenWeight, final double blueWeight){
-		return ColorPixel.getGrey(r(),g(),b(), redWeight, greenWeight, blueWeight);
+		return ColorPixel.getGrey(r_asDouble(),g_asDouble(),b_asDouble(), redWeight, greenWeight, blueWeight);
 	}
 
 	@Override
@@ -434,10 +366,11 @@ public class ColorPixel implements PixelBase {
 		//		double newRange = upperLimitAfter-lowerLimitAfter;
 		//		double scaling = newRange/currentRange;
 		double scaling = (upperLimitAfter-lowerLimitAfter)/(upperLimitNow-lowerLimitNow);
-		return setRGB_preserveAlpha(
-				lowerLimitAfter+(r()-lowerLimitNow)*scaling,
-				lowerLimitAfter+(g()-lowerLimitNow)*scaling,
-				lowerLimitAfter+(b()-lowerLimitNow)*scaling);
+		setRGB_fromDouble_preserveAlpha(
+				lowerLimitAfter+(r_asDouble()-lowerLimitNow)*scaling,
+				lowerLimitAfter+(g_asDouble()-lowerLimitNow)*scaling,
+				lowerLimitAfter+(b_asDouble()-lowerLimitNow)*scaling);
+		return this;
 	}
 
 	public ColorPixel scaleToRange(double lowerLimit, double upperLimit){
@@ -449,11 +382,13 @@ public class ColorPixel implements PixelBase {
 	}
 
 	public ColorPixel scale(double factor){
-		return setRGB_preserveAlpha(r()*factor, g()*factor, b()*factor);
+		setRGB_fromDouble_preserveAlpha(r_asDouble()*factor, g_asDouble()*factor, b_asDouble()*factor);
+		return this;
 	}
 
 	public ColorPixel add(double r, double g, double b){
-		return setRGB_preserveAlpha(r+r(), g+g(), b+b());
+		setRGB_fromDouble_preserveAlpha(r+r_asDouble(), g+g_asDouble(), b+b_asDouble());
+		return this;
 	}
 
 	public ColorPixel subtract(double r, double g, double b){
@@ -461,17 +396,19 @@ public class ColorPixel implements PixelBase {
 	}
 
 	public ColorPixel cross(double r, double g, double b){
-		return setRGB_preserveAlpha(
-				(g()*b)-(g*b()),
-				(b()*r)-(b*r()),
-				(r()*g)-(r*g()));
+		setRGB_fromDouble_preserveAlpha(
+				(g_asDouble()*b)-(g*b_asDouble()),
+				(b_asDouble()*r)-(b*r_asDouble()),
+				(r_asDouble()*g)-(r*g_asDouble()));
+		return this;
 	}
 
 	public ColorPixel cross_(double r, double g, double b){
-		return setRGB_preserveAlpha(
-				(g*b())-(g()*b),
-				(b*r())-(b()*r),
-				(r*g())-(r()*g));
+		setRGB_fromDouble_preserveAlpha(
+				(g*b_asDouble())-(g_asDouble()*b),
+				(b*r_asDouble())-(b_asDouble()*r),
+				(r*g_asDouble())-(r_asDouble()*g));
+		return this;
 	}
 
 	public double dot(double r, double g, double b){
@@ -483,25 +420,25 @@ public class ColorPixel implements PixelBase {
 			double m10, double m11, double m12,
 			double m20, double m21, double m22)
 	{
-		return setRGB_preserveAlpha(
+		setRGB_fromDouble_preserveAlpha(
 				dot(m00,m01,m02),
 				dot(m10,m11,m12),
-				dot(m20,m21,m22)
-				);
+				dot(m20,m21,m22));
+		return this;
 	}
 
 	public ColorPixel transform(double[][] m3x3){
-		return transform(
+		transform(
 				m3x3[0][0],m3x3[0][1],m3x3[0][2],
 				m3x3[1][0],m3x3[1][1],m3x3[1][2],
-				m3x3[2][0],m3x3[2][1],m3x3[2][2]
-				);
+				m3x3[2][0],m3x3[2][1],m3x3[2][2]);
+		return this;
 	}
 
 
 
 	public double getLenSquared(){
-		return r()*r() + g()*g() + b()*b();
+		return r_asDouble()*r_asDouble() + g_asDouble()*g_asDouble() + b_asDouble()*b_asDouble();
 	}
 
 	public double getLen(){
@@ -510,9 +447,10 @@ public class ColorPixel implements PixelBase {
 
 	public ColorPixel normalize(){
 		double len = getLen();
-		if(len == 0.0) return this;
+		if(len == 0.0)
+			return this;
 		double divByLen = 1/len;
-		return setR(r()*divByLen).setG(g()*divByLen).setB(b()*divByLen);
+		return setR_fromDouble(r_asDouble()*divByLen).setG_fromDouble(g_asDouble()*divByLen).setB_fromDouble(b_asDouble()*divByLen);
 	}
 
 	public int minChannel() {
@@ -574,41 +512,6 @@ public class ColorPixel implements PixelBase {
 	 */
 	public static final double getGrey(final double r, final double g, final double b, final double redWeight, final double greenWeight, final double blueWeight){
 		return r*redWeight+g*greenWeight+b*blueWeight;
-	}
-
-	@Override
-	public void setARGB_fromDouble(double a, double r, double g, double b) {
-		if(img.hasAlpha()) setARGB(a, r, g, b); else setRGB_fromDouble_preserveAlpha(r, g, b);
-	}
-
-	@Override
-	public void setRGB_fromDouble(double r, double g, double b) {
-		setRGB(r, g, b);
-	}
-
-	@Override
-	public void setRGB_fromDouble_preserveAlpha(double r, double g, double b) {
-		setRGB_preserveAlpha(r, g, b);
-	}
-
-	@Override
-	public double a_asDouble() {
-		return img.hasAlpha() ? a():1.0;
-	}
-
-	@Override
-	public double r_asDouble() {
-		return r();
-	}
-
-	@Override
-	public double g_asDouble() {
-		return g();
-	}
-
-	@Override
-	public double b_asDouble() {
-		return b();
 	}
 
 }

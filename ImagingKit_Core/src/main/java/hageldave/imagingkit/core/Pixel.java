@@ -159,8 +159,9 @@ public class Pixel implements PixelBase {
 	 * @see Img#setValue(int, int, int)
 	 * @since 1.0
 	 */
-	public void setValue(int pixelValue){
+	public Pixel setValue(int pixelValue){
 		this.img.getData()[index] = pixelValue;
+		return this;
 	}
 
 	/**
@@ -264,12 +265,12 @@ public class Pixel implements PixelBase {
 	 * range of the Img's data array.
 	 *
 	 * @see #a()
-	 * @see #r_normalized()
-	 * @see #g_normalized()
-	 * @see #b_normalized()
+	 * @see #r_asDouble()
+	 * @see #g_asDouble()
+	 * @see #b_asDouble()
 	 * @since 1.2
 	 */
-	public double a_normalized(){
+	public double a_asDouble(){
 		return Pixel.a_normalized(getValue());
 	}
 
@@ -280,12 +281,12 @@ public class Pixel implements PixelBase {
 	 * range of the Img's data array.
 	 *
 	 * @see #r()
-	 * @see #a_normalized()
-	 * @see #g_normalized()
-	 * @see #b_normalized()
+	 * @see #a_asDouble()
+	 * @see #g_asDouble()
+	 * @see #b_asDouble()
 	 * @since 1.2
 	 */
-	public double r_normalized(){
+	public double r_asDouble(){
 		return Pixel.r_normalized(getValue());
 	}
 
@@ -296,12 +297,12 @@ public class Pixel implements PixelBase {
 	 * range of the Img's data array.
 	 *
 	 * @see #g()
-	 * @see #a_normalized()
-	 * @see #r_normalized()
-	 * @see #b_normalized()
+	 * @see #a_asDouble()
+	 * @see #r_asDouble()
+	 * @see #b_asDouble()
 	 * @since 1.2
 	 */
-	public double g_normalized(){
+	public double g_asDouble(){
 		return Pixel.g_normalized(getValue());
 	}
 
@@ -312,12 +313,12 @@ public class Pixel implements PixelBase {
 	 * range of the Img's data array.
 	 *
 	 * @see #b()
-	 * @see #a_normalized()
-	 * @see #r_normalized()
-	 * @see #g_normalized()
+	 * @see #a_asDouble()
+	 * @see #r_asDouble()
+	 * @see #g_asDouble()
 	 * @since 1.2
 	 */
-	public double b_normalized(){
+	public double b_asDouble(){
 		return Pixel.b_normalized(getValue());
 	}
 
@@ -371,7 +372,7 @@ public class Pixel implements PixelBase {
 	 * @param b blue
 	 * @throws ArrayIndexOutOfBoundsException if this Pixel's index is not in
 	 * range of the Img's data array.
-	 * @see #setRGB_fromNormalized_preserveAlpha(double, double, double)
+	 * @see #setRGB_fromDouble_preserveAlpha(double, double, double)
 	 * @since 1.2
 	 */
 	public void setRGB_preserveAlpha(int r, int g, int b){
@@ -389,16 +390,16 @@ public class Pixel implements PixelBase {
 	 * @throws ArrayIndexOutOfBoundsException if this Pixel's index is not in
 	 * range of the Img's data array.
 	 *
-	 * @see #setRGB_fromNormalized(double, double, double)
-	 * @see #setRGB_fromNormalized_preserveAlpha(double, double, double)
+	 * @see #setRGB_fromDouble(double, double, double)
+	 * @see #setRGB_fromDouble_preserveAlpha(double, double, double)
 	 * @see #setARGB(int, int, int, int)
-	 * @see #a_normalized()
-	 * @see #r_normalized()
-	 * @see #g_normalized()
-	 * @see #b_normalized()
+	 * @see #a_asDouble()
+	 * @see #r_asDouble()
+	 * @see #g_asDouble()
+	 * @see #b_asDouble()
 	 * @since 1.2
 	 */
-	public void setARGB_fromNormalized(double a, double r, double g, double b){
+	public void setARGB_fromDouble(double a, double r, double g, double b){
 		setValue(Pixel.argb_fromNormalized(a, r, g, b));
 	}
 
@@ -412,16 +413,16 @@ public class Pixel implements PixelBase {
 	 * @throws ArrayIndexOutOfBoundsException if this Pixel's index is not in
 	 * range of the Img's data array.
 	 *
-	 * @see #setARGB_fromNormalized(double, double, double, double)
-	 * @see #setRGB_fromNormalized_preserveAlpha(double, double, double)
+	 * @see #setARGB_fromDouble(double, double, double, double)
+	 * @see #setRGB_fromDouble_preserveAlpha(double, double, double)
 	 * @see #setRGB(int, int, int)
-	 * @see #a_normalized()
-	 * @see #r_normalized()
-	 * @see #g_normalized()
-	 * @see #b_normalized()
+	 * @see #a_asDouble()
+	 * @see #r_asDouble()
+	 * @see #g_asDouble()
+	 * @see #b_asDouble()
 	 * @since 1.2
 	 */
-	public void setRGB_fromNormalized(double r, double g, double b){
+	public void setRGB_fromDouble(double r, double g, double b){
 		setValue(Pixel.rgb_fromNormalized(r, g, b));
 	}
 
@@ -439,7 +440,7 @@ public class Pixel implements PixelBase {
 	 * @see #setRGB_preserveAlpha(int, int, int)
 	 * @since 1.2
 	 */
-	public void setRGB_fromNormalized_preserveAlpha(double r, double g, double b){
+	public void setRGB_fromDouble_preserveAlpha(double r, double g, double b){
 		setValue((getValue() & 0xff000000) | (0x00ffffff & Pixel.rgb_fromNormalized(r, g, b)));
 	}
 
@@ -452,8 +453,8 @@ public class Pixel implements PixelBase {
 	 * @see #setARGB(int a, int r, int g, int b)
 	 * @since 1.2
 	 */
-	public void setA(int a){
-		setValue((getValue() & 0x00ffffff) | ((a<<24) & 0xff000000));
+	public Pixel setA(int a){
+		return setValue((getValue() & 0x00ffffff) | ((a<<24) & 0xff000000));
 	}
 
 	/**
@@ -466,8 +467,8 @@ public class Pixel implements PixelBase {
 	 * @see #setRGB(int r, int g, int b)
 	 * @since 1.2
 	 */
-	public void setR(int r){
-		setValue((getValue() & 0xff00ffff) | ((r<<16) & 0x00ff0000));
+	public Pixel setR(int r){
+		return setValue((getValue() & 0xff00ffff) | ((r<<16) & 0x00ff0000));
 	}
 
 	/**
@@ -480,8 +481,8 @@ public class Pixel implements PixelBase {
 	 * @see #setRGB(int r, int g, int b)
 	 * @since 1.2
 	 */
-	public void setG(int g){
-		setValue((getValue() & 0xffff00ff) | ((g<<8) & 0x0000ff00));
+	public Pixel setG(int g){
+		return setValue((getValue() & 0xffff00ff) | ((g<<8) & 0x0000ff00));
 	}
 
 	/**
@@ -494,8 +495,28 @@ public class Pixel implements PixelBase {
 	 * @see #setRGB(int r, int g, int b)
 	 * @since 1.2
 	 */
-	public void setB(int b){
-		setValue((getValue() & 0xffffff00) | ((b) & 0x000000ff));
+	public Pixel setB(int b){
+		return setValue((getValue() & 0xffffff00) | ((b) & 0x000000ff));
+	}
+
+	@Override
+	public PixelBase setA_fromDouble(double a) {
+		return setA(clamp_0_255((int)Math.round(a*0xff)));
+	}
+
+	@Override
+	public PixelBase setR_fromDouble(double r) {
+		return setR(clamp_0_255((int)Math.round(r*0xff)));
+	}
+
+	@Override
+	public PixelBase setG_fromDouble(double g) {
+		return setG(clamp_0_255((int)Math.round(g*0xff)));
+	}
+
+	@Override
+	public PixelBase setB_fromDouble(double b) {
+		return setB(clamp_0_255((int)Math.round(b*0xff)));
 	}
 
 	/**
@@ -880,40 +901,8 @@ public class Pixel implements PixelBase {
 		return a(color)/255.0;
 	}
 
-	@Override
-	public double a_asDouble() {
-		return a_normalized();
+	private static final int clamp_0_255(int val){
+		return Math.max(0, Math.min(val, 255));
 	}
-
-	@Override
-	public double r_asDouble() {
-		return r_normalized();
-	}
-
-	@Override
-	public double g_asDouble() {
-		return g_normalized();
-	}
-
-	@Override
-	public double b_asDouble() {
-		return b_normalized();
-	}
-
-	@Override
-	public void setARGB_fromDouble(double a, double r, double g, double b) {
-		setARGB_fromNormalized(a, r, g, b);
-	}
-
-	@Override
-	public void setRGB_fromDouble(double r, double g, double b) {
-		setRGB_fromNormalized(r, g, b);
-	}
-
-	@Override
-	public void setRGB_fromDouble_preserveAlpha(double r, double g, double b) {
-		setRGB_fromNormalized_preserveAlpha(r, g, b);
-	}
-
 
 }
