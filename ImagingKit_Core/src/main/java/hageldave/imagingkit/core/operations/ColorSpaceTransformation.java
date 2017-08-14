@@ -183,10 +183,6 @@ public enum ColorSpaceTransformation implements Consumer<PixelBase> {
 		}
 	}
 
-	static double clamp_0_1(double val){
-		return Math.max(0.0, Math.min(val, 1.0));
-	}
-
 
 	////// TRANSFORMS //////
 	private static void rgb2lab_continuous(PixelBase px)

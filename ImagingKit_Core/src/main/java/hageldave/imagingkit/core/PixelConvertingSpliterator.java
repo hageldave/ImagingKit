@@ -22,6 +22,8 @@
 
 package hageldave.imagingkit.core;
 
+import static hageldave.imagingkit.core.util.ImagingKitUtils.clamp_0_1;
+
 import java.util.Objects;
 import java.util.Spliterator;
 import java.util.function.BiConsumer;
@@ -215,9 +217,9 @@ public class PixelConvertingSpliterator<P extends PixelBase, T> implements Split
 			public void convertElementToPixel(double[] array, PixelBase px) {
 				px.setRGB_fromDouble_preserveAlpha(
 						// clamp values between zero and one
-						Math.min(1, Math.max(0, array[0])),
-						Math.min(1, Math.max(0, array[1])),
-						Math.min(1, Math.max(0, array[2])));
+						clamp_0_1(array[0]),
+						clamp_0_1(array[1]),
+						clamp_0_1(array[2]));
 			}
 
 			@Override
@@ -229,7 +231,7 @@ public class PixelConvertingSpliterator<P extends PixelBase, T> implements Split
 
 
 
-	static interface PixelConverter<P extends PixelBase, T> {
+	public static interface PixelConverter<P extends PixelBase, T> {
 		/**
 		 * Allocates a new element for the PixelConvertingSpliterator
 		 * (will be called once per split)

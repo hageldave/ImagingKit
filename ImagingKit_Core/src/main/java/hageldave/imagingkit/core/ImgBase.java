@@ -38,10 +38,10 @@ import hageldave.imagingkit.core.util.ParallelForEachExecutor;
 /**
  * Base interface for imagingkit's Img classes.
  * <p>
- * This interface defines the most basic methods like getting the dimensions 
- * of an image and converting an image to {@link BufferedImage}. 
+ * This interface defines the most basic methods like getting the dimensions
+ * of an image and converting an image to {@link BufferedImage}.
  * <p>
- * Appart from that it defines and implements all the {@link Iterable} functionality 
+ * Appart from that it defines and implements all the {@link Iterable} functionality
  * which is based on {@link PixelBase}. The Iterable Functionality also comprises
  * {@link Spliterator}s as well as the {@link #forEach(Consumer)} and {@link #stream()}
  * functionality.
@@ -52,7 +52,7 @@ import hageldave.imagingkit.core.util.ParallelForEachExecutor;
  * data structure, the method should be overridden to enable the mentioned funtionality.
  *
  * @param <P>
- * 
+ *
  * @author hageldave
  * @since 2.0
  */
@@ -371,6 +371,14 @@ public interface ImgBase<P extends PixelBase> extends Iterable<P> {
 				}
 			}
 		}
+	}
+
+	public default <T> void forEach(boolean parallel, final PixelManipulator<T> manipulator) {
+		forEach(manipulator.getConverter(), parallel, manipulator.getAction());
+	}
+
+	public default <T> void forEach(boolean parallel, final int xStart, final int yStart, final int width, final int height, final PixelManipulator<T> manipulator) {
+		forEach(manipulator.getConverter(), parallel, xStart, yStart, width, height, manipulator.getAction());
 	}
 
 	/**

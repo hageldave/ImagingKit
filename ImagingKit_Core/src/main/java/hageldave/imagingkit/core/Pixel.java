@@ -22,6 +22,8 @@
 
 package hageldave.imagingkit.core;
 
+import static hageldave.imagingkit.core.util.ImagingKitUtils.*;
+
 /**
  * Pixel class for retrieving a value from an {@link Img}.
  * A Pixel object stores a position and can be used to get and set values of
@@ -899,10 +901,6 @@ public class Pixel implements PixelBase {
 	 */
 	public static final double a_normalized(final int color){
 		return a(color)/255.0;
-	}
-
-	private static final int clamp_0_255(int val){
-		return Math.max(0, Math.min(val, 255));
 	}
 
 }

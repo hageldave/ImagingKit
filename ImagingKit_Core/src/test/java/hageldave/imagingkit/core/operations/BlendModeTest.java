@@ -4,70 +4,86 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 
+import static hageldave.imagingkit.core.JunitUtils.*;
 import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.Pixel;
 import hageldave.imagingkit.core.operations.Blending;
+import hageldave.imagingkit.core.scientific.ColorImg;
 
 public class BlendModeTest {
 
 	@Test
 	public void testFunctions(){
+		Img img0 = new Img(256, 256);
+		Img img1 = img0.copy();
+		img0.forEach(px->px.setRGB(0, px.getY(), px.getX()));
+		img1.forEach(px->px.setRGB(0, px.getX(), px.getY()));
+		Img img2;
 		for(Blending mode: Blending.values()){
 			/* input values range from 0 to 255, output values also have to satisfy that property */
-			for(int a = 0; a < 0xff; a++){
-				for(int b = 0; b < 0xff; b++){
-					assertEquals(String.format("not 8bit: a=%d b=%d mode:%s", a,b,mode.name()), 
-							0xff, 
-							mode.blendFunction.blend(a, b) | 0xff);
-				}
-			}			
+//			for(int a = 0; a < 0xff; a++){
+//				for(int b = 0; b < 0xff; b++){
+//					assertEquals(String.format("not 8bit: a=%d b=%d mode:%s", a,b,mode.name()),
+//							0xff,
+//							mode.blendFunction.blend(a, b) | 0xff);
+//				}
+//			}
+			img2 = new Img(img0.getRemoteBufferedImage());
+			img2.forEach(false, mode.getBlendingWith(img1));
+			img2.forEach(px->{
+				testWithMsg(()->assertEquals(0, px.r_asDouble(), 0),()->px.toString()+mode.name());
+				testWithMsg(()->assertTrue(px.g_asDouble() <= 1.0), ()->px.toString()+mode.name());
+				testWithMsg(()->assertTrue(px.b_asDouble() <= 1.0), ()->px.toString()+mode.name());
+				testWithMsg(()->assertTrue(px.g_asDouble() >= 0.0), ()->px.toString()+mode.name());
+				testWithMsg(()->assertTrue(px.b_asDouble() >= 0.0), ()->px.toString()+mode.name());
+			});
 		}
 	}
-	
+
 	@Test
 	public void testOpacityThings(){
 		int opaque = 0xff000000;
 		int semi = 0x88000000;
-		assertEquals("not top color", 
-				opaque|0xaa, 
+		assertEquals("not top color",
+				opaque|0xaa,
 				Blending.blend(opaque|0xff, opaque|0xaa, Blending.NORMAL));
-		assertEquals("not same result with visibility 1", 
-				Blending.blend(opaque|0xff, opaque|0xaa, Blending.NORMAL), 
+		assertEquals("not same result with visibility 1",
+				Blending.blend(opaque|0xff, opaque|0xaa, Blending.NORMAL),
 				Blending.alphaBlend(opaque|0xff, opaque|0xaa, 1,Blending.NORMAL));
 		assertEquals("not bottom color with visibility 0",
-				opaque|0xff, 
+				opaque|0xff,
 				Blending.alphaBlend(opaque|0xff, opaque|0xaa, 0,Blending.NORMAL));
 		assertEquals("not bottom color with transparent top color at visibility 1",
 				opaque|0xff,
 				Blending.alphaBlend(opaque|0xff, 0|0xaa, 1, Blending.NORMAL));
-		assertTrue("not brighter than darker color at visibility 0.5", 
-				Pixel.getLuminance(opaque|0x44) < 
+		assertTrue("not brighter than darker color at visibility 0.5",
+				Pixel.getLuminance(opaque|0x44) <
 				Pixel.getLuminance(Blending.alphaBlend(opaque|0x44, opaque|0xff, 0.5f, Blending.NORMAL)));
-		assertTrue("not darker than brighter color at visibility 0.5", 
-				Pixel.getLuminance(opaque|0xff) > 
+		assertTrue("not darker than brighter color at visibility 0.5",
+				Pixel.getLuminance(opaque|0xff) >
 				Pixel.getLuminance(Blending.alphaBlend(opaque|0x44, opaque|0xff, 0.5f, Blending.NORMAL)));
-		assertTrue("not brighter than darker color with 88 opacity", 
-				Pixel.getLuminance(opaque|0x44) < 
+		assertTrue("not brighter than darker color with 88 opacity",
+				Pixel.getLuminance(opaque|0x44) <
 				Pixel.getLuminance(Blending.alphaBlend(opaque|0x44, semi|0xff, 1, Blending.NORMAL)));
-		assertTrue("not darker than brighter color with 88 opacity", 
-				Pixel.getLuminance(opaque|0xff) > 
+		assertTrue("not darker than brighter color with 88 opacity",
+				Pixel.getLuminance(opaque|0xff) >
 				Pixel.getLuminance(Blending.alphaBlend(opaque|0x44, semi|0xff, 1, Blending.NORMAL)));
 		assertEquals("alpha not preserved",
 				semi|0x67,
 				Blending.blend(semi|0x34, opaque|0x67, Blending.NORMAL));
-		
+
 	}
-	
+
 	@Test
 	public void testConsumers() {
 		int opaqueBlack = 0xff000000;
 		int opaqueWhite = 0xffffffff;
-		
+
 		Img imgB = new Img(10, 10);
 		imgB.fill(opaqueBlack);
 		Img imgT = imgB.copy();
 		imgT.fill(opaqueWhite);
-		
+
 		// bottom is black top is white
 		imgB.forEach(Blending.NORMAL.getBlendingWith(imgT));
 		// bottom should be white now
@@ -113,7 +129,7 @@ public class BlendModeTest {
 				assertEquals(opaqueBlack, px.getValue());
 			}
 		});
-		
+
 	}
-	
+
 }
