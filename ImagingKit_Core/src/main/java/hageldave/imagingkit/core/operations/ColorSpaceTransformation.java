@@ -152,8 +152,20 @@ public enum ColorSpaceTransformation implements Consumer<PixelBase> {
 	}
 
 	/**
+	 * Applies this transformation to the specified pixel
+	 * @param px pixel to be transformed
+	 * @return the pixel for chaining
+	 * @since 2.0
+	 */
+	public <P extends PixelBase> P transform(P px){
+		accept(px);
+		return px;
+	}
+
+	/**
 	 * Returns the inverse transformation of this.
 	 * @return the transform that reverses this one.
+	 * @since 2.0
 	 */
 	public ColorSpaceTransformation inverse() {
 		return inverse;
