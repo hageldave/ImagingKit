@@ -34,9 +34,9 @@ import hageldave.imagingkit.core.PixelManipulator;
  * This Enum class provides a variation of different blend functions to
  * blend a bottom and top value (pixels). It also provides methods to calculate
  * the blend of two colors with additional transparency specification
- * (see {@link #alphaBlend(int, int, float, Blending)}), as well as ready to use
+ * (see {@link #alphaBlend(int, int, double, Blending)}), as well as ready to use
  * Consumers for blending two {@link Img}s
- * (see {@link #getAlphaBlendingWith(Img, float)}).
+ * (see {@link #getAlphaBlendingWith(Img, double)}).
  * <p>
  * Here's a short example on how to blend two images using the Blending class:
  * <pre>
@@ -61,7 +61,7 @@ import hageldave.imagingkit.core.PixelManipulator;
  * {@code
  * int bottomARGB = 0x8844FF11;
  * int topARGB =    0xFF118899;
- * float opacity = 0.7f;
+ * double opacity = 0.7;
  * int blendARGB = Blending.blend(bottomARGB, topARGB, opacity, Blending.DODGE);
  *
  * int channel1 = 0xBB;
@@ -174,11 +174,11 @@ public enum Blending {
 	 * @return Consumer to apply to bottom Img that will perform the specified
 	 * blending. {@code bottomImg.forEach(blendingConsumer);}
 	 *
-	 * @see #getAlphaBlendingWith(Img, float)
+	 * @see #getAlphaBlendingWith(Img, double)
 	 * @see #getBlendingWith(Img, int, int)
 	 * @see #getBlendingWith(Img)
 	 */
-	public PixelManipulator<PixelBasePair> getAlphaBlendingWith(ImgBase<? extends PixelBase> topImg, int xTopOffset, int yTopOffset, float opacity){
+	public PixelManipulator<PixelBasePair> getAlphaBlendingWith(ImgBase<? extends PixelBase> topImg, int xTopOffset, int yTopOffset, double opacity){
 		return alphaBlendingWith(topImg, xTopOffset, yTopOffset, opacity, blendFunction);
 	}
 
@@ -194,7 +194,7 @@ public enum Blending {
 	 * the result is therefore fully dependent on this blend function.
 	 * See also the ARGB alpha blending version which respects pixels alpha values
 	 * as well as an additional global opacity parameter
-	 * {@link #getAlphaBlendingWith(Img, int, int, float)}
+	 * {@link #getAlphaBlendingWith(Img, int, int, double)}
 	 *
 	 * @param topImg top image of the blending (consumer is applied to bottom)
 	 * @param xTopOffset horizontal offset of the top image on the bottom
@@ -203,8 +203,8 @@ public enum Blending {
 	 * blending. {@code bottomImg.forEach(blendingConsumer);}
 	 *
 	 * @see #getBlendingWith(Img)
-	 * @see #getAlphaBlendingWith(Img, int, int, float)
-	 * @see #getAlphaBlendingWith(Img, float)
+	 * @see #getAlphaBlendingWith(Img, int, int, double)
+	 * @see #getAlphaBlendingWith(Img, double)
 	 */
 	public PixelManipulator<PixelBasePair> getBlendingWith(ImgBase<? extends PixelBase> topImg, int xTopOffset, int yTopOffset){
 		return blendingWith(topImg, xTopOffset, yTopOffset, blendFunction);
@@ -231,7 +231,7 @@ public enum Blending {
 	 * @return Consumer to apply to bottom Img that will perform the specified
 	 * blending. {@code bottomImg.forEach(blendingConsumer);}
 	 */
-	public PixelManipulator<PixelBasePair> getAlphaBlendingWith(ImgBase<? extends PixelBase> topImg, float opacity){
+	public PixelManipulator<PixelBasePair> getAlphaBlendingWith(ImgBase<? extends PixelBase> topImg, double opacity){
 		return getAlphaBlendingWith(topImg,0,0, opacity);
 	}
 
@@ -246,15 +246,15 @@ public enum Blending {
 	 * the result is therefore fully dependent on this blend function.
 	 * See also the ARGB alpha blending version which respects pixels alpha values
 	 * as well as an additional global opacity parameter
-	 * {@link #getAlphaBlendingWith(Img, int, int, float)}
+	 * {@link #getAlphaBlendingWith(Img, int, int, double)}
 	 *
 	 * @param topImg top image of the blending (consumer is applied to bottom)
 	 * @return Consumer to apply to bottom Img that will perform the specified
 	 * blending. {@code bottomImg.forEach(blendingConsumer);}
 	 *
 	 * @see #getBlendingWith(Img)
-	 * @see #getAlphaBlendingWith(Img, int, int, float)
-	 * @see #getAlphaBlendingWith(Img, float)
+	 * @see #getAlphaBlendingWith(Img, int, int, double)
+	 * @see #getAlphaBlendingWith(Img, double)
 	 */
 	public PixelManipulator<PixelBasePair> getBlendingWith(ImgBase<? extends PixelBase> topImg){
 		return getBlendingWith(topImg, 0, 0);
@@ -290,14 +290,15 @@ public enum Blending {
 	 * @return blended RGB or ARGB value
 	 *
 	 * @see #blend(int, int, Blending)
-	 * @see #alphaBlend(int, int, float, Blending)
-	 * @see #alphaBlend(int, int, float, BlendFunction)
+	 * @see #alphaBlend(int, int, double, Blending)
+	 * @see #alphaBlend(int, int, double, BlendFunction)
 	 */
-	public static void blend(PixelBase bottom, PixelBase top, BlendFunction func){
+	public static <P extends PixelBase> P blend(P bottom, PixelBase top, BlendFunction func){
 		bottom.setRGB_fromDouble_preserveAlpha(
 				func.blend(bottom.r_asDouble(), top.r_asDouble()),
 				func.blend(bottom.g_asDouble(), top.g_asDouble()),
 				func.blend(bottom.b_asDouble(), top.b_asDouble()));
+		return bottom;
 	}
 
 	/**
@@ -313,11 +314,11 @@ public enum Blending {
 	 * @return blended RGB or ARGB value
 	 *
 	 * @see #blend(int, int, BlendFunction)
-	 * @see #alphaBlend(int, int, float, Blending)
-	 * @see #alphaBlend(int, int, float, BlendFunction)
+	 * @see #alphaBlend(int, int, double, Blending)
+	 * @see #alphaBlend(int, int, double, BlendFunction)
 	 */
-	public static void blend(PixelBase bottom, PixelBase top, Blending blending){
-		blend(bottom, top, blending.blendFunction);
+	public static <P extends PixelBase> P blend(P bottom, PixelBase top, Blending blending){
+		return blend(bottom, top, blending.blendFunction);
 	}
 
 	/**
@@ -336,11 +337,11 @@ public enum Blending {
 	 * @param func blend function
 	 * @return blended ARGB value
 	 *
-	 * @see #alphaBlend(int, int, float, Blending)
+	 * @see #alphaBlend(int, int, double, Blending)
 	 * @see #blend(int, int, BlendFunction)
 	 * @see #blend(int, int, Blending)
 	 */
-	public static void alphaBlend(PixelBase bottom, PixelBase top, double opacity, BlendFunction func){
+	public static <P extends PixelBase> P alphaBlend(P bottom, PixelBase top, double opacity, BlendFunction func){
 //		int temp = 0;
 //		double a = Math.min(opacity*(temp=a(topARGB)) + a(bottomARGB),0xff);
 //		opacity *= (temp/255.0f);
@@ -356,6 +357,7 @@ public enum Blending {
 		double b = opacity*func.blend(temp=bottom.b_asDouble(), top.b_asDouble()) + temp*transparency;
 
 		bottom.setARGB_fromDouble(a, r, g, b);
+		return bottom;
 	}
 
 	/**
@@ -374,12 +376,12 @@ public enum Blending {
 	 * @param blending the blend function
 	 * @return blended ARGB value
 	 *
-	 * @see #alphaBlend(int, int, float, BlendFunction)
+	 * @see #alphaBlend(int, int, double, BlendFunction)
 	 * @see #blend(int, int, Blending)
 	 * @see #blend(int, int, BlendFunction)
 	 */
-	public static void alphaBlend(PixelBase bottom, PixelBase top, double opacity, Blending blending){
-		alphaBlend(bottom, top, opacity, blending.blendFunction);
+	public static <P extends PixelBase> P alphaBlend(P bottom, PixelBase top, double opacity, Blending blending){
+		return alphaBlend(bottom, top, opacity, blending.blendFunction);
 	}
 
 	/**
@@ -409,10 +411,10 @@ public enum Blending {
 	 * blending. {@code bottomImg.forEach(blendingConsumer);}
 	 *
 	 * @see #blendingWith(Img, int, int, BlendFunction)
-	 * @see #getAlphaBlendingWith(Img, int, int, float)
-	 * @see #getAlphaBlendingWith(Img, float)
+	 * @see #getAlphaBlendingWith(Img, int, int, double)
+	 * @see #getAlphaBlendingWith(Img, double)
 	 */
-	public static PixelManipulator<PixelBasePair> alphaBlendingWith(ImgBase<? extends PixelBase> topImg, int xTopOffset, int yTopOffset, float opacity, BlendFunction func){
+	public static PixelManipulator<PixelBasePair> alphaBlendingWith(ImgBase<? extends PixelBase> topImg, int xTopOffset, int yTopOffset, double opacity, BlendFunction func){
 		return PixelManipulator.fromConverterAndConsumer(
 				getPixelBasePairConverter(topImg),
 				(pair)->
@@ -440,7 +442,7 @@ public enum Blending {
 	 * the result is therefore fully dependent on this blend function.
 	 * See also the ARGB alpha blending version which respects pixels alpha values
 	 * as well as an additional global opacity parameter
-	 * {@link #alphaBlendingWith(Img, int, int, float, BlendFunction)}
+	 * {@link #alphaBlendingWith(Img, int, int, double, BlendFunction)}
 	 *
 	 * @param topImg top image of the blending (consumer is applied to bottom)
 	 * @param xTopOffset horizontal offset of the top image on the bottom
@@ -449,7 +451,7 @@ public enum Blending {
 	 * @return Consumer to apply to bottom Img that will perform the specified
 	 * blending. {@code bottomImg.forEach(blendingConsumer);}
 	 *
-	 * @see #alphaBlendingWith(Img, int, int, float, BlendFunction)
+	 * @see #alphaBlendingWith(Img, int, int, double, BlendFunction)
 	 * @see #getBlendingWith(Img, int, int)
 	 * @see #getBlendingWith(Img)
 	 */

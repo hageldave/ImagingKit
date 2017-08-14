@@ -373,11 +373,19 @@ public interface ImgBase<P extends PixelBase> extends Iterable<P> {
 		}
 	}
 
-	public default <T> void forEach(boolean parallel, final PixelManipulator<T> manipulator) {
+	public default <T> void forEach(final PixelManipulator<T> manipulator) {
+		forEach(false, manipulator);
+	}
+
+	public default <T> void forEach(final boolean parallel, final PixelManipulator<T> manipulator) {
 		forEach(manipulator.getConverter(), parallel, manipulator.getAction());
 	}
 
-	public default <T> void forEach(boolean parallel, final int xStart, final int yStart, final int width, final int height, final PixelManipulator<T> manipulator) {
+	public default <T> void forEach(final int xStart, final int yStart, final int width, final int height, final PixelManipulator<T> manipulator) {
+		forEach(false, xStart, yStart, width, height, manipulator);
+	}
+
+	public default <T> void forEach(final boolean parallel, final int xStart, final int yStart, final int width, final int height, final PixelManipulator<T> manipulator) {
 		forEach(manipulator.getConverter(), parallel, xStart, yStart, width, height, manipulator.getAction());
 	}
 
