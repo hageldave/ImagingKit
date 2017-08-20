@@ -103,8 +103,9 @@ public class ColorPixel implements PixelBase {
 	 * @see #getIndex()
 	 * @since 1.0
 	 */
-	public void setIndex(int index) {
+	public ColorPixel setIndex(int index) {
 		this.index = index;
+		return this;
 	}
 
 	/**
@@ -117,8 +118,9 @@ public class ColorPixel implements PixelBase {
 	 * @see #getY()
 	 * @since 1.0
 	 */
-	public void setPosition(int x, int y) {
+	public ColorPixel setPosition(int x, int y) {
 		this.index = y*img.getWidth()+x;
+		return this;
 	}
 
 	/**
@@ -323,6 +325,24 @@ public class ColorPixel implements PixelBase {
 	 */
 	public ColorPixel setB_fromDouble(double b){
 		this.img.getDataB()[index] = b;
+		return this;
+	}
+	
+	@Override
+	public ColorPixel setARGB_fromDouble(double a, double r, double g, double b) {
+		PixelBase.super.setARGB_fromDouble(a, r, g, b);
+		return this;
+	}
+	
+	@Override
+	public ColorPixel setRGB_fromDouble(double r, double g, double b) {
+		PixelBase.super.setRGB_fromDouble(r, g, b);
+		return this;
+	}
+	
+	@Override
+	public PixelBase setRGB_fromDouble_preserveAlpha(double r, double g, double b) {
+		PixelBase.super.setRGB_fromDouble_preserveAlpha(r, g, b);
 		return this;
 	}
 

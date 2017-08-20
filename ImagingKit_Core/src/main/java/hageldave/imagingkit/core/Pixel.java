@@ -97,8 +97,9 @@ public class Pixel implements PixelBase {
 	 * @see #getIndex()
 	 * @since 1.0
 	 */
-	public void setIndex(int index) {
+	public Pixel setIndex(int index) {
 		this.index = index;
+		return this;
 	}
 
 	/**
@@ -111,8 +112,9 @@ public class Pixel implements PixelBase {
 	 * @see #getY()
 	 * @since 1.0
 	 */
-	public void setPosition(int x, int y) {
+	public Pixel setPosition(int x, int y) {
 		this.index = y*img.getWidth()+x;
+		return this;
 	}
 
 	/**
@@ -401,8 +403,8 @@ public class Pixel implements PixelBase {
 	 * @see #b_asDouble()
 	 * @since 1.2
 	 */
-	public void setARGB_fromDouble(double a, double r, double g, double b){
-		setValue(Pixel.argb_fromNormalized(a, r, g, b));
+	public Pixel setARGB_fromDouble(double a, double r, double g, double b){
+		return setValue(Pixel.argb_fromNormalized(a, r, g, b));
 	}
 
 	/**
@@ -424,8 +426,8 @@ public class Pixel implements PixelBase {
 	 * @see #b_asDouble()
 	 * @since 1.2
 	 */
-	public void setRGB_fromDouble(double r, double g, double b){
-		setValue(Pixel.rgb_fromNormalized(r, g, b));
+	public Pixel setRGB_fromDouble(double r, double g, double b){
+		return setValue(Pixel.rgb_fromNormalized(r, g, b));
 	}
 
 	/**
@@ -442,8 +444,8 @@ public class Pixel implements PixelBase {
 	 * @see #setRGB_preserveAlpha(int, int, int)
 	 * @since 1.2
 	 */
-	public void setRGB_fromDouble_preserveAlpha(double r, double g, double b){
-		setValue((getValue() & 0xff000000) | (0x00ffffff & Pixel.rgb_fromNormalized(r, g, b)));
+	public Pixel setRGB_fromDouble_preserveAlpha(double r, double g, double b){
+		return setValue((getValue() & 0xff000000) | (0x00ffffff & Pixel.rgb_fromNormalized(r, g, b)));
 	}
 
 	/**
