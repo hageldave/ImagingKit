@@ -502,6 +502,11 @@ public class Img implements ImgBase<Pixel> {
 
 	@Override
 	public BufferedImage toBufferedImage(BufferedImage bimg){
+		if(bimg.getWidth() != this.getWidth() || bimg.getHeight() != this.getHeight()){
+			throw new IllegalArgumentException(String.format(
+					"Specified BufferedImage has a different dimension as this image. BufferedImage dimension: [%dx%d], this: [%dx%d]", 
+					bimg.getWidth(),bimg.getHeight(), this.getWidth(),this.getHeight()));
+		}
 		bimg.setRGB(0, 0, getWidth(), getHeight(), getData(), 0, getWidth());
 		return bimg;
 	}

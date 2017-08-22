@@ -20,6 +20,11 @@ public interface PixelBase {
 	 * If the underlying image does not support alpha, 1.0 is returned.
 	 * @return alpha value of this pixel with 0.0 as fully transparent and 1.0 as fully opaque.
 	 * May exceed [0,1] range depending on implementation.
+	 * 
+	 * @see #setA_fromDouble(double)
+	 * @see #r_asDouble
+	 * @see #g_asDouble
+	 * @see #b_asDouble
 	 */
 	public double a_asDouble();
 
@@ -27,6 +32,11 @@ public interface PixelBase {
 	 * Returns the red value of this pixel at its current position.
 	 * @return red value of this pixel with 0.0 as no red contribution and 1.0 as full red contribution.
 	 * May exceed [0,1] range depending on implementation.
+	 * 
+	 * @see #setR_fromDouble(double)
+	 * @see #a_asDouble
+	 * @see #g_asDouble
+	 * @see #b_asDouble
 	 */
 	public double r_asDouble();
 
@@ -34,6 +44,11 @@ public interface PixelBase {
 	 * Returns the green value of this pixel at its current position.
 	 * @return green value of this pixel with 0.0 as no green contribution and 1.0 as full green contribution.
 	 * May exceed [0,1] range depending on implementation.
+	 * 
+	 * @see #setG_fromDouble(double)
+	 * @see #a_asDouble
+	 * @see #r_asDouble
+	 * @see #b_asDouble
 	 */
 	public double g_asDouble();
 
@@ -41,6 +56,11 @@ public interface PixelBase {
 	 * Returns the blue value of this pixel at its current position.
 	 * @return blue value of this pixel with 0.0 as no blue contribution and 1.0 as full blue contribution.
 	 * May exceed [0,1] range depending on implementation.
+	 * 
+	 * @see #setB_fromDouble(double)
+	 * @see #a_asDouble
+	 * @see #r_asDouble
+	 * @see #g_asDouble
 	 */
 	public double b_asDouble();
 
@@ -49,6 +69,12 @@ public interface PixelBase {
 	 * If the underlying image does not support alpha, this call imediately returns without modifying the image. 
 	 * @param a the alpha value. May exceed [0,1] range depending on implementation.
 	 * @return this pixel for chaining.
+	 * 
+	 * @see #a_asDouble()
+	 * @see #setR_fromDouble(double)
+	 * @see #setG_fromDouble(double)
+	 * @see #setB_fromDouble(double)
+	 * @see #setARGB_fromDouble(double, double, double, double)
 	 */
 	public PixelBase setA_fromDouble(double a);
 
@@ -56,6 +82,12 @@ public interface PixelBase {
 	 * Sets the red value of this pixel at its current position with 0.0 as no red contribution and 1.0 as full red contribution. 
 	 * @param r the red value. May exceed [0,1] range depending on implementation.
 	 * @return this pixel for chaining.
+	 * 
+	 * @see #r_asDouble()
+	 * @see #setA_fromDouble(double)
+	 * @see #setG_fromDouble(double)
+	 * @see #setB_fromDouble(double)
+	 * @see #setARGB_fromDouble(double, double, double, double)
 	 */
 	public PixelBase setR_fromDouble(double r);
 
@@ -63,6 +95,12 @@ public interface PixelBase {
 	 * Sets the green value of this pixel at its current position with 0.0 as no green contribution and 1.0 as full green contribution. 
 	 * @param g the green value. May exceed [0,1] range depending on implementation.
 	 * @return this pixel for chaining.
+	 * 
+	 * @see #g_asDouble()
+	 * @see #setA_fromDouble(double)
+	 * @see #setR_fromDouble(double)
+	 * @see #setB_fromDouble(double)
+	 * @see #setARGB_fromDouble(double, double, double, double)
 	 */
 	public PixelBase setG_fromDouble(double g);
 
@@ -70,6 +108,12 @@ public interface PixelBase {
 	 * Sets the blue value of this pixel at its current position with 0.0 as no blue contribution and 1.0 as full blue contribution. 
 	 * @param b the blue value. May exceed [0,1] range depending on implementation.
 	 * @return this pixel for chaining.
+	 * 
+	 * @see #b_asDouble()
+	 * @see #setA_fromDouble(double)
+	 * @see #setR_fromDouble(double)
+	 * @see #setG_fromDouble(double)
+	 * @see #setARGB_fromDouble(double, double, double, double)
 	 */
 	public PixelBase setB_fromDouble(double b);
 
@@ -82,6 +126,9 @@ public interface PixelBase {
 	 * @param g green value
 	 * @param b blue value
 	 * @return this pixel for chaining.
+	 * 
+	 * @see #setRGB_fromDouble_preserveAlpha(double, double, double)
+	 * @see #setRGB_fromDouble(double, double, double)
 	 */
 	public default PixelBase setARGB_fromDouble(double a, double r, double g, double b){
 		setA_fromDouble(a);
@@ -100,6 +147,9 @@ public interface PixelBase {
 	 * @param g green value
 	 * @param b blue value
 	 * @return this pixel for chaining.
+	 * 
+	 * @see #setARGB_fromDouble(double, double, double, double)
+	 * @see #setRGB_fromDouble_preserveAlpha(double, double, double)
 	 */
 	public default PixelBase setRGB_fromDouble(double r, double g, double b){
 		setA_fromDouble(1.0);
@@ -118,6 +168,9 @@ public interface PixelBase {
 	 * @param g green value
 	 * @param b blue value
 	 * @return this pixel for chaining.
+	 * 
+	 * @see #setARGB_fromDouble(double, double, double, double)
+	 * @see #setRGB_fromDouble(double, double, double)
 	 */
 	public default PixelBase setRGB_fromDouble_preserveAlpha(double r, double g, double b){
 		setR_fromDouble(r);
@@ -128,11 +181,23 @@ public interface PixelBase {
 
 	/**
 	 * @return the x coordinate of this pixel's current position
+	 * 
+	 * @see #getY()
+	 * @see #getXnormalized()
+	 * @see #setPosition(int, int)
+	 * @see #getIndex()
+	 * @see #setIndex(int)
 	 */
 	public int getX();
 
 	/**
 	 * @return the y coordinate of this pixel's current position
+	 * 
+	 * @see #getX()
+	 * @see #getYnormalized()
+	 * @see #setPosition(int, int)
+	 * @see #getIndex()
+	 * @see #setIndex(int)
 	 */
 	public int getY();
 
@@ -142,6 +207,12 @@ public interface PixelBase {
 	 * at the right boundary of the Img.<br>
 	 * <em>For Img's that are only 1 Pixel wide, <u>NaN</u> is returned.</em>
 	 * @return normalized x coordinate within [0..1]
+	 * 
+	 * @see #getX()
+	 * @see #getYnormalized()
+	 * @see #setPosition(int, int)
+	 * @see #getIndex()
+	 * @see #setIndex(int)
 	 */
 	public default double getXnormalized(){
 		return getX()*1.0/(getSource().getWidth()-1.0);
@@ -153,7 +224,12 @@ public interface PixelBase {
 	 * at the lower boundary of the Img.<br>
 	 * <em>For Img's that are only 1 Pixel high, <u>NaN</u> is returned.</em>
 	 * @return normalized y coordinate within [0..1]
-	 * @since 1.2
+	 * 
+	 * @see #getY()
+	 * @see #getXnormalized()
+	 * @see #setPosition(int, int)
+	 * @see #getIndex()
+	 * @see #setIndex(int)
 	 */
 	public default double getYnormalized(){
 		return getY()*1.0/(getSource().getHeight()-1.0);
@@ -168,6 +244,10 @@ public interface PixelBase {
 	 *     x = index % width
 	 * </pre>
 	 * @return index of this pixel
+	 * 
+	 * @see #setIndex(int)
+	 * @see #getX()
+	 * @see #getY()
 	 */
 	public int getIndex();
 
@@ -184,6 +264,9 @@ public interface PixelBase {
 	 * outside of the underlying image's boundaries may cause an Exception.
 	 * @param index to set the pixel to
 	 * @return this pixel for chaining
+	 * 
+	 * @see #getIndex()
+	 * @see #setPosition(int, int)
 	 */
 	public PixelBase setIndex(int index);
 
@@ -195,12 +278,18 @@ public interface PixelBase {
 	 * @param x coordinate (0 left most, width-1 right most)
 	 * @param y coordinate (0 top most, height-1 bottom most)
 	 * @return this pixel for chaining
+	 * 
+	 * @see #getX()
+	 * @see #getY()
+	 * @see #setIndex(int)
 	 */
 	public PixelBase setPosition(int x, int y);
 
 	/**
 	 * Returns the underlying image of this pixel (the image referenced by this pixel)
 	 * @return the image this pixel belongs to
+	 * 
+	 * @see ImgBase
 	 */
 	public ImgBase<?> getSource();
 

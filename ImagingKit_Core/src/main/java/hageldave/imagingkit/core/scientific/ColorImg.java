@@ -695,16 +695,7 @@ public class ColorImg implements ImgBase<ColorPixel> {
 		return toImg(transferFunc).getRemoteBufferedImage();
 	}
 
-	/**
-	 * Copies this Img's data to the specified {@link BufferedImage}.
-	 * @param bimg the BufferedImage
-	 * @return specified BufferedImage
-	 * @throws ArrayIndexOutOfBoundsException if the provided BufferedImage
-	 * has less values than this Img.
-	 * @see #toBufferedImage()
-	 * @see #getRemoteBufferedImage()
-	 * @since 1.0
-	 */
+	@Override
 	public BufferedImage toBufferedImage(BufferedImage bimg){
 		return toBufferedImage(bimg, TransferFunction.normalizedInput());
 	}

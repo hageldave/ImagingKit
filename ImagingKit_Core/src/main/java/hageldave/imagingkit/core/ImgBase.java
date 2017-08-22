@@ -25,6 +25,8 @@ package hageldave.imagingkit.core;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
+import java.awt.image.ColorModel;
+import java.awt.image.Raster;
 import java.util.Iterator;
 import java.util.Spliterator;
 import java.util.function.Consumer;
@@ -33,6 +35,7 @@ import java.util.stream.StreamSupport;
 
 import hageldave.imagingkit.core.PixelConvertingSpliterator.PixelConverter;
 import hageldave.imagingkit.core.util.BufferedImageFactory;
+import hageldave.imagingkit.core.util.ImagingKitUtils;
 import hageldave.imagingkit.core.util.ParallelForEachExecutor;
 
 /**
@@ -58,57 +61,100 @@ import hageldave.imagingkit.core.util.ParallelForEachExecutor;
  */
 public interface ImgBase<P extends PixelBase> extends Iterable<P> {
 
+	/**
+	 * @return the dimension (width,height) of this image
+	 * 
+	 * @see #getWidth()
+	 * @see #getHeight()
+	 * @see #numValues()
+	 */
 	public Dimension getDimension();
 
+	/**
+	 * @return the width of this image (number of pixels in horizontal direction)
+	 * 
+	 * @see #getHeight()
+	 * @see #getDimension()
+	 * @see #numValues()
+	 */
 	public default int getWidth(){return getDimension().width;}
 
+	/**
+	 * @return the height of this image (number of pixels in vertical direction)
+	 * 
+	 * @see #getWidth()
+	 * @see #getDimension()
+	 * @see #numValues()
+	 */
 	public default int getHeight(){return getDimension().height;}
 
+	/**
+	 * @return the number of pixels of this image
+	 * 
+	 * @see #getWidth()
+	 * @see #getHeight()
+	 * @see #getDimension()
+	 */
 	public default int numValues(){return getWidth()*getHeight();}
 
 	/**
-	 * Creates a new Pixel object for this Img with position {0,0}.
-	 * @return a Pixel object for this Img.
-	 * @since 1.0
+	 * Creates a new pixel object (instance of {@link PixelBase}) for this Img 
+	 * with initial position (0,0) i.e. top left corner.
+	 * <p>
+	 * <b>Tip:</b><br>
+	 * Do not use this method repeatedly while iterating the image.
+	 * Use {@link PixelBase#setPosition(int, int)} instead to avoid excessive
+	 * allocation of pixel objects.
+	 * <br>
+	 * You can also use <code>for(PixelBase px: img){...}</code> syntax or the
+	 * {@link #forEach(Consumer)} method to iterate this image.
+	 * 
+	 * @return a pixel object for this image.
+	 * 
+	 * @see #getPixel(int, int)
 	 */
 	public P getPixel();
 
 	/**
 	 * Creates a new Pixel object for this Img at specified position.
-	 * No bounds checks are performed for x and y.
+	 * (0,0) is the top left corner, (width-1,height-1) is the bottom right corner.
 	 * <p>
 	 * <b>Tip:</b><br>
 	 * Do not use this method repeatedly while iterating the image.
-	 * Use {@link Pixel#setPosition(int, int)} instead to avoid excessive
-	 * allocation of Pixel objects.
-	 * <p>
-	 * You can also use <code>for(Pixel px: img){...}</code> syntax or the
+	 * Use {@link PixelBase#setPosition(int, int)} instead to avoid excessive
+	 * allocation of pixel objects.
+	 * <br>
+	 * You can also use <code>for(PixelBase px: img){...}</code> syntax or the
 	 * {@link #forEach(Consumer)} method to iterate this image.
+	 * 
 	 * @param x coordinate
 	 * @param y coordinate
 	 * @return a Pixel object for this Img at {x,y}.
-	 * @see #getValue(int, int)
-	 * @since 1.0
+	 * 
+	 * @see #getPixel()
 	 */
 	public P getPixel(int x, int y);
 
 	/**
-	 * Copies this Img's data to the specified {@link BufferedImage}.
+	 * Copies this image's data to the specified {@link BufferedImage}.
+	 * This method will preserve the {@link Raster} of the specified
+	 * BufferedImage and will only modify the contents of it.
+	 * 
 	 * @param bimg the BufferedImage
-	 * @return specified BufferedImage
-	 * @throws ArrayIndexOutOfBoundsException if the provided BufferedImage
-	 * has less values than this Img.
+	 * @return the specified BufferedImage
+	 * @throws IllegalArgumentException if the provided BufferedImage
+	 * has a different dimension as this image.
+	 * 
 	 * @see #toBufferedImage()
 	 * @see #getRemoteBufferedImage()
-	 * @since 1.0
 	 */
 	public BufferedImage toBufferedImage(BufferedImage bimg);
 
 	/**
 	 * @return a BufferedImage of type INT_ARGB with this Img's data copied to it.
+	 * 
 	 * @see #toBufferedImage(BufferedImage)
 	 * @see #getRemoteBufferedImage()
-	 * @since 1.0
 	 */
 	public default BufferedImage toBufferedImage(){
 		BufferedImage bimg = BufferedImageFactory.getINT_ARGB(getDimension());
@@ -116,50 +162,88 @@ public interface ImgBase<P extends PixelBase> extends Iterable<P> {
 	}
 
 	/**
-	 * Creates a BufferedImage that shares the data of this Img. Changes in
-	 * this Img are reflected in the created BufferedImage and vice versa.
-	 * The created BufferedImage uses an ARGB DirectColorModel with an
-	 * underlying DataBufferInt (similar to {@link BufferedImage#TYPE_INT_ARGB})
+	 * Creates a {@link BufferedImage} that shares the data of this image. Changes in
+	 * this image are reflected in the created BufferedImage and vice versa.
+	 * The {@link ColorModel} and {@link Raster} of the resulting BufferedImage
+	 * are implementation dependent.
+	 * <p>
+	 * This operation may not be supported by an implementation of {@link ImgBase}
+	 * and will then throw an {@link UnsupportedOperationException}. Use
+	 * {@link #supportsRemoteBufferedImage()} to check if this operation is
+	 * supported.
+	 * 
 	 * @return BufferedImage sharing this Img's data.
-	 * @see #createRemoteImg(BufferedImage)
+	 * @throws UnsupportedOperationException if this implementation of {@link ImgBase}
+	 * does not support this method.
+	 * 
+	 * @see #supportsRemoteBufferedImage()
+	 * @see #toBufferedImage(BufferedImage)
 	 * @see #toBufferedImage()
-	 * @since 1.0
 	 */
 	public default BufferedImage getRemoteBufferedImage(){
-		throw new UnsupportedOperationException();
+		throw new UnsupportedOperationException("This method is not supported. You can check beforehand using supportsRemoteBufferedImage()");
 	}
 
 
+	/**
+	 * Returns true when this implementation of {@link ImgBase} supports the 
+	 * {@link #getRemoteBufferedImage()} method. This by default also indicates
+	 * the support for the following methods:
+	 * <ul>
+	 * <li>{@link #createGraphics()}</li>
+	 * <li>{@link #paint(Consumer)}</li>
+	 * </ul>
+	 * 
+	 * @return true when supported, false otherwise.
+	 */
 	public default boolean supportsRemoteBufferedImage(){
 		return false;
 	}
 
 	/**
-	 * Creates a {@link Graphics2D}, which can be used to draw into this Img.
+	 * Creates a {@link Graphics2D}, which can be used to draw into this image.
+	 * <br>
+	 * This operation may not be supported by an implementation of {@link ImgBase}
+	 * and will then throw an {@link UnsupportedOperationException}. Use
+	 * {@link #supportsRemoteBufferedImage()} to check if this operation is
+	 * supported.
+	 * 
 	 * @return Graphics2D object to draw into this image.
+	 * @throws UnsupportedOperationException if this implementation of {@link ImgBase}
+	 * does not support this method.
+	 * 
+	 * @see #supportsRemoteBufferedImage()
 	 * @see #paint(Consumer)
-	 * @since 1.3
 	 */
 	public default Graphics2D createGraphics(){
 		return getRemoteBufferedImage().createGraphics();
 	}
 
 	/**
-	 * Uses the specified paintInstructions to draw into this Img.
-	 * This method will pass a {@link Graphics2D} object of this Img to the
+	 * Uses the specified paintInstructions to draw into this image.
+	 * This method will pass a {@link Graphics2D} object of this image to the
 	 * specified {@link Consumer}. The {@link Consumer#accept(Object)} method
-	 * can then draw into this Image. When the accept method return, the
+	 * can then draw into this image. When the accept method returns, the
 	 * Graphics2D object is disposed.
 	 * <p>
-	 * For example (using lambda expression for Consumers accept method):
+	 * This operation may not be supported by an implementation of {@link ImgBase}
+	 * and will then throw an {@link UnsupportedOperationException}. Use
+	 * {@link #supportsRemoteBufferedImage()} to check if this operation is
+	 * supported.
+	 * <p>
+	 * Example (using lambda expression for Consumers accept method):
 	 * <pre>
 	 * {@code
 	 * Img img = new Img(100, 100);
 	 * img.paint( g2d -> { g2d.drawLine(0, 0, 100, 100); } );
 	 * }
 	 * </pre>
-	 * @param paintInstructions to be executed on a this Graphics2D object
+	 * 
+	 * @param paintInstructions to be executed on a Graphics2D object of this image
 	 * of this Img.
+	 * @throws UnsupportedOperationException if this implementation of {@link ImgBase}
+	 * does not support this method.
+	 * 
 	 * @see #createGraphics()
 	 * @since 1.3
 	 */
@@ -169,43 +253,66 @@ public interface ImgBase<P extends PixelBase> extends Iterable<P> {
 		g2d.dispose();
 	}
 
+	/**
+	 * Returns an iterator over the pixels of this image. The iterator will
+	 * always return the same object on next() but with different index 
+	 * (thus referencing different values in the image).
+	 * 
+	 * @return an iterator over the pixels of this image.
+	 * 
+	 * @see #iterator(int, int, int, int)
+	 * @see #spliterator()
+	 * @see #spliterator(int, int, int, int)
+	 */
 	@Override
 	public default Iterator<P> iterator() {
-		return new Iterators.ImgIterator<P>(numValues(), getPixel()) ;
+		return new Iterators.ImgIterator<P>(numValues(), getPixel());
 	}
 
 	/**
 	 * Returns the minimum number of elements in a split of a {@link Spliterator}
 	 * of this Img. Spliterators will only split if they contain more elements than
 	 * specified by this value. Default is 1024.
+	 * 
 	 * @return minimum number of elements of a Spliterator to allow for splitting.
-	 * @since 1.3
 	 */
 	public default int getSpliteratorMinimumSplitSize(){return 1024;}
 
 	/**
-	 * Returns an iterator for the specified area of the image.
+	 * Returns an {@link Iterator} for the specified area of the image. The Iterator will
+	 * always return the same pixel object on next() but with different index 
+	 * (thus referencing different values in the image).
+	 * 
 	 * @param xStart left boundary of the area (inclusive)
 	 * @param yStart upper boundary of the area (inclusive)
 	 * @param width of the area
 	 * @param height of the area
 	 * @return iterator for iterating over the pixels in the specified area.
 	 * @throws IllegalArgumentException if provided area is not within this
-	 * Img's bounds.
-	 * @since 1.1
+	 * image's bounds.
+	 * 
+	 * @see #iterator()
+	 * @see #spliterator()
+	 * @see #spliterator(int, int, int, int)
 	 */
 	public default Iterator<P> iterator(final int xStart, final int yStart, final int width, final int height) {
-		if(		width <= 0 || height <= 0 ||
-				xStart < 0 || yStart < 0 ||
-				xStart+width > getWidth() || yStart+height > getHeight() )
-		{
-			throw new IllegalArgumentException(String.format(
-							"provided area [%d,%d][%d,%d] is not within bounds of the image [%d,%d]",
-							xStart,yStart,width,height, getWidth(), getHeight()));
-		}
+		ImagingKitUtils.requireAreaInImageBounds(xStart, yStart, width, height, this);
 		return new Iterators.ImgAreaIterator<P>(xStart, yStart, width, height, getPixel());
 	}
 
+	/**
+	 * Returns a {@link Spliterator} over the pixels of this image. Within each
+	 * split of the Spliterator a unique pixel object will be used on tryAdvance()
+	 * but with changing index (thus referencing different values in the image).
+	 * 
+	 * @return a Spliterator over the pixels of this image
+	 * 
+	 * @see #spliterator(int, int, int, int)
+	 * @see #rowSpliterator()
+	 * @see #colSpliterator()
+	 * @see #iterator()
+	 * @see #iterator(int, int, int, int)
+	 */
 	@Override
 	public default Spliterator<P> spliterator() {
 		return new Iterators.ImgSpliterator<P>(0, numValues()-1, getSpliteratorMinimumSplitSize(),this::getPixel);
@@ -218,11 +325,13 @@ public interface ImgBase<P extends PixelBase> extends Iterable<P> {
 	 * (e.g.starts at index 0 then continues with index 1, then 2, until
 	 * the end of the row, then continuing with the next row).
 	 * This Spliterator iterates in row-major order.
+	 * 
 	 * @return Spliterator that splits at beginning of rows.
+	 * 
 	 * @see #colSpliterator()
 	 * @see #spliterator()
 	 * @see #stream(Spliterator, boolean)
-	 * @since 1.3
+	 * @see #stream(PixelConverter, boolean)
 	 */
 	public default Spliterator<P> rowSpliterator() {
 		return new Iterators.RowSpliterator<P>(0, getWidth(), 0, getHeight()-1, this::getPixel);
@@ -235,11 +344,13 @@ public interface ImgBase<P extends PixelBase> extends Iterable<P> {
 	 * (e.g.starts at index 0 then continues with index 1, then 2, until
 	 * the end of the column, then continuing with the next column).
 	 * This Spliterator iterates in column-major order.
+	 * 
 	 * @return Spliterator that splits at beginning of columns.
+	 * 
 	 * @see #rowSpliterator()
 	 * @see #spliterator()
 	 * @see #stream(Spliterator, boolean)
-	 * @since 1.3
+	 * @see #stream(PixelConverter, boolean)
 	 */
 	public default Spliterator<P> colSpliterator() {
 		return new Iterators.ColSpliterator<P>(0, getWidth()-1, 0, getHeight(), this::getPixel);
@@ -253,33 +364,43 @@ public interface ImgBase<P extends PixelBase> extends Iterable<P> {
 	 * @param height of the area
 	 * @return spliterator for the specified area.
 	 * @throws IllegalArgumentException if provided area is not within this
-	 * Img's bounds.
-	 * @since 1.1
+	 * image's bounds.
+	 * 
+	 * @see #spliterator()
+	 * @see #colSpliterator()
+	 * @see #rowSpliterator()
+	 * @see #stream(Spliterator, boolean)
+	 * @see #stream(PixelConverter, boolean)
 	 */
 	public default Spliterator<P> spliterator(final int xStart, final int yStart, final int width, final int height) {
-		if(		width <= 0 || height <= 0 ||
-				xStart < 0 || yStart < 0 ||
-				xStart+width > getWidth() || yStart+height > getHeight() )
-		{
-			throw new IllegalArgumentException(String.format(
-							"provided area [%d,%d][%d,%d] is not within bounds of the image [%d,%d]",
-							xStart,yStart,width,height, getWidth(), getHeight()));
-		}
+		ImagingKitUtils.requireAreaInImageBounds(xStart, yStart, width, height, this);
 		return new Iterators.ImgAreaSpliterator<P>(xStart,yStart,width,height, getSpliteratorMinimumSplitSize(), this::getPixel);
 	}
 
 
-	/** default implementation of {@link Iterable#forEach(Consumer)} <br>
+	/** 
+	 * Default implementation of {@link Iterable#forEach(Consumer)} <br>
 	 * only for performance test purposes as it is slower than the
 	 * {@link Img#forEach(Consumer)} implementation
-	 * @since 1.0
 	 */
 	default void forEach_defaultimpl(final Consumer<? super P> action) {
 		Iterable.super.forEach(action);
 	}
 
 	/**
-	 * @see #forEachParallel(Consumer action)
+	 * Performs the specified action on each of the pixels of this image.
+	 * @param action to be performed
+	 * 
+	 * @see #forEach(PixelManipulator)
+	 * @see #forEach(boolean, Consumer)
+	 * @see #forEach(boolean, PixelManipulator)
+	 * @see #forEach(PixelConverter, boolean, Consumer)
+	 * @see #forEach(int, int, int, int, Consumer)
+	 * @see #forEach(int, int, int, int, PixelManipulator)
+	 * @see #forEach(boolean, int, int, int, int, Consumer)
+	 * @see #forEach(boolean, int, int, int, int, PixelManipulator)
+	 * @see #forEach(PixelConverter, boolean, int, int, int, int, Consumer)
+	 * @see #stream()
 	 * @since 1.0
 	 */
 	@Override
@@ -287,6 +408,23 @@ public interface ImgBase<P extends PixelBase> extends Iterable<P> {
 		forEach(false, action);
 	}
 
+	/**
+	 * Performs the specified action on each of the pixels of this image.
+	 * @param parallel whether to be performed in parallel
+	 * @param action
+	 * 
+	 * @see #forEach(Consumer)
+	 * @see #forEach(PixelManipulator)
+	 * @see #forEach(boolean, Consumer)
+	 * @see #forEach(boolean, PixelManipulator)
+	 * @see #forEach(PixelConverter, boolean, Consumer)
+	 * @see #forEach(int, int, int, int, Consumer)
+	 * @see #forEach(int, int, int, int, PixelManipulator)
+	 * @see #forEach(boolean, int, int, int, int, Consumer)
+	 * @see #forEach(boolean, int, int, int, int, PixelManipulator)
+	 * @see #forEach(PixelConverter, boolean, int, int, int, int, Consumer)
+	 * @see #stream()
+	 */
 	public default void forEach(boolean parallel, final Consumer<? super P> action) {
 		if(parallel){
 			ParallelForEachExecutor<P> exec = new ParallelForEachExecutor<>(null, spliterator(), action);
@@ -307,15 +445,49 @@ public interface ImgBase<P extends PixelBase> extends Iterable<P> {
 	 * @param height of the area
 	 * @param action to be performed on each pixel
 	 * @throws IllegalArgumentException if provided area is not within this
-	 * Img's bounds.
-	 * @see #forEachParallel(int x, int y, int w, int h, Consumer action)
-	 * @since 1.1
+	 * images's bounds.
+	 * 
+	 * @see #forEach(Consumer)
+	 * @see #forEach(PixelManipulator)
+	 * @see #forEach(boolean, Consumer)
+	 * @see #forEach(boolean, PixelManipulator)
+	 * @see #forEach(PixelConverter, boolean, Consumer)
+	 * @see #forEach(int, int, int, int, Consumer)
+	 * @see #forEach(int, int, int, int, PixelManipulator)
+	 * @see #forEach(boolean, int, int, int, int, Consumer)
+	 * @see #forEach(boolean, int, int, int, int, PixelManipulator)
+	 * @see #forEach(PixelConverter, boolean, int, int, int, int, Consumer)
+	 * @see #stream()
 	 */
 	public default void forEach(final int xStart, final int yStart, final int width, final int height, final Consumer<? super P> action) {
 		forEach(false, xStart, yStart, width, height, action);
 	}
 
+	/**
+	 * Applies the specified action to every pixel in the specified area of this image.
+	 * @param parallel whether to be performed in parallel
+	 * @param xStart left boundary of the area (inclusive)
+	 * @param yStart upper boundary of the area (inclusive)
+	 * @param width of the area
+	 * @param height of the area
+	 * @param action to be performed on each pixel
+	 * @throws IllegalArgumentException if provided area is not within this
+	 * images's bounds.
+	 * 
+	 * @see #forEach(Consumer)
+	 * @see #forEach(PixelManipulator)
+	 * @see #forEach(boolean, Consumer)
+	 * @see #forEach(boolean, PixelManipulator)
+	 * @see #forEach(PixelConverter, boolean, Consumer)
+	 * @see #forEach(int, int, int, int, Consumer)
+	 * @see #forEach(int, int, int, int, PixelManipulator)
+	 * @see #forEach(boolean, int, int, int, int, Consumer)
+	 * @see #forEach(boolean, int, int, int, int, PixelManipulator)
+	 * @see #forEach(PixelConverter, boolean, int, int, int, int, Consumer)
+	 * @see #stream()
+	 */
 	public default void forEach(boolean parallel, final int xStart, final int yStart, final int width, final int height, final Consumer<? super P> action) {
+		ImagingKitUtils.requireAreaInImageBounds(xStart, yStart, width, height, this);
 		if(parallel){
 			ParallelForEachExecutor<P> exec = new ParallelForEachExecutor<>(null, spliterator(xStart, yStart, width, height), action);
 			exec.invoke();
@@ -332,6 +504,29 @@ public interface ImgBase<P extends PixelBase> extends Iterable<P> {
 		}
 	}
 
+	/**
+	 * Applies the specified action to every pixel of this image.
+	 * Prior to applying the action, each time the pixel is converted using the specified
+	 * converter. The action is then performed on an instance of the element type of the converter
+	 * (which is also the type accepted by the action).
+	 * Finally the modified instance is then converted back to the pixel.
+	 * 
+	 * @param converter that converts the pixel to the type accepted by the action
+	 * @param parallel whether to be performed in parallel
+	 * @param action to be performed on each pixel
+	 * 
+	 * @see #forEach(Consumer)
+	 * @see #forEach(PixelManipulator)
+	 * @see #forEach(boolean, Consumer)
+	 * @see #forEach(boolean, PixelManipulator)
+	 * @see #forEach(PixelConverter, boolean, Consumer)
+	 * @see #forEach(int, int, int, int, Consumer)
+	 * @see #forEach(int, int, int, int, PixelManipulator)
+	 * @see #forEach(boolean, int, int, int, int, Consumer)
+	 * @see #forEach(boolean, int, int, int, int, PixelManipulator)
+	 * @see #forEach(PixelConverter, boolean, int, int, int, int, Consumer)
+	 * @see #stream()
+	 */
 	public default <T> void forEach(final PixelConverter<? super P,T> converter, boolean parallel, final Consumer<? super T> action) {
 		if(parallel){
 			Spliterator<T> spliterator = new PixelConvertingSpliterator<>(
@@ -350,7 +545,38 @@ public interface ImgBase<P extends PixelBase> extends Iterable<P> {
 		}
 	}
 
+
+	/**
+	 * Applies the specified action to every pixel in the specified area of this image.
+	 * Prior to applying the action, each time the pixel is converted using the specified
+	 * converter. The action is then performed on an instance of the element type of the converter
+	 * (which is also the type accepted by the action).
+	 * Finally the modified instance is then converted back to the pixel.
+	 * 
+	 * @param converter that converts the pixel to the type accepted by the action
+	 * @param parallel whether to be performed in parallel
+	 * @param xStart left boundary of the area (inclusive)
+	 * @param yStart upper boundary of the area (inclusive)
+	 * @param width of the area
+	 * @param height of the area
+	 * @param action to be performed on each pixel
+	 * @throws IllegalArgumentException if provided area is not within this
+	 * images's bounds.
+	 * 
+	 * @see #forEach(Consumer)
+	 * @see #forEach(PixelManipulator)
+	 * @see #forEach(boolean, Consumer)
+	 * @see #forEach(boolean, PixelManipulator)
+	 * @see #forEach(PixelConverter, boolean, Consumer)
+	 * @see #forEach(int, int, int, int, Consumer)
+	 * @see #forEach(int, int, int, int, PixelManipulator)
+	 * @see #forEach(boolean, int, int, int, int, Consumer)
+	 * @see #forEach(boolean, int, int, int, int, PixelManipulator)
+	 * @see #forEach(PixelConverter, boolean, int, int, int, int, Consumer)
+	 * @see #stream()
+	 */
 	public default <T> void forEach(final PixelConverter<? super P, T> converter, boolean parallel, final int xStart, final int yStart, final int width, final int height, final Consumer<? super T> action) {
+		ImagingKitUtils.requireAreaInImageBounds(xStart, yStart, width, height, this);
 		if(parallel){
 			Spliterator<T> spliterator = new PixelConvertingSpliterator<>(
 					spliterator(xStart, yStart, width, height),
@@ -373,18 +599,98 @@ public interface ImgBase<P extends PixelBase> extends Iterable<P> {
 		}
 	}
 
+	/**
+	 * Applies the specified manipulator to every pixel of this image.
+	 * @param manipulator that will be applied
+	 * 
+	 * @see #forEach(Consumer)
+	 * @see #forEach(PixelManipulator)
+	 * @see #forEach(boolean, Consumer)
+	 * @see #forEach(boolean, PixelManipulator)
+	 * @see #forEach(PixelConverter, boolean, Consumer)
+	 * @see #forEach(int, int, int, int, Consumer)
+	 * @see #forEach(int, int, int, int, PixelManipulator)
+	 * @see #forEach(boolean, int, int, int, int, Consumer)
+	 * @see #forEach(boolean, int, int, int, int, PixelManipulator)
+	 * @see #forEach(PixelConverter, boolean, int, int, int, int, Consumer)
+	 * @see #stream()
+	 */
 	public default <T> void forEach(final PixelManipulator<T> manipulator) {
 		forEach(false, manipulator);
 	}
 
+	/**
+	 * Applies the specified manipulator to every pixel of this image.
+	 * @param parallel whether to be performed in parallel
+	 * @param manipulator that will be applied
+	 * 
+	 * @see #forEach(Consumer)
+	 * @see #forEach(PixelManipulator)
+	 * @see #forEach(boolean, Consumer)
+	 * @see #forEach(boolean, PixelManipulator)
+	 * @see #forEach(PixelConverter, boolean, Consumer)
+	 * @see #forEach(int, int, int, int, Consumer)
+	 * @see #forEach(int, int, int, int, PixelManipulator)
+	 * @see #forEach(boolean, int, int, int, int, Consumer)
+	 * @see #forEach(boolean, int, int, int, int, PixelManipulator)
+	 * @see #forEach(PixelConverter, boolean, int, int, int, int, Consumer)
+	 * @see #stream()
+	 */
 	public default <T> void forEach(final boolean parallel, final PixelManipulator<T> manipulator) {
 		forEach(manipulator.getConverter(), parallel, manipulator.getAction());
 	}
 
+	/**
+	 * Applies the specified manipulator to every pixel in the specified area of this image.
+	 * @param xStart left boundary of the area (inclusive)
+	 * @param yStart upper boundary of the area (inclusive)
+	 * @param width of the area
+	 * @param height of the area
+	 * @param action to be performed on each pixel
+	 * @param manipulator that will be applied
+	 * @throws IllegalArgumentException if provided area is not within this
+	 * images's bounds.
+	 * 
+	 * @see #forEach(Consumer)
+	 * @see #forEach(PixelManipulator)
+	 * @see #forEach(boolean, Consumer)
+	 * @see #forEach(boolean, PixelManipulator)
+	 * @see #forEach(PixelConverter, boolean, Consumer)
+	 * @see #forEach(int, int, int, int, Consumer)
+	 * @see #forEach(int, int, int, int, PixelManipulator)
+	 * @see #forEach(boolean, int, int, int, int, Consumer)
+	 * @see #forEach(boolean, int, int, int, int, PixelManipulator)
+	 * @see #forEach(PixelConverter, boolean, int, int, int, int, Consumer)
+	 * @see #stream()
+	 */
 	public default <T> void forEach(final int xStart, final int yStart, final int width, final int height, final PixelManipulator<T> manipulator) {
 		forEach(false, xStart, yStart, width, height, manipulator);
 	}
 
+	/**
+	 * Applies the specified manipulator to every pixel in the specified area of this image.
+	 * @param parallel whether to be performed in parallel
+	 * @param xStart left boundary of the area (inclusive)
+	 * @param yStart upper boundary of the area (inclusive)
+	 * @param width of the area
+	 * @param height of the area
+	 * @param action to be performed on each pixel
+	 * @param manipulator that will be applied
+	 * @throws IllegalArgumentException if provided area is not within this
+	 * images's bounds.
+	 * 
+	 * @see #forEach(Consumer)
+	 * @see #forEach(PixelManipulator)
+	 * @see #forEach(boolean, Consumer)
+	 * @see #forEach(boolean, PixelManipulator)
+	 * @see #forEach(PixelConverter, boolean, Consumer)
+	 * @see #forEach(int, int, int, int, Consumer)
+	 * @see #forEach(int, int, int, int, PixelManipulator)
+	 * @see #forEach(boolean, int, int, int, int, Consumer)
+	 * @see #forEach(boolean, int, int, int, int, PixelManipulator)
+	 * @see #forEach(PixelConverter, boolean, int, int, int, int, Consumer)
+	 * @see #stream()
+	 */
 	public default <T> void forEach(final boolean parallel, final int xStart, final int yStart, final int width, final int height, final PixelManipulator<T> manipulator) {
 		forEach(manipulator.getConverter(), parallel, xStart, yStart, width, height, manipulator.getAction());
 	}
@@ -400,7 +706,7 @@ public interface ImgBase<P extends PixelBase> extends Iterable<P> {
 	 * <pre>
 	 * {@code
 	 * Img myImg = ...;
-	 * Img.stream(myImg.rowSpliterator(), true).forEach( px -> {
+	 * ImgBase.stream(myImg.rowSpliterator(), true).forEach( px -> {
 	 *     int next = px.getImg().getValue(px.getX()+1, px.getY(), Img.boundary_mode_repeat_edge);
 	 *     int forwardDiff = Math.abs( Pixel.getLuminance(next) - px.getLuminance() );
 	 *     px.setRGB(forwardDiff, forwardDiff, forwardDiff);
@@ -413,19 +719,26 @@ public interface ImgBase<P extends PixelBase> extends Iterable<P> {
 	 *
 	 * @see #stream()
 	 * @see #parallelStream()
-	 * @since 1.3
 	 */
 	public static <Px extends PixelBase> Stream<Px> stream(Spliterator<Px> spliterator, boolean parallel){
 		return StreamSupport.stream(spliterator, parallel);
 	}
 
 	/**
-	 * Returns a Pixel {@link Stream} of this Img.
+	 * Returns a sequential {@link Stream} of pixels of this Img.
 	 * This Img's {@link #spliterator()} is used to create the Stream.
+	 * <p>
+	 * <b>The elements of this stream are not distinct!</b><br>
+	 * This is due to a {@link PixelBase} object being a pointer into
+	 * the data of the image and not a pixel value itself. While streaming
+	 * the index of the pixel object is changed for each actual pixel of the image.
+	 * <br>
+	 * Thus, a Set created by the expression {@code img.stream().collect(Collectors.toSet())}
+	 * will only contain a single element.
+	 * 
 	 * @return Pixel Stream of this Img.
 	 * @see #parallelStream()
 	 * @see #stream(int x, int y, int w, int h)
-	 * @since 1.2
 	 */
 	public default Stream<P> stream() {
 		return stream(false);
@@ -469,5 +782,5 @@ public interface ImgBase<P extends PixelBase> extends Iterable<P> {
 				converter);
 		return StreamSupport.stream(spliterator, parallel);
 	}
-
+	
 }
