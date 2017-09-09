@@ -118,9 +118,8 @@ public class Img implements ImgBase<Pixel> {
 	 * @since 1.0 */
 	private final int[] data;
 
-	/** dimension of this Img
-	 * @since 1.0 */
-	private final Dimension dimension;
+	/** width and height of this image */
+	private final int width,height;
 
 	/** minimum number of elements this Img's {@link Spliterator}s can be split to.
 	 * Default value is 1024.
@@ -137,7 +136,9 @@ public class Img implements ImgBase<Pixel> {
 	 * @since 1.0
 	 */
 	public Img(int width, int height){
-		this(new Dimension(width, height));
+		this.data = new int[width*height];
+		this.width = width;
+		this.height = height;
 	}
 
 	/**
@@ -147,8 +148,7 @@ public class Img implements ImgBase<Pixel> {
 	 * @since 1.0
 	 */
 	public Img(Dimension dimension){
-		this.data = new int[dimension.width*dimension.height];
-		this.dimension = new Dimension(dimension);
+		this(dimension.width,dimension.height);
 	}
 
 	/**
@@ -190,16 +190,9 @@ public class Img implements ImgBase<Pixel> {
 		if(dim.width*dim.height != data.length){
 			throw new IllegalArgumentException(String.format("Provided Dimension %s does not match number of provided pixels %d", dim, data.length));
 		}
-		this.dimension = new Dimension(dim);
+		this.width = dim.width;
+		this.height = dim.height;
 		this.data = data;
-	}
-
-	/**
-	 * @return dimension of this Img
-	 * @since 1.0
-	 */
-	public Dimension getDimension() {
-		return new Dimension(dimension);
 	}
 
 	/**
@@ -207,7 +200,7 @@ public class Img implements ImgBase<Pixel> {
 	 * @since 1.0
 	 */
 	public int getWidth(){
-		return dimension.width;
+		return this.width;
 	}
 
 	/**
@@ -215,7 +208,7 @@ public class Img implements ImgBase<Pixel> {
 	 * @since 1.0
 	 */
 	public int getHeight(){
-		return dimension.height;
+		return this.height;
 	}
 
 	/**
@@ -250,7 +243,7 @@ public class Img implements ImgBase<Pixel> {
 	 * @since 1.0
 	 */
 	public int getValue(final int x, final int y){
-		return this.data[y*dimension.width + x];
+		return this.data[y*this.width + x];
 	}
 
 	/**
@@ -286,17 +279,17 @@ public class Img implements ImgBase<Pixel> {
 	 * @since 1.0
 	 */
 	public int getValue(int x, int y, final int boundaryMode){
-		if(x < 0 || y < 0 || x >= dimension.width || y >= dimension.height){
+		if(x < 0 || y < 0 || x >= this.width || y >= this.height){
 			switch (boundaryMode) {
 			case boundary_mode_zero:
 				return 0;
 			case boundary_mode_repeat_edge:
-				x = (x < 0 ? 0: (x >= dimension.width ? dimension.width-1:x));
-				y = (y < 0 ? 0: (y >= dimension.height ? dimension.height-1:y));
+				x = (x < 0 ? 0: (x >= this.width ? this.width-1:x));
+				y = (y < 0 ? 0: (y >= this.height ? this.height-1:y));
 				return getValue(x, y);
 			case boundary_mode_repeat_image:
-				x = (dimension.width + (x % dimension.width)) % dimension.width;
-				y = (dimension.height + (y % dimension.height)) % dimension.height;
+				x = (this.width + (x % this.width)) % this.width;
+				y = (this.height + (y % this.height)) % this.height;
 				return getValue(x,y);
 			case boundary_mode_mirror:
 				if(x < 0){ // mirror x to right side of image
@@ -305,8 +298,8 @@ public class Img implements ImgBase<Pixel> {
 				if(y < 0 ){ // mirror y to bottom side of image
 					y = -y - 1;
 				}
-				x = (x/dimension.width) % 2 == 0 ? (x%dimension.width) : (dimension.width-1)-(x%dimension.width);
-				y = (y/dimension.height) % 2 == 0 ? (y%dimension.height) : (dimension.height-1)-(y%dimension.height);
+				x = (x/this.width) % 2 == 0 ? (x%this.width) : (this.width-1)-(x%this.width);
+				y = (y/this.height) % 2 == 0 ? (y%this.height) : (this.height-1)-(y%this.height);
 				return getValue(x, y);
 			default:
 				return boundaryMode; // boundary mode can be default color
@@ -480,7 +473,7 @@ public class Img implements ImgBase<Pixel> {
 	 * @since 1.0
 	 */
 	public void setValue(final int x, final int y, final int value){
-		this.data[y*dimension.width + x] = value;
+		this.data[y*this.width + x] = value;
 	}
 
 	/**
@@ -496,6 +489,7 @@ public class Img implements ImgBase<Pixel> {
 	 * @return a deep copy of this Img.
 	 * @since 1.0
 	 */
+	@Override
 	public Img copy(){
 		return new Img(getDimension(), Arrays.copyOf(getData(), getData().length));
 	}

@@ -37,6 +37,8 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.Spliterator;
 import java.util.function.Consumer;
+import java.util.function.DoubleFunction;
+import java.util.function.DoubleToIntFunction;
 import java.util.function.Function;
 
 import hageldave.imagingkit.core.Img;
@@ -123,25 +125,27 @@ public class ColorImg implements ImgBase<ColorPixel> {
 	 */
 	public static final int boundary_mode_mirror = 3;
 
+	/** red channel index */
 	public static final int channel_r = 0;
+	/** green channel index */
 	public static final int channel_g = 1;
+	/** blue channel index */
 	public static final int channel_b = 2;
+	/** alpha channel index */
 	public static final int channel_a = 3;
 
-
-	/** data array of this Img containing a value for each ColorPixel in row major order
-	 * @since 1.0 */
+	/* data arrays per channel */
 	private final double[] dataR;
 	private final double[] dataG;
 	private final double[] dataB;
 	private final double[] dataA;
-
+	/* all data arrays */
 	private final double[][] data;
+	
+	/* whether this image has an alpha channel */
 	private final boolean hasAlpha;
 
-	/** dimension of this Img
-	 * @since 1.0 */
-	private final Dimension dimension;
+	private final int width,height;
 
 	/** minimum number of elements this Img's {@link Spliterator}s can be split to.
 	 * Default value is 1024.
@@ -158,7 +162,14 @@ public class ColorImg implements ImgBase<ColorPixel> {
 	 * @since 1.0
 	 */
 	public ColorImg(int width, int height, boolean alpha){
-		this(new Dimension(width, height), alpha);
+		this.dataR = new double[width*height];
+		this.dataG = new double[width*height];
+		this.dataB = new double[width*height];
+		this.hasAlpha = alpha;
+		this.dataA = alpha ? new double[width*height]:null;
+		this.data = alpha ? new double[][]{dataR,dataG,dataB,dataA}:new double[][]{dataR,dataG,dataB};
+		this.width=width;
+		this.height=height;
 	}
 
 	/**
@@ -168,13 +179,7 @@ public class ColorImg implements ImgBase<ColorPixel> {
 	 * @since 1.0
 	 */
 	public ColorImg(Dimension dimension, boolean alpha){
-		this.dataR = new double[dimension.width*dimension.height];
-		this.dataG = new double[dimension.width*dimension.height];
-		this.dataB = new double[dimension.width*dimension.height];
-		this.hasAlpha = alpha;
-		this.dataA = alpha ? new double[dimension.width*dimension.height]:null;
-		this.data = alpha ? new double[][]{dataR,dataG,dataB,dataA}:new double[][]{dataR,dataG,dataB};
-		this.dimension = new Dimension(dimension);
+		this(dimension.width, dimension.height, alpha);
 	}
 
 	/**
@@ -209,20 +214,6 @@ public class ColorImg implements ImgBase<ColorPixel> {
 	 * @since 1.5
 	 */
 	public ColorImg(int width, int height, double[] dataR, double[] dataG, double[] dataB, double[] dataA){
-		this(new Dimension(width, height), dataR,dataG,dataB,dataA);
-	}
-
-	/**
-	 * Creates a new ColorImg of specified dimensions.
-	 * Provided data array will be used as this images data.
-	 * @param dim extend of the image (width and height)
-	 * @param data values (ColorPixels) that will be used as the content of this Img
-	 * @throws IllegalArgumentException when the number of ColorPixels of this Img
-	 * resulting from width*height does not match the number of provided data values.
-	 * @throws NullPointerException if any of dataR, dataG or dataB is null.
-	 * @since 1.0
-	 */
-	public ColorImg(Dimension dim, double[] dataR, double[] dataG, double[] dataB, double[] dataA){
 		Objects.requireNonNull(dataR);
 		Objects.requireNonNull(dataG);
 		Objects.requireNonNull(dataB);
@@ -230,10 +221,11 @@ public class ColorImg implements ImgBase<ColorPixel> {
 		if(dataR.length != dataG.length || dataG.length != dataB.length || (hasAlpha && dataB.length != dataA.length)){
 			throw new IllegalArgumentException(String.format("Provided data arrays are not of same size. R[%d] G[%d] B[%d]%s", dataR.length, dataG.length, dataB.length, hasAlpha ? " A["+dataA.length+"]":""));
 		}
-		if(dim.width*dim.height != dataR.length){
-			throw new IllegalArgumentException(String.format("Provided Dimension %s does not match number of provided Pixels %d", dim, dataR.length));
+		if(width*height != dataR.length){
+			throw new IllegalArgumentException(String.format("Provided Dimension (width=%d, height=$d) does not match number of provided Pixels %d", width, height, dataR.length));
 		}
-		this.dimension = new Dimension(dim);
+		this.width = width;
+		this.height = height;
 		this.dataR=dataR;
 		this.dataG=dataG;
 		this.dataB=dataB;
@@ -242,29 +234,27 @@ public class ColorImg implements ImgBase<ColorPixel> {
 	}
 
 
-	public ColorImg (BufferedImage bimg){
+	/**
+	 * Creates a new ColorImg from the specified {@link BufferedImage}.
+	 * Therefore a ColorImage of equal dimension as the the argument image is created
+	 * and the argument image is then painted on it.
+	 * @param bimg BufferedImage from which a ColorImg is to be created.
+	 */
+	public ColorImg(BufferedImage bimg){
 		this(bimg.getWidth(),bimg.getHeight(),bimg.getColorModel().hasAlpha());
 		this.paint(g->g.drawImage(bimg, 0, 0, getWidth(), getHeight(), 0, 0, getWidth(), getHeight(), null));
 	}
 
-	/**
-	 * @return dimension of this Img
-	 * @since 1.0
-	 */
-	public Dimension getDimension() {
-		return new Dimension(dimension);
-	}
-
+	/** @return true when this image has an alpha channel, else false */
 	public boolean hasAlpha(){
 		return hasAlpha;
 	}
 
 	/**
 	 * @return width of this Img
-	 * @since 1.0
 	 */
 	public int getWidth(){
-		return dimension.width;
+		return this.width;
 	}
 
 	/**
@@ -272,7 +262,7 @@ public class ColorImg implements ImgBase<ColorPixel> {
 	 * @since 1.0
 	 */
 	public int getHeight(){
-		return dimension.height;
+		return this.height;
 	}
 
 	/**
@@ -288,7 +278,7 @@ public class ColorImg implements ImgBase<ColorPixel> {
 	 * @since 1.0
 	 */
 	public double[][] getData() {
-		return data;
+		return Arrays.copyOf(data, data.length);
 	}
 
 	public double[] getDataR() {
@@ -323,23 +313,23 @@ public class ColorImg implements ImgBase<ColorPixel> {
 	 * @since 1.0
 	 */
 	public double getValue(final int channel, final int x, final int y){
-		return this.data[channel][y*dimension.width + x];
+		return this.data[channel][y*this.width + x];
 	}
 
 	public double getValueR(final int x, final int y){
-		return this.dataR[y*dimension.width + x];
+		return this.dataR[y*this.width + x];
 	}
 
 	public double getValueG(final int x, final int y){
-		return this.dataG[y*dimension.width + x];
+		return this.dataG[y*this.width + x];
 	}
 
 	public double getValueB(final int x, final int y){
-		return this.dataB[y*dimension.width + x];
+		return this.dataB[y*this.width + x];
 	}
 
 	public double getValueA(final int x, final int y){
-		return this.dataA[y*dimension.width + x];
+		return this.dataA[y*this.width + x];
 	}
 
 	/**
@@ -375,17 +365,17 @@ public class ColorImg implements ImgBase<ColorPixel> {
 	 * @since 1.0
 	 */
 	public double getValue(final int channel, int x, int y, final int boundaryMode){
-		if(x < 0 || y < 0 || x >= dimension.width || y >= dimension.height){
+		if(x < 0 || y < 0 || x >= this.width || y >= this.height){
 			switch (boundaryMode) {
 			case boundary_mode_zero:
 				return 0;
 			case boundary_mode_repeat_edge:
-				x = (x < 0 ? 0: (x >= dimension.width ? dimension.width-1:x));
-				y = (y < 0 ? 0: (y >= dimension.height ? dimension.height-1:y));
+				x = (x < 0 ? 0: (x >= this.width ? this.width-1:x));
+				y = (y < 0 ? 0: (y >= this.height ? this.height-1:y));
 				return getValue(channel, x, y);
 			case boundary_mode_repeat_image:
-				x = (dimension.width + (x % dimension.width)) % dimension.width;
-				y = (dimension.height + (y % dimension.height)) % dimension.height;
+				x = (this.width + (x % this.width)) % this.width;
+				y = (this.height + (y % this.height)) % this.height;
 				return getValue(channel, x,y);
 			case boundary_mode_mirror:
 				if(x < 0){ // mirror x to right side of image
@@ -394,8 +384,8 @@ public class ColorImg implements ImgBase<ColorPixel> {
 				if(y < 0 ){ // mirror y to bottom side of image
 					y = -y - 1;
 				}
-				x = (x/dimension.width) % 2 == 0 ? (x%dimension.width) : (dimension.width-1)-(x%dimension.width);
-				y = (y/dimension.height) % 2 == 0 ? (y%dimension.height) : (dimension.height-1)-(y%dimension.height);
+				x = (x/this.width) % 2 == 0 ? (x%this.width) : (this.width-1)-(x%this.width);
+				y = (y/this.height) % 2 == 0 ? (y%this.height) : (this.height-1)-(y%this.height);
 				return getValue(channel, x, y);
 			default:
 				return boundaryMode; // boundary mode can be default color
@@ -650,23 +640,23 @@ public class ColorImg implements ImgBase<ColorPixel> {
 	 * @since 1.0
 	 */
 	public void setValue(final int channel, final int x, final int y, final double value){
-		this.data[channel][y*dimension.width + x] = value;
+		this.data[channel][y*this.width + x] = value;
 	}
 
 	public void setValueR(final int x, final int y, final double value){
-		this.dataR[y*dimension.width + x] = value;
+		this.dataR[y*this.width + x] = value;
 	}
 
 	public void setValueG(final int x, final int y, final double value){
-		this.dataG[y*dimension.width + x] = value;
+		this.dataG[y*this.width + x] = value;
 	}
 
 	public void setValueB(final int x, final int y, final double value){
-		this.dataB[y*dimension.width + x] = value;
+		this.dataB[y*this.width + x] = value;
 	}
 
 	public void setValueA(final int x, final int y, final double value){
-		this.dataA[y*dimension.width + x] = value;
+		this.dataA[y*this.width + x] = value;
 	}
 
 	/**
@@ -678,33 +668,65 @@ public class ColorImg implements ImgBase<ColorPixel> {
 		Arrays.fill(getData()[channel], value);
 	}
 
-	/**
-	 * @return a deep copy of this Img.
-	 * @since 1.0
-	 */
+	@Override
 	public ColorImg copy(){
 		return new ColorImg(
-				getDimension(),
+				getWidth(),
+				getHeight(),
 				Arrays.copyOf(getDataR(), numValues()),
 				Arrays.copyOf(getDataG(), numValues()),
 				Arrays.copyOf(getDataB(), numValues()),
 				hasAlpha() ? Arrays.copyOf(getDataA(), numValues()):null);
 	}
 
+	/**
+	 * Creates a {@link BufferedImage} of type {@link BufferedImage#TYPE_INT_ARGB} 
+	 * from this ColorImg using the specified {@link TransferFunction} to map the channel values 
+	 * of this image to the 8bits per channel ARGB of the BufferedImage.
+	 * @param transferFunc to transform a pixel value to the required 8bit per channel ARGB value
+	 * @return a BufferedImage
+	 */
 	public BufferedImage toBufferedImage(TransferFunction transferFunc){
 		return toImg(transferFunc).getRemoteBufferedImage();
 	}
 
+	/**
+	 * {@inheritDoc}
+	 * <p>
+	 * It is assumed that all channel values are in range of [0.0, 1.0] and are otherwise
+	 * clamped to that range.
+	 */
 	@Override
 	public BufferedImage toBufferedImage(BufferedImage bimg){
 		return toBufferedImage(bimg, TransferFunction.normalizedInput());
 	}
 
-
+	/**
+	 * Copies this image's data to the specified {@link BufferedImage}.
+	 * This method will preserve the {@link Raster} of the specified
+	 * BufferedImage and will only modify the contents of it.
+	 * <p>
+	 * The specified {@link TransferFunction} is used to map this
+	 * image's channel values to 8bit per channel ARGB values.
+	 * 
+	 * @param bimg the BufferedImage
+	 * @param transferFunc to transform a pixel value to the required 8bit per channel ARGB value
+	 * @return the specified BufferedImage
+	 * @throws IllegalArgumentException if the provided BufferedImage
+	 * has a different dimension as this image.
+	 */
 	public BufferedImage toBufferedImage(BufferedImage bimg, TransferFunction transferFunc){
 		return toImg(transferFunc).toBufferedImage(bimg);
 	}
 
+	/**
+	 * Copies this image's data to a new {@link Img}.
+	 * The specified {@link TransferFunction} is used to map this
+	 * image's channel values to 8bit per channel ARGB values.
+	 * 
+	 * @param transferFunc to transform a pixel value to the required 8bit per channel ARGB value
+	 * @return an Img with this image's data copied to it
+	 */
 	public Img toImg(TransferFunction transferFunc){
 		Img img = new Img(getDimension());
 		if(hasAlpha()){
@@ -714,14 +736,21 @@ public class ColorImg implements ImgBase<ColorPixel> {
 					getDataG()[px.getIndex()],
 					getDataB()[px.getIndex()])));
 		} else {
-			img.forEach(px->px.setValue(0xff000000 | transferFunc.toRGB(
+			img.forEach(px->px.setValue(transferFunc.toRGB(
 					getDataR()[px.getIndex()],
 					getDataG()[px.getIndex()],
 					getDataB()[px.getIndex()])));
 		}
-		return null;
+		return img;
 	}
 
+	/**
+	 * Copies this image's data to a new {@link Img}.
+	 * It is assumed that all channel values are in range of [0.0, 1.0] and are otherwise
+	 * clamped to that range.
+	 * 
+	 * @return an Img with this image's data copied to it
+	 */
 	public Img toImg(){
 		return toImg(TransferFunction.normalizedInput());
 	}
@@ -770,7 +799,7 @@ public class ColorImg implements ImgBase<ColorPixel> {
 	 * memory compared to higher values. Special applications on small Imgs using
 	 * sophisticated consumers or stream operations may justify the use of low split sizes.
 	 * @param size number of elements
-	 * @since 1.3
+	 * @throws IllegalArgumentException if specified size is less than 1
 	 */
 	public void setSpliteratorMinimumSplitSize(int size) {
 		if(size < 1){
@@ -785,14 +814,73 @@ public class ColorImg implements ImgBase<ColorPixel> {
 		return this.spliteratorMinimumSplitSize;
 	}
 
+	/**
+	 * A TransferFunction defines the method {@link #toARGB(double, double, double, double)}
+	 * which maps 4 double precision values (channels) to an 8bit per channel int (ARGB) value.
+	 * @author hageldave
+	 * @since 2.0
+	 */
 	public static interface TransferFunction {
 
+		/**
+		 * Transforms the specified channel values to an 8bit per channel ARGB value packed integer value.
+		 * @param a alpha value
+		 * @param r red value
+		 * @param g green value
+		 * @param b blue value
+		 * @return integer packed 8bit per channel ARGB value
+		 */
 		public int toARGB(double a, double r, double g, double b);
 
+		/**
+		 * Transforms the specified channel values to an 8bit per channel ARGB value packed integer value.
+		 * This returns an opaque color (alpha=255).
+		 * @param r red value
+		 * @param g green value
+		 * @param b blue value
+		 * @return integer packed 8bit per channel ARGB value
+		 */
 		public default int toRGB(double r, double g, double b){
 			return 0xff000000 | toARGB(0, r, g, b);
 		}
 
+		/**
+		 * Returns a {@link TransferFunction} that uses the specified function for each channel.
+		 * The specified function has to guarantee a mapping to the value range of [0,255] (8bit)
+		 * in order for the TransferFunction to produce well formed ARGB values.
+		 * @param fn function to be applied to each channel
+		 * @return a TransferFunction using the specified function on each channel
+		 */
+		static TransferFunction fromFunction(DoubleToIntFunction fn){
+			return (a,r,g,b) -> Pixel.argb_fast(
+					fn.applyAsInt(a),
+					fn.applyAsInt(r),
+					fn.applyAsInt(g),
+					fn.applyAsInt(b));
+		}
+		
+		/**
+		 * Returns a {@link TransferFunction} that uses the specified function for each channel.
+		 * The specified function has to guarantee a mapping to the value range of [0,255] (8bit)
+		 * in order for the TransferFunction to produce well formed ARGB values.
+		 * @param fn function to be applied to each channel
+		 * @return a TransferFunction using the specified function on each channel
+		 */
+		static TransferFunction fromFunction(DoubleFunction<Integer> fn){
+			return (a,r,g,b) -> Pixel.argb_fast(
+					fn.apply(a),
+					fn.apply(r),
+					fn.apply(g),
+					fn.apply(b));
+		}
+		
+		/**
+		 * Returns a {@link TransferFunction} that uses the specified function for each channel.
+		 * The specified function has to guarantee a mapping to the value range of [0,255] (8bit)
+		 * in order for the TransferFunction to produce well formed ARGB values.
+		 * @param fn function to be applied to each channel
+		 * @return a TransferFunction using the specified function on each channel
+		 */
 		static TransferFunction fromFunction(Function<Double, Integer> fn){
 			return (a,r,g,b) -> Pixel.argb_fast(
 					fn.apply(a),
@@ -801,8 +889,13 @@ public class ColorImg implements ImgBase<ColorPixel> {
 					fn.apply(b));
 		}
 
+		/**
+		 * Returns a TransferFunction that assumes values in range of [0.0, 1.0] which are
+		 * linearly mapped to [0, 255]. Values outside the assumed range are clamped to it.
+		 * @return the TransferFunction that linearly maps [0.0, 1.0] to [0,255].
+		 */
 		static TransferFunction normalizedInput(){
-			return (a,r,g,b) -> Pixel.argb_fromNormalized((float)a, (float)r, (float)g, (float)b);
+			return (a,r,g,b) -> Pixel.argb_fromNormalized(a, r, g, b);
 		}
 
 	}

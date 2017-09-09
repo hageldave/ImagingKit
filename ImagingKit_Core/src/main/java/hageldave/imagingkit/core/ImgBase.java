@@ -68,7 +68,7 @@ public interface ImgBase<P extends PixelBase> extends Iterable<P> {
 	 * @see #getHeight()
 	 * @see #numValues()
 	 */
-	public Dimension getDimension();
+	public default Dimension getDimension(){ return new Dimension(getWidth(),getHeight());}
 
 	/**
 	 * @return the width of this image (number of pixels in horizontal direction)
@@ -77,7 +77,7 @@ public interface ImgBase<P extends PixelBase> extends Iterable<P> {
 	 * @see #getDimension()
 	 * @see #numValues()
 	 */
-	public default int getWidth(){return getDimension().width;}
+	public int getWidth();
 
 	/**
 	 * @return the height of this image (number of pixels in vertical direction)
@@ -86,7 +86,7 @@ public interface ImgBase<P extends PixelBase> extends Iterable<P> {
 	 * @see #getDimension()
 	 * @see #numValues()
 	 */
-	public default int getHeight(){return getDimension().height;}
+	public int getHeight();
 
 	/**
 	 * @return the number of pixels of this image
@@ -888,5 +888,12 @@ public interface ImgBase<P extends PixelBase> extends Iterable<P> {
 				converter);
 		return StreamSupport.stream(spliterator, parallel);
 	}
+	
+	/**
+	 * Returns a deep copy of this image. 
+	 * 'Deep' means that changes made to this image are NOT reflected in the copy.
+	 * @return a deep copy.
+	 */
+	public ImgBase<P> copy();
 	
 }
