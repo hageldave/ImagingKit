@@ -598,6 +598,7 @@ public class Img implements ImgBase<Pixel> {
 	 * memory compared to higher values. Special applications on small Imgs using
 	 * sophisticated consumers or stream operations may justify the use of low split sizes.
 	 * @param size number of elements
+	 * @throws IllegalArgumentException if specified size is less than 1
 	 * @since 1.3
 	 */
 	public void setSpliteratorMinimumSplitSize(int size) {

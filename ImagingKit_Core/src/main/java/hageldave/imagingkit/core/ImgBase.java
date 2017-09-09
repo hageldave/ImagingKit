@@ -54,7 +54,7 @@ import hageldave.imagingkit.core.util.ParallelForEachExecutor;
  * If it is possible to create a remote BufferedImage from the implemented
  * data structure, the method should be overridden to enable the mentioned funtionality.
  *
- * @param <P>
+ * @param <P> the pixel type of the image
  *
  * @author hageldave
  * @since 2.0
@@ -266,7 +266,7 @@ public interface ImgBase<P extends PixelBase> extends Iterable<P> {
 	 */
 	@Override
 	public default Iterator<P> iterator() {
-		return new Iterators.ImgIterator<P>(numValues(), getPixel());
+		return new Iterators.ImgIterator<P>(getPixel());
 	}
 
 	/**
@@ -718,14 +718,13 @@ public interface ImgBase<P extends PixelBase> extends Iterable<P> {
 	 * @return a new sequential or parallel pixel stream.
 	 *
 	 * @see #stream()
-	 * @see #parallelStream()
 	 */
 	public static <Px extends PixelBase> Stream<Px> stream(Spliterator<Px> spliterator, boolean parallel){
 		return StreamSupport.stream(spliterator, parallel);
 	}
 
 	/**
-	 * Returns a sequential {@link Stream} of pixels of this Img.
+	 * Returns a sequential {@link Stream} of pixels of this image.
 	 * This Img's {@link #spliterator()} is used to create the Stream.
 	 * <p>
 	 * <b>The elements of this stream are not distinct!</b><br>
@@ -736,14 +735,46 @@ public interface ImgBase<P extends PixelBase> extends Iterable<P> {
 	 * Thus, a Set created by the expression {@code img.stream().collect(Collectors.toSet())}
 	 * will only contain a single element.
 	 * 
-	 * @return Pixel Stream of this Img.
-	 * @see #parallelStream()
+	 * @return pixel Stream of this image.
+	 * 
+	 * @see #stream()
+	 * @see #stream(boolean parallel)
 	 * @see #stream(int x, int y, int w, int h)
+	 * @see #stream(boolean parallel, int x, int y, int w, int h)
+	 * @see #stream(PixelConverter c, boolean parallel)
+	 * @see #stream(PixelConverter c, boolean parallel, int x, int y, int w, int h)
+	 * @see #stream(Spliterator spliterator, boolean parallel)
+	 * @see #forEach(Consumer action)
 	 */
 	public default Stream<P> stream() {
 		return stream(false);
 	}
 
+	/**
+	 * Returns a {@link Stream} of pixels of this image.
+	 * Depending on the specified argument, the stream will be parallel or sequential.
+	 * This Img's {@link #spliterator()} is used to create the Stream.
+	 * <p>
+	 * <b>The elements of this stream are not distinct!</b><br>
+	 * This is due to a {@link PixelBase} object being a pointer into
+	 * the data of the image and not a pixel value itself. While streaming
+	 * the index of the pixel object is changed for each actual pixel of the image.
+	 * <br>
+	 * Thus, a Set created by the expression {@code img.stream().collect(Collectors.toSet())}
+	 * will only contain a single element.
+	 * 
+	 * @param parallel whether the stream is parallel (true) or sequential (false)
+	 * @return pixel Stream of this image.
+	 * 
+	 * @see #stream()
+	 * @see #stream(boolean parallel)
+	 * @see #stream(int x, int y, int w, int h)
+	 * @see #stream(boolean parallel, int x, int y, int w, int h)
+	 * @see #stream(PixelConverter c, boolean parallel)
+	 * @see #stream(PixelConverter c, boolean parallel, int x, int y, int w, int h)
+	 * @see #stream(Spliterator spliterator, boolean parallel)
+	 * @see #forEach(Consumer action)
+	 */
 	public default Stream<P> stream(boolean parallel) {
 		return ImgBase.stream(spliterator(), parallel);
 	}
@@ -759,23 +790,98 @@ public interface ImgBase<P extends PixelBase> extends Iterable<P> {
 	 * @return Pixel Stream for specified area.
 	 * @throws IllegalArgumentException if provided area is not within this
 	 * Img's bounds.
-	 * @see #parallelStream(int x, int y, int w, int h)
+	 * 
 	 * @see #stream()
-	 * @since 1.2
+	 * @see #stream(boolean parallel)
+	 * @see #stream(int x, int y, int w, int h)
+	 * @see #stream(boolean parallel, int x, int y, int w, int h)
+	 * @see #stream(PixelConverter c, boolean parallel)
+	 * @see #stream(PixelConverter c, boolean parallel, int x, int y, int w, int h)
+	 * @see #stream(Spliterator spliterator, boolean parallel)
+	 * @see #forEach(Consumer action)
 	 */
 	public default Stream<P> stream(final int xStart, final int yStart, final int width, final int height){
 		return stream(false, xStart, yStart, width, height);
 	}
 
+	/**
+	 * Returns a Pixel {@link Stream} for the specified area of this Img.<br>
+	 * This Img's {@link #spliterator(int,int,int,int)} is used to create
+	 * the Stream.
+	 * 
+	 * @param parallel whether the stream is parallel (true) or sequential (false)
+	 * @param xStart left boundary of the area (inclusive)
+	 * @param yStart upper boundary of the area (inclusive)
+	 * @param width of the area
+	 * @param height of the area
+	 * @return Pixel Stream for specified area.
+	 * @throws IllegalArgumentException if provided area is not within this
+	 * image's bounds.
+	 * 
+	 * @see #stream()
+	 * @see #stream(boolean parallel)
+	 * @see #stream(int x, int y, int w, int h)
+	 * @see #stream(boolean parallel, int x, int y, int w, int h)
+	 * @see #stream(PixelConverter c, boolean parallel)
+	 * @see #stream(PixelConverter c, boolean parallel, int x, int y, int w, int h)
+	 * @see #stream(Spliterator spliterator, boolean parallel)
+	 * @see #forEach(Consumer action)
+	 */
 	public default Stream<P> stream(boolean parallel, final int xStart, final int yStart, final int width, final int height){
 		return StreamSupport.stream(spliterator(xStart, yStart, width, height), parallel);
 	}
 
+	/**
+	 * Returns a {@link Stream} of the specified {@link PixelConverter}'s element type 
+	 * over the pixels of this image. Each pixel will be converted to the element type
+	 * before being processed, and the element will be back converted to the pixel after
+	 * processing. The conversion and back conversion is handled by the specified converter.
+	 * 
+	 * @param converter that determines the element type of the stream and handles conversion/back conversion
+	 * @param parallel whether the stream is parallel (true) or sequential (false)
+	 * @return a Stream over the pixels of this image in the representation given by the specified converter.
+	 * 
+	 * @see #stream()
+	 * @see #stream(boolean parallel)
+	 * @see #stream(int x, int y, int w, int h)
+	 * @see #stream(boolean parallel, int x, int y, int w, int h)
+	 * @see #stream(PixelConverter c, boolean parallel)
+	 * @see #stream(PixelConverter c, boolean parallel, int x, int y, int w, int h)
+	 * @see #stream(Spliterator spliterator, boolean parallel)
+	 * @see #forEach(boolean, PixelManipulator)
+	 * @see #forEach(PixelConverter, boolean, Consumer)
+	 */
 	public default <T> Stream<T> stream(PixelConverter<? super P, T> converter, boolean parallel) {
 		Spliterator<T> spliterator = new PixelConvertingSpliterator<>(spliterator(), converter);
 		return StreamSupport.stream(spliterator, parallel);
 	}
 
+	/**
+	 * Returns a {@link Stream} of the specified {@link PixelConverter}'s element type 
+	 * over the pixels of this image within the specified area. Each pixel will be converted to the element type
+	 * before being processed, and the element will be back converted to the pixel after
+	 * processing. The conversion and back conversion is handled by the specified converter.
+	 * 
+	 * @param converter that determines the element type of the stream and handles conversion/back conversion
+	 * @param parallel whether the stream is parallel (true) or sequential (false)
+	 * @param xStart left boundary of the area (inclusive)
+	 * @param yStart upper boundary of the area (inclusive)
+	 * @param width of the area
+	 * @param height of the area
+	 * @return a Stream over the pixels in the specified area of this image 
+	 * in the representation given by the specified converter.
+	 * @throws IllegalArgumentException if provided area is not within this image's bounds.
+	 * 
+	 * @see #stream()
+	 * @see #stream(boolean parallel)
+	 * @see #stream(int x, int y, int w, int h)
+	 * @see #stream(boolean parallel, int x, int y, int w, int h)
+	 * @see #stream(PixelConverter c, boolean parallel)
+	 * @see #stream(PixelConverter c, boolean parallel, int x, int y, int w, int h)
+	 * @see #stream(Spliterator spliterator, boolean parallel)
+	 * @see #forEach(boolean parallel, int x, int y, int w, int h, PixelManipulator m)
+	 * @see #forEach(PixelConverter c, boolean parallel, int x, int y, int w, int h, Consumer action)
+	 */
 	public default <T> Stream<T> stream(final PixelConverter<? super P, T> converter, boolean parallel, final int xStart, final int yStart, final int width, final int height){
 		Spliterator<T> spliterator = new PixelConvertingSpliterator<>(
 				spliterator(xStart, yStart, width, height),
