@@ -10,7 +10,7 @@ import hageldave.imagingkit.core.Img;
  * CountedCompleter class for multithreaded execution of a Consumer on a
  * Pixel Spliterator. Used to realise multithreaded forEach loop.
  * @author hageldave
- * @see Img#forEachParallel(Consumer)
+ * @see Img#forEach(boolean parallel, Consumer action)
  * @since 1.0 (relocated from Img class)
  */
 public final class ParallelForEachExecutor<T> extends CountedCompleter<Void> {
