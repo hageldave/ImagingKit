@@ -44,86 +44,49 @@ import java.util.function.Function;
 import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.ImgBase;
 import hageldave.imagingkit.core.Pixel;
+import hageldave.imagingkit.core.PixelBase;
 
 /**
- * Image class with data stored in an int array.
+ * The ColorImg class provides defines a 2D Image with 3 (4 with alpha) channels 
+ * for RGB (ARGB) values.
  * <p>
- * In contrast to {@link BufferedImage} the Img class only offers
- * ColorPixel data to be stored as integer values simplifying data retrieval
- * and increasing performance due to less overhead and omitting color
- * model conversions. <br>
- * However the Img class can be easily used together with BufferedImages
- * offering convenience methods like {@link #Img(BufferedImage)},
- * {@link #toBufferedImage()} or {@link #createRemoteImg(BufferedImage)}.
+ * In contrast to the standard {@link Img} class, ColorImg uses
+ * double precision values for each channel of a pixel, whereas Img uses
+ * 8bit discrete values per channel of a pixel. <br>
+ * ColorImg is thus way more resource 'hungry' as Img 
+ * (32byte (24byte without alpha) vs 4byte per pixel). 
+ * This accuracy is meant for use in scientific image processing, e.g.
+ * frequency analysis, medical imaging, vector field visualitzation or the like.
  * <p>
- * Moreover the Img class targets lambda expressions introduced in Java 8
- * useful for per ColorPixel operations by implementing the {@link Iterable}
- * interface and providing
- * <ul>
- * <li> {@link #iterator()} </li>
- * <li> {@link #spliterator()} </li>
- * <li> {@link #forEach(Consumer)} </li>
- * <li> and {@link #forEachParallel(Consumer)}. </li>
- * </ul>
- * <p>
- * Since version 1.1 it is also possible to iterate over a specified area of
- * the Img using
- * <ul>
- * <li> {@link #iterator(int, int, int, int)} </li>
- * <li> {@link #spliterator(int, int, int, int)} </li>
- * <li> {@link #forEach(int, int, int, int, Consumer)} </li>
- * <li> and {@link #forEachParallel(int, int, int, int, Consumer)}. </li>
- * </ul>
- * <p>
- * Here is an example of a parallelized per ColorPixel operation:
- * <pre>
- * {@code
- * Img img = new Img(1024, 1024);
- * img.forEachParallel(px -> {
- *     double x = (px.getX()-512)/512.0;
- *     double y = (px.getY()-512)/512.0;
- *     double len = Math.max(Math.abs(x),Math.abs(y));
- *     double angle = (Math.atan2(x,y)+Math.PI)*(180/Math.PI);
- *
- *     double r = 255*Math.max(0,1-Math.abs((angle-120)/120.0));
- *     double g = 255*Math.max(0, 1-Math.abs((angle-240)/120.0));
- *     double b = 255*Math.max(0, angle <= 120 ?
- *          1-Math.abs((angle)/120.0):1-Math.abs((angle-360)/120.0));
- *
- *     px.setRGB((int)(r*(1-len)), (int)(g*(1-len)), (int)(b*(1-len)));
- * });
- * ImageSaver.saveImage(img.getRemoteBufferedImage(), "polar_colors.png");
- * }</pre>
- *
+ * Its pixel class {@link ColorPixel} provides, appart from the methods 
+ * defined in {@link PixelBase}, methods for vector operations treating the
+ * RGB values of the pixel as 3D vector.
+ * 
  * @author hageldave
- * @since 1.0
+ * @since 2.0
  */
 public class ColorImg implements ImgBase<ColorPixel> {
 
 	/** boundary mode that will return 0 for out of bounds positions.
-	 * @see #getValue(int, int, int)
-	 * @since 1.0
+	 * @see #getValue(int channel, int x, int y, int mode)
 	 */
-	public static final int boundary_mode_zero = 0;
+	public static final int boundary_mode_zero = Img.boundary_mode_zero;
 
 	/** boundary mode that will repeat the the edge of of an Img for out of
 	 * bounds positions.
-	 * @see #getValue(int, int, int)
-	 * @since 1.0
+	 * @see #getValue(int channel, int x, int y, int mode)
 	 */
-	public static final int boundary_mode_repeat_edge = 1;
+	public static final int boundary_mode_repeat_edge = Img.boundary_mode_repeat_edge;
 
 	/** boundary mode that will repeat the Img for out of bounds positions.
-	 * @see #getValue(int, int, int)
-	 * @since 1.0
+	 * @see #getValue(int channel, int x, int y, int mode)
 	 */
-	public static final int boundary_mode_repeat_image = 2;
+	public static final int boundary_mode_repeat_image = Img.boundary_mode_repeat_image;
 
 	/** boundary mode that will mirror the Img for out of bounds positions
-	 * @see #getValue(int, int, int)
-	 * @since 1.0
+	 * @see #getValue(int channel, int x, int y, int mode)
 	 */
-	public static final int boundary_mode_mirror = 3;
+	public static final int boundary_mode_mirror = Img.boundary_mode_mirror;
 
 	/** red channel index */
 	public static final int channel_r = 0;
@@ -156,10 +119,10 @@ public class ColorImg implements ImgBase<ColorPixel> {
 
 	/**
 	 * Creates a new ColorImg of specified dimensions.
-	 * Values are initialized to 0.
+	 * Channel values are initialized to 0.
 	 * @param width of the ColorImg
 	 * @param height of the ColorImg
-	 * @since 1.0
+	 * @param alpha whether the created image has an alpha channel
 	 */
 	public ColorImg(int width, int height, boolean alpha){
 		this.dataR = new double[width*height];
@@ -174,20 +137,25 @@ public class ColorImg implements ImgBase<ColorPixel> {
 
 	/**
 	 * Creates a new ColorImg of specified Dimension.
-	 * Values are initilaized to 0.
+	 * Channel values are initialized to 0.
 	 * @param dimension extend of the ColorImg (width and height)
-	 * @since 1.0
+	 * @param alpha whether the created image has an alpha channel
 	 */
 	public ColorImg(Dimension dimension, boolean alpha){
 		this(dimension.width, dimension.height, alpha);
 	}
 
 	/**
-	 * Creates a new ColorImg of same dimensions as provided BufferedImage.
-	 * Values are copied from argument Image
-	 * @param bimg the BufferedImage
-	 * @see #createRemoteImg(BufferedImage)
-	 * @since 1.0
+	 * Creates a new ColorImg of same dimensions as provided {@link Img}.
+	 * Values are copied from argument image.
+	 * 
+	 * @param img the Img
+	 * @param alpha whether the created image has an alpha channel
+	 * @see #ColorImg(int, int, boolean)
+	 * @see #ColorImg(Dimension, boolean)
+	 * @see #ColorImg(Img, boolean)
+	 * @see #ColorImg(BufferedImage)
+	 * @see #ColorImg(int, int, double[], double[], double[], double[])
 	 */
 	public ColorImg(Img img, boolean alpha){
 		this(img.getWidth(), img.getHeight(), alpha);
@@ -204,14 +172,15 @@ public class ColorImg implements ImgBase<ColorPixel> {
 
 	/**
 	 * Creates a new ColorImg of specified dimensions.
-	 * Provided data array will be used as this images data.
+	 * Provided data arrays will be used as this images data.
 	 * @param width of the ColorImg
 	 * @param height of the ColorImg
-	 * @param data values (ColorPixels) that will be used as the content of this Img
-	 * @throws IllegalArgumentException when the number of ColorPixels of this Img
-	 * resulting from width*height does not match the number of provided data values.
-	 * @throws NullPointerException if any of dataR, dataG or dataB is null.
-	 * @since 1.5
+	 * @param dataR array of red values (row major)
+	 * @param dataG array of green values (row major)
+	 * @param dataB array of blue values (row major)
+	 * @param dataA array of alpha values (row major)(can be null when no alpha channel is desired)
+	 * @throws IllegalArgumentException when the provided data arrays are not of the same length, 
+	 * or if the number of pixels resulting from the specified dimension does not match the array length.
 	 */
 	public ColorImg(int width, int height, double[] dataR, double[] dataG, double[] dataB, double[] dataA){
 		Objects.requireNonNull(dataR);
@@ -250,90 +219,190 @@ public class ColorImg implements ImgBase<ColorPixel> {
 		return hasAlpha;
 	}
 
-	/**
-	 * @return width of this Img
-	 */
+	@Override
 	public int getWidth(){
 		return this.width;
 	}
 
-	/**
-	 * @return height of this Img
-	 * @since 1.0
-	 */
+	@Override
 	public int getHeight(){
 		return this.height;
 	}
 
-	/**
-	 * @return number of values (ColorPixels) of this Img
-	 * @since 1.0
-	 */
+	@Override
 	public int numValues(){
 		return getWidth()*getHeight();
 	}
 
 	/**
-	 * @return data array of this Img
-	 * @since 1.0
+	 * Returns the data arrays of this image in the following order:
+	 * <pre>
+	 * data[0]= redData
+	 * data[1]= greenData
+	 * data[2]= blueData
+	 * (data[3]= alphaData)
+	 * </pre>
+	 * Depending on this image having an alpha channel or not, the returned array is
+	 * of size 3 (no alpha) or 4 (with alpha).
+	 * @return data arrays of this Img
+	 * 
+	 * @see #getDataR()
+	 * @see #getDataG()
+	 * @see #getDataB()
+	 * @see #getDataA()
+	 * @see #getData()
 	 */
 	public double[][] getData() {
 		return Arrays.copyOf(data, data.length);
 	}
 
+	/**
+	 * @return the data array of the red channel (row major)
+	 * @see #getDataR()
+	 * @see #getDataG()
+	 * @see #getDataB()
+	 * @see #getDataA()
+	 * @see #getData()
+	 */
 	public double[] getDataR() {
 		return dataR;
 	}
 
+	/**
+	 * @return the data array of the green channel (row major)
+	 * @see #getDataR()
+	 * @see #getDataG()
+	 * @see #getDataB()
+	 * @see #getDataA()
+	 * @see #getData()
+	 */
 	public double[] getDataG() {
 		return dataG;
 	}
 
+	/**
+	 * @return the data array of the blue channel (row major)
+	 * @see #getDataR()
+	 * @see #getDataG()
+	 * @see #getDataB()
+	 * @see #getDataA()
+	 * @see #getData()
+	 */
 	public double[] getDataB() {
 		return dataB;
 	}
 
+	/**
+	 * @return the data array of the alpha channel (row major). Null if this image has no alpha.
+	 * @see #getDataR()
+	 * @see #getDataG()
+	 * @see #getDataB()
+	 * @see #getDataA()
+	 * @see #getData()
+	 */
 	public double[] getDataA() {
 		return dataA;
 	}
 
 	/**
-	 * Returns the value of this Img at the specified position.
+	 * Returns the value of this image at the specified position for the specified channel.
 	 * No bounds checks will be performed, positions outside of this
 	 * image's dimension can either result in a value for a different position
 	 * or an ArrayIndexOutOfBoundsException.
 	 * @param x coordinate
 	 * @param y coordinate
-	 * @return value for specified position
+	 * @return value for specified position and channel
 	 * @throws ArrayIndexOutOfBoundsException if resulting index from x and y
-	 * is not within the data arrays bounds.
-	 * @see #getValue(int, int, int)
-	 * @see #getColorPixel(int, int)
-	 * @see #setValue(int, int, int)
-	 * @since 1.0
+	 * is not within the data arrays bounds or if the specified channel is not in [0,3] 
+	 * or is 3 but the image has no alpha (check using {@link #hasAlpha()}).
+	 * 
+	 * @see #getValue(int channel, int x, int y, int mode)
+	 * @see #getValueR(int, int)
+	 * @see #getValueG(int, int)
+	 * @see #getValueB(int, int)
+	 * @see #getValueA(int, int)
+	 * @see #getPixel(int x, int y)
+	 * @see #setValue(int channel, int x, int y, double val)
 	 */
 	public double getValue(final int channel, final int x, final int y){
 		return this.data[channel][y*this.width + x];
 	}
 
+	/**
+	 * Returns the red channel value of this image at the specified position.
+	 * No bounds checks will be performed, positions outside of this
+	 * image's dimension can either result in a value for a different position
+	 * or an ArrayIndexOutOfBoundsException.
+	 * @param x coordinate
+	 * @param y coordinate
+	 * @return red value for specified position
+	 * @throws ArrayIndexOutOfBoundsException if resulting index from x and y
+	 * is not within the data arrays bounds
+	 * 
+	 * @see #getValue(int channel , int x, int y)
+	 * @see #getValueR(int x, int y, int mode)
+	 */
 	public double getValueR(final int x, final int y){
 		return this.dataR[y*this.width + x];
 	}
 
+	/**
+	 * Returns the green channel value of this image at the specified position.
+	 * No bounds checks will be performed, positions outside of this
+	 * image's dimension can either result in a value for a different position
+	 * or an ArrayIndexOutOfBoundsException.
+	 * @param x coordinate
+	 * @param y coordinate
+	 * @return green value for specified position
+	 * @throws ArrayIndexOutOfBoundsException if resulting index from x and y
+	 * is not within the data arrays bounds
+	 * 
+	 * @see #getValue(int channel , int x, int y)
+	 * @see #getValueG(int x, int y, int mode)
+	 */
 	public double getValueG(final int x, final int y){
 		return this.dataG[y*this.width + x];
 	}
 
+	/**
+	 * Returns the blue channel value of this image at the specified position.
+	 * No bounds checks will be performed, positions outside of this
+	 * image's dimension can either result in a value for a different position
+	 * or an ArrayIndexOutOfBoundsException.
+	 * @param x coordinate
+	 * @param y coordinate
+	 * @return blue value for specified position
+	 * @throws ArrayIndexOutOfBoundsException if resulting index from x and y
+	 * is not within the data arrays bounds
+	 * 
+	 * @see #getValue(int channel , int x, int y)
+	 * @see #getValueB(int x, int y, int mode)
+	 */
 	public double getValueB(final int x, final int y){
 		return this.dataB[y*this.width + x];
 	}
 
+	/**
+	 * Returns the alpha channel value of this image at the specified position.
+	 * No bounds checks will be performed, positions outside of this
+	 * image's dimension can either result in a value for a different position
+	 * or an ArrayIndexOutOfBoundsException.
+	 * @param x coordinate
+	 * @param y coordinate
+	 * @return alpha value for specified position
+	 * @throws ArrayIndexOutOfBoundsException if resulting index from x and y
+	 * is not within the data arrays bounds
+	 * @throws NullPointerException if this image has no alpha channel (check using {@link #hasAlpha()})
+	 * 
+	 * @see #getValue(int channel , int x, int y)
+	 * @see #getValueA(int x, int y, int mode)
+	 */
 	public double getValueA(final int x, final int y){
 		return this.dataA[y*this.width + x];
 	}
 
 	/**
-	 * Returns the value of this Img at the specified position.
+	 * Returns the value of this image at the specified position for the specified channel.
 	 * Bounds checks will be performed and positions outside of this image's
 	 * dimensions will be handled according to the specified boundary mode.
 	 * <p>
@@ -357,12 +426,14 @@ public class ColorImg implements ImgBase<ColorPixel> {
 	 * to use opaque colors (0xff000000 - 0xffffffff) and transparent colors
 	 * above 0x0000000f which will not collide with one of the boundary modes
 	 * (number of boundary modes is limited to 16 for the future).
+	 * @param channel one of {@link #channel_r},{@link #channel_g},{@link #channel_b},{@link #channel_a} (0,1,2,3)
 	 * @param x coordinate
 	 * @param y coordinate
 	 * @param boundaryMode one of the boundary modes e.g. boundary_mode_mirror
 	 * @return value at specified position or a value depending on the
 	 * boundary mode for out of bounds positions.
-	 * @since 1.0
+	 * @throws ArrayIndexOutOfBoundsException if the specified channel is not in [0,3] 
+	 * or is 3 but the image has no alpha (check using {@link #hasAlpha()}).
 	 */
 	public double getValue(final int channel, int x, int y, final int boundaryMode){
 		if(x < 0 || y < 0 || x >= this.width || y >= this.height){
@@ -395,37 +466,75 @@ public class ColorImg implements ImgBase<ColorPixel> {
 		}
 	}
 
+	/**
+	 * See {@link #getValue(int channel, int x, int y, int mode)} for details.
+	 * This is a shortcut for {@code getValue(channel_r, x, y, boundaryMode)}.
+	 * @param x coordinate
+	 * @param y coordinate
+	 * @param boundaryMode one of the boundary modes e.g. boundary_mode_mirror
+	 * @return red value at specified position or a value depending on the
+	 * boundary mode for out of bounds positions.
+	 */
 	public double getValueR(int x, int y, final int boundaryMode){
 		return getValue(channel_r, x, y, boundaryMode);
 	}
 
+	/**
+	 * See {@link #getValue(int channel, int x, int y, int mode)} for details.
+	 * This is a shortcut for {@code getValue(channel_g, x, y, boundaryMode)}.
+	 * @param x coordinate
+	 * @param y coordinate
+	 * @param boundaryMode one of the boundary modes e.g. boundary_mode_mirror
+	 * @return green value at specified position or a value depending on the
+	 * boundary mode for out of bounds positions.
+	 */
 	public double getValueG(int x, int y, final int boundaryMode){
 		return getValue(channel_g, x, y, boundaryMode);
 	}
 
+	/**
+	 * See {@link #getValue(int channel, int x, int y, int mode)} for details.
+	 * This is a shortcut for {@code getValue(channel_b, x, y, boundaryMode)}.
+	 * @param x coordinate
+	 * @param y coordinate
+	 * @param boundaryMode one of the boundary modes e.g. boundary_mode_mirror
+	 * @return blue value at specified position or a value depending on the
+	 * boundary mode for out of bounds positions.
+	 */
 	public double getValueB(int x, int y, final int boundaryMode){
 		return getValue(channel_b, x, y, boundaryMode);
 	}
 
+	/**
+	 * See {@link #getValue(int channel, int x, int y, int mode)} for details.
+	 * This is a shortcut for {@code getValue(channel_a, x, y, boundaryMode)}.
+	 * @param x coordinate
+	 * @param y coordinate
+	 * @param boundaryMode one of the boundary modes e.g. boundary_mode_mirror
+	 * @return alpha value at specified position or a value depending on the
+	 * boundary mode for out of bounds positions.
+	 * @throws ArrayIndexOutOfBoundsException the image has no alpha (check using {@link #hasAlpha()}).
+	 */
 	public double getValueA(int x, int y, final int boundaryMode){
 		return getValue(channel_a, x, y, boundaryMode);
 	}
 
 	/**
-	 * Returns a bilinearly interpolated ARGB value of the image for the
+	 * Returns a bilinearly interpolated value of the image for the
+	 * specified channel at the
 	 * specified normalized position (x and y within [0,1]). Position {0,0}
 	 * denotes the image's origin (top left corner), position {1,1} denotes the
-	 * opposite corner (ColorPixel at {width-1, height-1}).
+	 * opposite corner (pixel at {width-1, height-1}).
 	 * <p>
 	 * An ArrayIndexOutOfBoundsException may be thrown for x and y greater than 1
 	 * or less than 0.
 	 * @param xNormalized coordinate within [0,1]
 	 * @param yNormalized coordinate within [0,1]
+	 * @return bilinearly interpolated value for specified channel.
 	 * @throws ArrayIndexOutOfBoundsException when a resulting index is out of
 	 * the data array's bounds, which can only happen for x and y values less
-	 * than 0 or greater than 1.
-	 * @return bilinearly interpolated ARGB value.
-	 * @since 1.0
+	 * than 0 or greater than 1 
+	 * or if the specified channel is not in [0,3] or is 3 but the image has no alpha (check using {@link #hasAlpha()}).
 	 */
 	public double interpolate(final int channel, final float xNormalized, final float yNormalized){
 		float xF = xNormalized * (getWidth()-1);
@@ -439,85 +548,74 @@ public class ColorImg implements ImgBase<ColorPixel> {
 		return interpolateBilinear(c00, c01, c10, c11, xF-x, yF-y);
 	}
 
+	/**
+	 * See {@link #interpolate(int, float, float)} for details.
+	 * This is a shorthand for {@code interpolate(channel_r, xNormalized, yNormalized)}.
+	 * @param xNormalized
+	 * @param yNormalized
+	 * @return bilinearly interpolated red value
+	 * @throws ArrayIndexOutOfBoundsException when a resulting index is out of
+	 * the data array's bounds, which can only happen for x and y values less
+	 * than 0 or greater than 1.
+	 */
 	public double interpolateR(final float xNormalized, final float yNormalized){
-		float xF = xNormalized * (getWidth()-1);
-		float yF = yNormalized * (getHeight()-1);
-		int x = (int)xF;
-		int y = (int)yF;
-		double c00 = getValueR(x, 							y);
-		double c01 = getValueR(x, 						   (y+1 < getHeight() ? y+1:y));
-		double c10 = getValueR((x+1 < getWidth() ? x+1:x), 	y);
-		double c11 = getValueR((x+1 < getWidth() ? x+1:x), (y+1 < getHeight() ? y+1:y));
-		return interpolateBilinear(c00, c01, c10, c11, xF-x, yF-y);
-	}
-
-	public double interpolateG(final float xNormalized, final float yNormalized){
-		float xF = xNormalized * (getWidth()-1);
-		float yF = yNormalized * (getHeight()-1);
-		int x = (int)xF;
-		int y = (int)yF;
-		double c00 = getValueG(x, 							y);
-		double c01 = getValueG(x, 						   (y+1 < getHeight() ? y+1:y));
-		double c10 = getValueG((x+1 < getWidth() ? x+1:x), 	y);
-		double c11 = getValueG((x+1 < getWidth() ? x+1:x), (y+1 < getHeight() ? y+1:y));
-		return interpolateBilinear(c00, c01, c10, c11, xF-x, yF-y);
-	}
-
-	public double interpolateB(final float xNormalized, final float yNormalized){
-		float xF = xNormalized * (getWidth()-1);
-		float yF = yNormalized * (getHeight()-1);
-		int x = (int)xF;
-		int y = (int)yF;
-		double c00 = getValueB(x, 							y);
-		double c01 = getValueB(x, 						   (y+1 < getHeight() ? y+1:y));
-		double c10 = getValueB((x+1 < getWidth() ? x+1:x), 	y);
-		double c11 = getValueB((x+1 < getWidth() ? x+1:x), (y+1 < getHeight() ? y+1:y));
-		return interpolateBilinear(c00, c01, c10, c11, xF-x, yF-y);
-	}
-
-	public double interpolateA(final float xNormalized, final float yNormalized){
-		float xF = xNormalized * (getWidth()-1);
-		float yF = yNormalized * (getHeight()-1);
-		int x = (int)xF;
-		int y = (int)yF;
-		double c00 = getValueA(x, 							y);
-		double c01 = getValueA(x, 						   (y+1 < getHeight() ? y+1:y));
-		double c10 = getValueA((x+1 < getWidth() ? x+1:x), 	y);
-		double c11 = getValueA((x+1 < getWidth() ? x+1:x), (y+1 < getHeight() ? y+1:y));
-		return interpolateBilinear(c00, c01, c10, c11, xF-x, yF-y);
-	}
-
-
-	private static double interpolateBilinear(final double c00, final double c01, final double c10, final double c11, final float mx, final float my){
-		return (c00*mx+c10*(1.0-mx))* my + (c01*mx+c11*(1.0-mx))*(1.0-my);
+		return interpolate(channel_r, xNormalized, yNormalized);
 	}
 
 	/**
-	 * Creates a new ColorPixel object for this ColorImg with position {0,0}.
-	 * @return a ColorPixel object for this ColorImg.
-	 * @since 1.0
+	 * See {@link #interpolate(int, float, float)} for details.
+	 * This is a shorthand for {@code interpolate(channel_g, xNormalized, yNormalized)}.
+	 * @param xNormalized
+	 * @param yNormalized
+	 * @return bilinearly interpolated green value
+	 * @throws ArrayIndexOutOfBoundsException when a resulting index is out of
+	 * the data array's bounds, which can only happen for x and y values less
+	 * than 0 or greater than 1.
 	 */
+	public double interpolateG(final float xNormalized, final float yNormalized){
+		return interpolate(channel_g, xNormalized, yNormalized);
+	}
+
+	/**
+	 * See {@link #interpolate(int, float, float)} for details.
+	 * This is a shorthand for {@code interpolate(channel_b, xNormalized, yNormalized)}.
+	 * @param xNormalized
+	 * @param yNormalized
+	 * @return bilinearly interpolated blue value
+	 * @throws ArrayIndexOutOfBoundsException when a resulting index is out of
+	 * the data array's bounds, which can only happen for x and y values less
+	 * than 0 or greater than 1.
+	 */
+	public double interpolateB(final float xNormalized, final float yNormalized){
+		return interpolate(channel_b, xNormalized, yNormalized);
+	}
+
+	/**
+	 * See {@link #interpolate(int, float, float)} for details.
+	 * This is a shorthand for {@code interpolate(channel_a, xNormalized, yNormalized)}.
+	 * @param xNormalized
+	 * @param yNormalized
+	 * @return bilinearly interpolated alpha value
+	 * @throws ArrayIndexOutOfBoundsException when a resulting index is out of
+	 * the data array's bounds, which can only happen for x and y values less
+	 * than 0 or greater than 1.
+	 * @throws NullPointerException if this image has no alpha channel (check using {@link #hasAlpha()})
+	 */
+	public double interpolateA(final float xNormalized, final float yNormalized){
+		return interpolate(channel_a, xNormalized, yNormalized);
+	}
+
+	/* bilinear interpolation between values c00 c01 c10 c11 at position mx my (in [0,1]) */
+	private static double interpolateBilinear(final double c00, final double c01, final double c10, final double c11, final float mx, final float my){
+		return (c00*mx+c10*(1.0-mx))*my + (c01*mx+c11*(1.0-mx))*(1.0-my);
+	}
+
+	@Override
 	public ColorPixel getPixel(){
 		return new ColorPixel(this, 0);
 	}
 
-	/**
-	 * Creates a new ColorPixel object for this ColorImg at specified position.
-	 * No bounds checks are performed for x and y.
-	 * <p>
-	 * <b>Tip:</b><br>
-	 * Do not use this method repeatedly while iterating the image.
-	 * Use {@link ColorPixel#setPosition(int, int)} instead to avoid excessive
-	 * allocation of ColorPixel objects.
-	 * <p>
-	 * You can also use <code>for(ColorPixel px: img){...}</code> syntax or the
-	 * {@link #forEach(Consumer)} method to iterate this image.
-	 * @param x coordinate
-	 * @param y coordinate
-	 * @return a ColorPixel object for this ColorImg at {x,y}.
-	 * @see #getValue(int, int)
-	 * @since 1.0
-	 */
+	@Override
 	public ColorPixel getPixel(int x, int y){
 		return new ColorPixel(this, x,y);
 	}
@@ -532,6 +630,9 @@ public class ColorImg implements ImgBase<ColorPixel> {
 	 * otherwise an IllegalArgumentException will be thrown. Only the
 	 * intersecting part of the area and the destination image is copied which
 	 * allows for an out of bounds destination area origin.
+	 * <p>
+	 * If this image has no alpha channel but the destination image has one, the destination's
+	 * alpha is left unchanged.
 	 *
 	 * @param x area origin in this image (x-coordinate)
 	 * @param y area origin in this image (y-coordinate)
@@ -543,7 +644,6 @@ public class ColorImg implements ImgBase<ColorPixel> {
 	 * @return the destination Img
 	 * @throws IllegalArgumentException if the specified area is not within
 	 * the bounds of this Img or if the size of the area is not positive.
-	 * @since 1.0
 	 */
 	public ColorImg copyArea(int x, int y, int w, int h, ColorImg dest, int destX, int destY){
 		if(w <= 0 || h <= 0){
@@ -574,9 +674,8 @@ public class ColorImg implements ImgBase<ColorPixel> {
 				System.arraycopy(this.getDataR(), srcPos, dest.getDataR(), destPos, len);
 				System.arraycopy(this.getDataG(), srcPos, dest.getDataG(), destPos, len);
 				System.arraycopy(this.getDataB(), srcPos, dest.getDataB(), destPos, len);
-				if(this.hasAlpha() && dest.hasAlpha()) System.arraycopy(this.getDataA(), srcPos, dest.getDataA(), destPos, len);
-				else
-				if(dest.hasAlpha())                    Arrays.fill(dest.getDataA(), destPos, destPos+len, 1.0);
+				if(this.hasAlpha() && dest.hasAlpha()) 
+					System.arraycopy(this.getDataA(), srcPos, dest.getDataA(), destPos, len);
 			}
 		} else {
 			if(destX < 0){
@@ -617,8 +716,6 @@ public class ColorImg implements ImgBase<ColorPixel> {
 							this.getDataA(), srcPos,
 							dest.getDataA(), destPos,
 							len);
-					} else if(dest.hasAlpha()) {
-						Arrays.fill(dest.getDataA(), destPos, destPos+len, 1.0);
 					}
 				}
 			}
@@ -627,42 +724,94 @@ public class ColorImg implements ImgBase<ColorPixel> {
 	}
 
 	/**
-	 * Sets value at the specified position.
+	 * Sets value at the specified position for the specified channel.
 	 * No bounds checks will be performed, positions outside of this
 	 * images dimension can either result in a value for a different position
 	 * or an ArrayIndexOutOfBoundsException.
+	 * 
+	 * @param channel the set value corresponds to
 	 * @param x coordinate
 	 * @param y coordinate
 	 * @param value to be set at specified position. e.g. 0xff0000ff for blue color
 	 * @throws ArrayIndexOutOfBoundsException if resulting index from x and y
-	 * is not within the data arrays bounds.
-	 * @see #getValue(int, int)
-	 * @since 1.0
+	 * is not within the data arrays bounds 
+	 * or if the specified channel is not in [0,3] 
+	 * or is 3 but the image has no alpha (check using {@link #hasAlpha()}).
+	 * @see #getValue(int channel, int x, int y)
 	 */
 	public void setValue(final int channel, final int x, final int y, final double value){
 		this.data[channel][y*this.width + x] = value;
 	}
 
+	/**
+	 * Sets the red value at the specified position.
+	 * No bounds checks will be performed, positions outside of this
+	 * images dimension can either result in a value for a different position
+	 * or an ArrayIndexOutOfBoundsException.
+	 * 
+	 * @param x coordinate
+	 * @param y coordinate
+	 * @param value to be set
+	 * @throws ArrayIndexOutOfBoundsException if resulting index from x and y
+	 * is not within the data arrays bounds 
+	 */
 	public void setValueR(final int x, final int y, final double value){
 		this.dataR[y*this.width + x] = value;
 	}
 
+	/**
+	 * Sets the green value at the specified position.
+	 * No bounds checks will be performed, positions outside of this
+	 * images dimension can either result in a value for a different position
+	 * or an ArrayIndexOutOfBoundsException.
+	 * 
+	 * @param x coordinate
+	 * @param y coordinate
+	 * @param value to be set
+	 * @throws ArrayIndexOutOfBoundsException if resulting index from x and y
+	 * is not within the data arrays bounds 
+	 */
 	public void setValueG(final int x, final int y, final double value){
 		this.dataG[y*this.width + x] = value;
 	}
 
+	/**
+	 * Sets the blue value at the specified position.
+	 * No bounds checks will be performed, positions outside of this
+	 * images dimension can either result in a value for a different position
+	 * or an ArrayIndexOutOfBoundsException.
+	 * 
+	 * @param x coordinate
+	 * @param y coordinate
+	 * @param value to be set
+	 * @throws ArrayIndexOutOfBoundsException if resulting index from x and y
+	 * is not within the data arrays bounds 
+	 */
 	public void setValueB(final int x, final int y, final double value){
 		this.dataB[y*this.width + x] = value;
 	}
 
+	/**
+	 * Sets the alpha value at the specified position.
+	 * No bounds checks will be performed, positions outside of this
+	 * images dimension can either result in a value for a different position
+	 * or an ArrayIndexOutOfBoundsException.
+	 * 
+	 * @param x coordinate
+	 * @param y coordinate
+	 * @param value to be set
+	 * @throws ArrayIndexOutOfBoundsException if resulting index from x and y
+	 * is not within the data arrays bounds
+	 * @throws NullPointerException if this image has no alpha channel (check using {@link #hasAlpha()})
+	 */
 	public void setValueA(final int x, final int y, final double value){
 		this.dataA[y*this.width + x] = value;
 	}
 
 	/**
-	 * Fills the whole image with the specified value.
-	 * @param value for filling image
-	 * @since 1.0
+	 * Fills the specified channel with the specified value.
+	 * @param channel to be filled
+	 * @param value for filling channel
 	 */
 	public void fill(final int channel, final double value){
 		Arrays.fill(getData()[channel], value);
@@ -755,16 +904,7 @@ public class ColorImg implements ImgBase<ColorPixel> {
 		return toImg(TransferFunction.normalizedInput());
 	}
 
-	/**
-	 * Creates a BufferedImage that shares the data of this Img. Changes in
-	 * this Img are reflected in the created BufferedImage and vice versa.
-	 * The created BufferedImage uses an ARGB DirectColorModel with an
-	 * underlying DataBufferInt (similar to {@link BufferedImage#TYPE_INT_ARGB})
-	 * @return BufferedImage sharing this Img's data.
-	 * @see #createRemoteImg(BufferedImage)
-	 * @see #toBufferedImage()
-	 * @since 1.0
-	 */
+	@Override
 	public BufferedImage getRemoteBufferedImage(){
 		SampleModel samplemodel = new BandedSampleModel(DataBuffer.TYPE_DOUBLE, getWidth(), getHeight(), hasAlpha() ? 4:3);
 		DataBufferDouble databuffer = new DataBufferDouble(getData(), numValues());
@@ -792,13 +932,17 @@ public class ColorImg implements ImgBase<ColorPixel> {
 	 * <p>
 	 * It is advised that this number is
 	 * chosen carefully and with respect to the Img's size and application of the
-	 * spliterator, as it can decrease performance of the parallelized methods
-	 * {@link #forEachParallel(Consumer)}, {@link #forEachParallel(int, int, int, int, Consumer)}
-	 * or {@link #parallelStream()} and {@link #parallelStream(int, int, int, int)}.
-	 * Low values cause a Spliterator to be split more often which will consume more
+	 * spliterator, as it can decrease performance of the parallelized methods<br>
+	 * {@link #forEach(boolean parallel, Consumer action)},<br>
+	 * {@link #forEach(boolean parallel, int x, int y, int w, int h, Consumer action)} or<br>
+	 * {@link #stream(boolean parallel)} etc.<br>
+	 * Small values cause a Spliterator to be split more often which will consume more
 	 * memory compared to higher values. Special applications on small Imgs using
-	 * sophisticated consumers or stream operations may justify the use of low split sizes.
-	 * @param size number of elements
+	 * sophisticated consumers or stream operations may justify the use of small split sizes.
+	 * High values cause a Spliterator to be split less often which may cause the work items
+	 * to be badly apportioned among the threads and lower throughput.
+	 *  
+	 * @param size the minimum number of elements a split covers
 	 * @throws IllegalArgumentException if specified size is less than 1
 	 */
 	public void setSpliteratorMinimumSplitSize(int size) {

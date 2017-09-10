@@ -24,17 +24,18 @@ package hageldave.imagingkit.core.operations;
 
 import java.util.function.Consumer;
 
-import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.Pixel;
 import hageldave.imagingkit.core.PixelBase;
 
 /**
  * Enum providing multiple color space transformations.
- * To transform a single color value use the {@link #discreteTransform(int)} method,
- * to transform a whole {@link Img} use the {@link #get()} method to obtain a
- * Pixel Consumer for the conversion.
+ * Each transformation implements the {@link Consumer} interface
+ * that accepts {@link PixelBase}. 
+ * <p>
+ * To tranform an image to the desired Colorspace the following could be used:<br>
+ * {@code myImg.forEach(ColorSpaceTransformation.RGB_2_HSV)}
  * @author hageldave
- * @since 1.2
+ * @since 1.2 (relocated from core package)
  */
 public enum ColorSpaceTransformation implements Consumer<PixelBase> {
 
@@ -174,7 +175,7 @@ public enum ColorSpaceTransformation implements Consumer<PixelBase> {
 
 	////// STATIC //////
 
-
+	
 	// CIE L*a*b* helper class
 	private static final class LAB {
 		static final double Xn = 0.95047f;

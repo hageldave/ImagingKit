@@ -427,7 +427,7 @@ public interface ImgBase<P extends PixelBase> extends Iterable<P> {
 	 */
 	public default void forEach(boolean parallel, final Consumer<? super P> action) {
 		if(parallel){
-			ParallelForEachExecutor<P> exec = new ParallelForEachExecutor<>(null, spliterator(), action);
+			ParallelForEachExecutor<P> exec = new ParallelForEachExecutor<>(spliterator(), action);
 			exec.invoke();
 		} else {
 			P p = getPixel();
@@ -489,7 +489,7 @@ public interface ImgBase<P extends PixelBase> extends Iterable<P> {
 	public default void forEach(boolean parallel, final int xStart, final int yStart, final int width, final int height, final Consumer<? super P> action) {
 		ImagingKitUtils.requireAreaInImageBounds(xStart, yStart, width, height, this);
 		if(parallel){
-			ParallelForEachExecutor<P> exec = new ParallelForEachExecutor<>(null, spliterator(xStart, yStart, width, height), action);
+			ParallelForEachExecutor<P> exec = new ParallelForEachExecutor<>(spliterator(xStart, yStart, width, height), action);
 			exec.invoke();
 		} else {
 			P p = getPixel();
@@ -532,7 +532,7 @@ public interface ImgBase<P extends PixelBase> extends Iterable<P> {
 			Spliterator<T> spliterator = new PixelConvertingSpliterator<>(
 					spliterator(),
 					converter);
-	 		ParallelForEachExecutor<T> exec = new ParallelForEachExecutor<>(null, spliterator, action);
+	 		ParallelForEachExecutor<T> exec = new ParallelForEachExecutor<>(spliterator, action);
 			exec.invoke();
 		} else {
 			P px = getPixel();
@@ -581,7 +581,7 @@ public interface ImgBase<P extends PixelBase> extends Iterable<P> {
 			Spliterator<T> spliterator = new PixelConvertingSpliterator<>(
 					spliterator(xStart, yStart, width, height),
 					converter);
-			ParallelForEachExecutor<T> exec = new ParallelForEachExecutor<>(null, spliterator, action);
+			ParallelForEachExecutor<T> exec = new ParallelForEachExecutor<>(spliterator, action);
 			exec.invoke();
 		} else {
 			P p = getPixel();

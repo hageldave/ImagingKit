@@ -26,17 +26,16 @@ import hageldave.imagingkit.core.PixelBase;
 
 /**
  * Pixel class for retrieving a value from an {@link ColorImg}.
- * A Pixel object stores a position and can be used to get and set values of
+ * A pixel object stores a position and can be used to get and set values of
  * an ColorImg. It is NOT the value and changing its position will not change the
  * image, instead it will reference a different value of the image as the
  * pixel object is a pointer to a value in the ColorImg's data array.
  * <p>
- * The Pixel class also provides a set of static methods for color decomposition
- * and recombination from color channels like {@link #argb(int, int, int, int)}
- * or {@link #a(int)}, {@link #r(int)}, {@link #g(int)}, {@link #b(int)}.
+ * The Pixel class also provides a set of vector calculations using the RGB channels
+ * as a 3-dimensional vector.
  *
  * @author hageldave
- * @since 1.0
+ * @since 2.0
  */
 public class ColorPixel implements PixelBase {
 
@@ -60,7 +59,7 @@ public class ColorPixel implements PixelBase {
 	 * of specified ColorImg at specified index.
 	 * <p>
 	 * No bounds checks are performed for index.
-	 * @param ColorImg the ColorImg this pixel corresponds to
+	 * @param img the ColorImg this pixel corresponds to
 	 * @param index of the value in the images data array
 	 * @see #ColorPixel(ColorImg, int, int)
 	 * @see ColorImg#getPixel()
@@ -76,10 +75,10 @@ public class ColorPixel implements PixelBase {
 	 * of specified ColorImg at specified position.
 	 * <p>
 	 * No bounds checks are performed for x and y
-	 * @param ColorImg the ColorImg this pixel corresponds to
+	 * @param img the ColorImg this pixel corresponds to
 	 * @param x coordinate
 	 * @param y coordinate
-	 * @see #Pixel(ColorImg, int)
+	 * @see #ColorPixel(ColorImg, int)
 	 * @see ColorImg#getPixel()
 	 * @see ColorImg#getPixel(int, int)
 	 */
@@ -130,8 +129,8 @@ public class ColorPixel implements PixelBase {
 	 * or if the specified channel is alpha but the image has no alpha (you may check 
 	 * this with {@code getSource().hasAlpha()})
 	 * 
-	 * @see #setARGB(int, int, int, int)
-	 * @see #setRGB(int, int, int)
+	 * @see #setARGB_fromDouble(double, double, double, double)
+	 * @see #setRGB_fromDouble(double, double, double)
 	 * @see #getValue(int channel)
 	 * @see ColorImg#setValue(int channel, int x, int y, double value)
 	 */
@@ -148,13 +147,13 @@ public class ColorPixel implements PixelBase {
 	 * @return the value of the ColorImg currently referenced by this Pixel.
 	 * @throws ArrayIndexOutOfBoundsException if this Pixel's index is not in
 	 * range of the ColorImg's data array, or if the specified channel is not in [0,3],
-	 * or if the specified channel is alpha but the image has no alpha (you may check 
+	 * or if the specified channel is alpha (3) but the image has no alpha (you may check 
 	 * this with {@code getSource().hasAlpha()})
 	 * 
-	 * @see #a()
-	 * @see #r()
-	 * @see #g()
-	 * @see #b()
+	 * @see #a_asDouble()
+	 * @see #r_asDouble()
+	 * @see #g_asDouble()
+	 * @see #b_asDouble()
 	 * @see #setValue(int channel, double value)
 	 * @see ColorImg#getValue(int channel, int x, int y)
 	 */

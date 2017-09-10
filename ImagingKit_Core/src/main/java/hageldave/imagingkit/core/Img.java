@@ -50,17 +50,17 @@ import java.util.function.Consumer;
  * <ul>
  * <li> {@link #iterator()} </li>
  * <li> {@link #spliterator()} </li>
- * <li> {@link #forEach(Consumer)} </li>
- * <li> and {@link #forEachParallel(Consumer)}. </li>
+ * <li> {@link #forEach(Consumer action)} </li>
+ * <li> and {@link #forEach(boolean parallel, Consumer action)}. </li>
  * </ul>
  * <p>
  * Since version 1.1 it is also possible to iterate over a specified area of
  * the Img using
  * <ul>
- * <li> {@link #iterator(int, int, int, int)} </li>
- * <li> {@link #spliterator(int, int, int, int)} </li>
- * <li> {@link #forEach(int, int, int, int, Consumer)} </li>
- * <li> and {@link #forEachParallel(int, int, int, int, Consumer)}. </li>
+ * <li> {@link #iterator(int x, int y, int w, int h)} </li>
+ * <li> {@link #spliterator(int x, int y, int w, int h)} </li>
+ * <li> {@link #forEach(int x, int y, int w, int h, Consumer action)} </li>
+ * <li> and {@link #forEach(boolean parallel, int x, int y, int w, int h, Consumer action)}. </li>
  * </ul>
  * <p>
  * Here is an example of a parallelized per pixel operation:
@@ -585,13 +585,17 @@ public class Img implements ImgBase<Pixel> {
 	 * <p>
 	 * It is advised that this number is
 	 * chosen carefully and with respect to the Img's size and application of the
-	 * spliterator, as it can decrease performance of the parallelized methods
-	 * {@link #forEachParallel(Consumer)}, {@link #forEachParallel(int, int, int, int, Consumer)}
-	 * or {@link #parallelStream()} and {@link #parallelStream(int, int, int, int)}.
-	 * Low values cause a Spliterator to be split more often which will consume more
+	 * spliterator, as it can decrease performance of the parallelized methods<br>
+	 * {@link #forEach(boolean parallel, Consumer action)},<br>
+	 * {@link #forEach(boolean parallel, int x, int y, int w, int h, Consumer action)} or<br>
+	 * {@link #stream(boolean parallel)} etc.<br>
+	 * Small values cause a Spliterator to be split more often which will consume more
 	 * memory compared to higher values. Special applications on small Imgs using
-	 * sophisticated consumers or stream operations may justify the use of low split sizes.
-	 * @param size number of elements
+	 * sophisticated consumers or stream operations may justify the use of small split sizes.
+	 * High values cause a Spliterator to be split less often which may cause the work items
+	 * to be badly apportioned among the threads and lower throughput.
+	 *  
+	 * @param size the minimum number of elements a split covers
 	 * @throws IllegalArgumentException if specified size is less than 1
 	 * @since 1.3
 	 */

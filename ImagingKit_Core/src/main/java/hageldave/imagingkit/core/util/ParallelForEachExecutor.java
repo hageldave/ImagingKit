@@ -11,15 +11,32 @@ import hageldave.imagingkit.core.Img;
  * Pixel Spliterator. Used to realise multithreaded forEach loop.
  * @author hageldave
  * @see Img#forEachParallel(Consumer)
- * @since 1.0
+ * @since 1.0 (relocated from Img class)
  */
 public final class ParallelForEachExecutor<T> extends CountedCompleter<Void> {
 	private static final long serialVersionUID = 1L;
 
-	final Spliterator<T> spliterator;
-	final Consumer<? super T> action;
-
+	private final Spliterator<T> spliterator;
+	private final Consumer<? super T> action;
+	
+	/**
+	 * Creates a new ParallelForEachExecutor that executes the 
+	 * specified {@link Consumer} (action) on the elements of the specified {@link Spliterator}.
+	 * In parallel.
+	 * <p>
+	 * Call {@link #invoke()} to trigger execution.
+	 * 
+	 * @param spliterator that provides the elements on which the action is to be performed
+	 * @param action to be performed
+	 */
 	public ParallelForEachExecutor(
+			Spliterator<T> spliterator,
+			Consumer<? super T> action)
+	{
+		this(null, spliterator, action);
+	}
+
+	private ParallelForEachExecutor(
 			ParallelForEachExecutor<T> parent,
 			Spliterator<T> spliterator,
 			Consumer<? super T> action)
