@@ -5,8 +5,8 @@
 [![Maven Central](https://img.shields.io/maven-central/v/com.github.hageldave.imagingkit/imagingkit-core.svg)](http://search.maven.org/#artifactdetails|com.github.hageldave.imagingkit|imagingkit-core|1.4|jar)
 ---
 #### [Development Branch](https://github.com/hageldave/ImagingKit/tree/devel)
-[![Build Status](https://travis-ci.org/hageldave/ImagingKit.svg?branch=devel)](https://travis-ci.org/hageldave/ImagingKit/branches)
-[![Coverage Status](https://coveralls.io/repos/github/hageldave/ImagingKit/badge.svg?branch=devel)](https://coveralls.io/github/hageldave/ImagingKit?branch=devel)
+[![Build Status](https://travis-ci.org/hageldave/ImagingKit.svg?branch=devel2.0)](https://travis-ci.org/hageldave/ImagingKit/branches)
+[![Coverage Status](https://coveralls.io/repos/github/hageldave/ImagingKit/badge.svg?branch=devel2.0)](https://coveralls.io/github/hageldave/ImagingKit?branch=devel2.0)
 ---
 
 A Java library for imaging tasks that integrates well with the commonly used java.awt.image environment (especially well with TYPE_INT BufferedImages). Its goal is to make image processing more convenient and to ease performance optimization. The library is intended for images using integer typed values like 24bit RGB or 32bit ARGB. 
