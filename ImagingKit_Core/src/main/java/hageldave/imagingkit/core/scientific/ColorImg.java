@@ -550,7 +550,7 @@ public class ColorImg implements ImgBase<ColorPixel> {
 	}
 
 	/**
-	 * See {@link #interpolate(int, float, float)} for details.
+	 * See {@link #interpolate(int, double, double)} for details.
 	 * This is a shorthand for {@code interpolate(channel_r, xNormalized, yNormalized)}.
 	 * @param xNormalized
 	 * @param yNormalized
@@ -564,7 +564,7 @@ public class ColorImg implements ImgBase<ColorPixel> {
 	}
 
 	/**
-	 * See {@link #interpolate(int, float, float)} for details.
+	 * See {@link #interpolate(int, double, double)} for details.
 	 * This is a shorthand for {@code interpolate(channel_g, xNormalized, yNormalized)}.
 	 * @param xNormalized
 	 * @param yNormalized
@@ -578,7 +578,7 @@ public class ColorImg implements ImgBase<ColorPixel> {
 	}
 
 	/**
-	 * See {@link #interpolate(int, float, float)} for details.
+	 * See {@link #interpolate(int, double, double)} for details.
 	 * This is a shorthand for {@code interpolate(channel_b, xNormalized, yNormalized)}.
 	 * @param xNormalized
 	 * @param yNormalized
@@ -592,7 +592,7 @@ public class ColorImg implements ImgBase<ColorPixel> {
 	}
 
 	/**
-	 * See {@link #interpolate(int, float, float)} for details.
+	 * See {@link #interpolate(int, double, double)} for details.
 	 * This is a shorthand for {@code interpolate(channel_a, xNormalized, yNormalized)}.
 	 * @param xNormalized
 	 * @param yNormalized

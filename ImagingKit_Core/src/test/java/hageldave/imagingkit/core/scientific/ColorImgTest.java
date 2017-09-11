@@ -1,16 +1,13 @@
 package hageldave.imagingkit.core.scientific;
 
+import static hageldave.imagingkit.core.JunitUtils.testException;
+import static hageldave.imagingkit.core.scientific.ColorImg.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+
 import org.junit.Test;
 
 import hageldave.imagingkit.core.Img;
-import hageldave.imagingkit.core.util.ImageFrame;
-
-import static org.junit.Assert.*;
-
-import java.util.Arrays;
-
-import static hageldave.imagingkit.core.JunitUtils.*;
-import static hageldave.imagingkit.core.scientific.ColorImg.*;
 
 public class ColorImgTest {
 
@@ -114,6 +111,51 @@ public class ColorImgTest {
 			assertArrayEquals(img2.getDataB(), img4.getDataR(), 0);
 			ColorImg img5 = new ColorImg(3,3, img3.getDataA(),img3.getDataG(),img3.getDataR(),img3.getDataB());
 			assertArrayEquals(img2.getDataB(), img5.getDataA(), 0);
+		}
+		
+		{// getValue methods
+			double[] rBuffer = new double[]{1,2,
+											3,4};
+			
+			double[] gBuffer = new double[]{10,20,
+											30,40};
+			
+			double[] bBuffer = new double[]{100,200,
+											300,400};
+			
+			double[] aBuffer = new double[]{-1,-2,
+											-3,-4};
+			
+			ColorImg img = new ColorImg(2, 2, rBuffer, gBuffer, bBuffer, aBuffer);
+			assertEquals(img.getValue(channel_r, 0, 0), rBuffer[0], 0);
+			assertEquals(img.getValue(channel_g, 1, 0), gBuffer[1], 0);
+			assertEquals(img.getValue(channel_b, 0, 1), bBuffer[2], 0);
+			assertEquals(img.getValue(channel_a, 1, 1), aBuffer[3], 0);
+			
+			int i = 0;
+			for(int y = 0; y < img.getHeight(); y++){
+				for(int x = 0; x < img.getWidth(); x++){
+					assertEquals(rBuffer[i], img.getValueR(x, y), 0);
+					assertEquals(gBuffer[i], img.getValueG(x, y), 0);
+					assertEquals(bBuffer[i], img.getValueB(x, y), 0);
+					assertEquals(aBuffer[i], img.getValueA(x, y), 0);
+					i++;
+				}
+			}
+			
+			assertEquals(4,  img.getValueR(-2,-2, boundary_mode_mirror), 0);
+			assertEquals(40, img.getValueG(-2, 1, boundary_mode_mirror), 0);
+			assertEquals(400,img.getValueB( 1,-2, boundary_mode_mirror), 0);
+			assertEquals(-4, img.getValueA( 1, 1, boundary_mode_mirror), 0);
+			assertEquals(1,  img.getValueR( 4, 4, boundary_mode_mirror), 0);
+			assertEquals(1,  img.getValueR(-5,-5, boundary_mode_mirror), 0);
+			
+			assertEquals(1,  img.getValueR( 0,-2, boundary_mode_repeat_edge), 0);
+			assertEquals(20, img.getValueG( 3, 0, boundary_mode_repeat_edge), 0);
+			assertEquals(400,img.getValueB( 1, 4, boundary_mode_repeat_edge), 0);
+			assertEquals(-3, img.getValueA(-2, 1, boundary_mode_repeat_edge), 0);
+			
+			
 		}
 		
 	}
