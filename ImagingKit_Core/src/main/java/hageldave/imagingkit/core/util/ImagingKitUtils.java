@@ -36,9 +36,9 @@ public final class ImagingKitUtils {
 	}
 	
 	/**
-	 * Throws an illegal argument exception when the specified area 
+	 * Throws an {@link IllegalArgumentException} when the specified area 
 	 * is not within the bounds of the specified image, or if the area
-	 * is 0 (width or height =0).
+	 * is not positive.
 	 * This is used for parameter evaluation.
 	 * 
 	 * @param xStart left boundary of the area
@@ -46,6 +46,7 @@ public final class ImagingKitUtils {
 	 * @param width of the area
 	 * @param height of the area
 	 * @param img the area has to fit in.
+	 * @throws IllegalArgumentException when area not in image bounds or not area not positive
 	 */
 	public static void requireAreaInImageBounds(final int xStart, final int yStart, final int width, final int height, ImgBase<?> img){
 		if(		width <= 0 || height <= 0 ||

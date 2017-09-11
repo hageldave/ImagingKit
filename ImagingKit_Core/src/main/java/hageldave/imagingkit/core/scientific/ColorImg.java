@@ -45,6 +45,7 @@ import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.ImgBase;
 import hageldave.imagingkit.core.Pixel;
 import hageldave.imagingkit.core.PixelBase;
+import hageldave.imagingkit.core.util.ImagingKitUtils;
 
 /**
  * The ColorImg class provides defines a 2D Image with 3 (4 with alpha) channels 
@@ -536,9 +537,9 @@ public class ColorImg implements ImgBase<ColorPixel> {
 	 * than 0 or greater than 1 
 	 * or if the specified channel is not in [0,3] or is 3 but the image has no alpha (check using {@link #hasAlpha()}).
 	 */
-	public double interpolate(final int channel, final float xNormalized, final float yNormalized){
-		float xF = xNormalized * (getWidth()-1);
-		float yF = yNormalized * (getHeight()-1);
+	public double interpolate(final int channel, final double xNormalized, final double yNormalized){
+		double xF = xNormalized * (getWidth()-1);
+		double yF = yNormalized * (getHeight()-1);
 		int x = (int)xF;
 		int y = (int)yF;
 		double c00 = getValue(channel, x, 							y);
@@ -558,7 +559,7 @@ public class ColorImg implements ImgBase<ColorPixel> {
 	 * the data array's bounds, which can only happen for x and y values less
 	 * than 0 or greater than 1.
 	 */
-	public double interpolateR(final float xNormalized, final float yNormalized){
+	public double interpolateR(final double xNormalized, final double yNormalized){
 		return interpolate(channel_r, xNormalized, yNormalized);
 	}
 
@@ -572,7 +573,7 @@ public class ColorImg implements ImgBase<ColorPixel> {
 	 * the data array's bounds, which can only happen for x and y values less
 	 * than 0 or greater than 1.
 	 */
-	public double interpolateG(final float xNormalized, final float yNormalized){
+	public double interpolateG(final double xNormalized, final double yNormalized){
 		return interpolate(channel_g, xNormalized, yNormalized);
 	}
 
@@ -586,7 +587,7 @@ public class ColorImg implements ImgBase<ColorPixel> {
 	 * the data array's bounds, which can only happen for x and y values less
 	 * than 0 or greater than 1.
 	 */
-	public double interpolateB(final float xNormalized, final float yNormalized){
+	public double interpolateB(final double xNormalized, final double yNormalized){
 		return interpolate(channel_b, xNormalized, yNormalized);
 	}
 
@@ -598,15 +599,15 @@ public class ColorImg implements ImgBase<ColorPixel> {
 	 * @return bilinearly interpolated alpha value
 	 * @throws ArrayIndexOutOfBoundsException when a resulting index is out of
 	 * the data array's bounds, which can only happen for x and y values less
-	 * than 0 or greater than 1.
-	 * @throws NullPointerException if this image has no alpha channel (check using {@link #hasAlpha()})
+	 * than 0 or greater than 1,
+	 * or if the image has no alpha channel (check using {@link #hasAlpha()}).
 	 */
-	public double interpolateA(final float xNormalized, final float yNormalized){
+	public double interpolateA(final double xNormalized, final double yNormalized){
 		return interpolate(channel_a, xNormalized, yNormalized);
 	}
 
 	/* bilinear interpolation between values c00 c01 c10 c11 at position mx my (in [0,1]) */
-	private static double interpolateBilinear(final double c00, final double c01, final double c10, final double c11, final float mx, final float my){
+	private static double interpolateBilinear(final double c00, final double c01, final double c10, final double c11, final double mx, final double my){
 		return (c00*mx+c10*(1.0-mx))*my + (c01*mx+c11*(1.0-mx))*(1.0-my);
 	}
 
@@ -646,16 +647,7 @@ public class ColorImg implements ImgBase<ColorPixel> {
 	 * the bounds of this Img or if the size of the area is not positive.
 	 */
 	public ColorImg copyArea(int x, int y, int w, int h, ColorImg dest, int destX, int destY){
-		if(w <= 0 || h <= 0){
-			throw new IllegalArgumentException(String.format(
-					"specified area size is not positive! specified size w,h = [%dx%d]",
-					w,h));
-		}
-		if(x < 0 || y < 0 || x+w > getWidth() || y+h > getHeight()){
-			throw new IllegalArgumentException(String.format(
-					"specified area is not within image bounds! specified x,y = [%d,%d] w,h = [%dx%d], image dimensions are [%dx%d]",
-					x,y,w,h,getWidth(),getHeight()));
-		}
+		ImagingKitUtils.requireAreaInImageBounds(x, y, w, h, this);
 		if(dest == null){
 			return copyArea(x, y, w, h, new ColorImg(w,h,this.hasAlpha()), 0, 0);
 		}
@@ -812,6 +804,8 @@ public class ColorImg implements ImgBase<ColorPixel> {
 	 * Fills the specified channel with the specified value.
 	 * @param channel to be filled
 	 * @param value for filling channel
+	 * @throws ArrayIndexOutOfBoundsException if the specified channel is not in [0,3] 
+	 * or is 3 but the image has no alpha (check using {@link #hasAlpha()}).
 	 */
 	public void fill(final int channel, final double value){
 		Arrays.fill(getData()[channel], value);
