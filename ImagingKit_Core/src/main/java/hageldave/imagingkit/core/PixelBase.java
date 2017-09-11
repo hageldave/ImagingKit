@@ -174,11 +174,7 @@ public interface PixelBase {
 	 * @see #setRGB_fromDouble_preserveAlpha(double, double, double)
 	 */
 	public default PixelBase setRGB_fromDouble(double r, double g, double b){
-		setA_fromDouble(1.0);
-		setR_fromDouble(r);
-		setG_fromDouble(g);
-		setB_fromDouble(b);
-		return this;
+		return setARGB_fromDouble(1.0, r, g, b);
 	}
 
 	/**

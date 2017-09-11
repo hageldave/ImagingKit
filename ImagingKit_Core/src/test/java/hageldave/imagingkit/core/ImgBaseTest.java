@@ -10,23 +10,23 @@ import org.junit.Test;
 public class ImgBaseTest {
 	
 	@Test
-	public void test() throws InterruptedException{
+	public void test() throws Exception {
 		TestImg img = new TestImg();
 		assertEquals(img.getWidth()*img.getHeight(), img.numValues());
 		JunitUtils.testException(()->{img.getRemoteBufferedImage();}, UnsupportedOperationException.class);
 		assertFalse(img.supportsRemoteBufferedImage());
 		assertEquals(1024, img.getSpliteratorMinimumSplitSize());
-		img.forEach(px->px.setA_fromDouble(px.getIndex()%220));
-		img.forEach(px->assertEquals((double)px.getIndex()%220, px.a_asDouble(), 0));
+		img.forEach(px->px.setRGB_fromDouble(px.getIndex()%220,px.getIndex()%221,px.getIndex()%222).setA_fromDouble(255));
+		img.forEach(px->assertEquals((double)px.getIndex()%220, px.r_asDouble(), 0));
 	}
 
 	
 	private static class TestImg implements ImgBase<TestPixel> {
 		
-		final double[][] values;
+		final double[][][] values;
 		
 		public TestImg() {
-			values = new double[1024][512];
+			values = new double[1024][512][4];
 		}
 		
 
@@ -52,15 +52,16 @@ public class ImgBaseTest {
 
 		@Override
 		public BufferedImage toBufferedImage(BufferedImage bimg) {
-			this.forEach(px->bimg.setRGB(px.x, px.y, Pixel.rgb_bounded((int)px.r_asDouble(),(int)px.g_asDouble(),(int)px.b_asDouble())));
+			this.forEach(px->bimg.setRGB(px.x, px.y, Pixel.argb_bounded((int)px.a_asDouble(),(int)px.r_asDouble(),(int)px.g_asDouble(),(int)px.b_asDouble())));
 			return bimg;
 		}
 
 		@Override
 		public ImgBase<TestPixel> copy() {
 			TestImg testImg = new TestImg();
-			for(int i = 0; i < getHeight(); i++){
-				System.arraycopy(values[i], 0, testImg.values[i], 0, getWidth());
+			for(int r = 0; r < getHeight(); r++){
+				for(int c = 0; c < getWidth(); c++)
+					System.arraycopy(values[r][c], 0, testImg.values[r][c], 0, 4);
 			}
 			return testImg;
 		}
@@ -76,45 +77,53 @@ public class ImgBaseTest {
 			this.source = source;
 		}
 		
+		private double channelAsDouble(int c){
+			return getSource().values[y][x][c];
+		}
+		
+		private TestPixel setChannel(int c, double v){
+			getSource().values[y][x][c]=v;
+			return this;
+		}
+		
 		@Override
 		public double a_asDouble() {
-			return getSource().values[y][x];
+			return channelAsDouble(0);
 		}
 
 		@Override
 		public double r_asDouble() {
-			return a_asDouble();
+			return channelAsDouble(1);
 		}
 
 		@Override
 		public double g_asDouble() {
-			return a_asDouble();
+			return channelAsDouble(2);
 		}
 
 		@Override
 		public double b_asDouble() {
-			return a_asDouble();
+			return channelAsDouble(3);
 		}
 
 		@Override
 		public PixelBase setA_fromDouble(double a) {
-			getSource().values[y][x]=a;
-			return this;
+			return setChannel(0, a);
 		}
 
 		@Override
 		public PixelBase setR_fromDouble(double r) {
-			return setA_fromDouble(r);
+			return setChannel(1, r);
 		}
 
 		@Override
 		public PixelBase setG_fromDouble(double g) {
-			return setA_fromDouble(g); 
+			return setChannel(2, g); 
 		}
 
 		@Override
 		public PixelBase setB_fromDouble(double b) {
-			return setA_fromDouble(b);
+			return setChannel(3, b);
 		}
 
 		@Override

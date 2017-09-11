@@ -289,7 +289,7 @@ public interface ImgBase<P extends PixelBase> extends Iterable<P> {
 	 * @param height of the area
 	 * @return iterator for iterating over the pixels in the specified area.
 	 * @throws IllegalArgumentException if provided area is not within this
-	 * image's bounds.
+	 * image's bounds, or if the area is 0 (width or height =0). 
 	 * 
 	 * @see #iterator()
 	 * @see #spliterator()
@@ -364,7 +364,7 @@ public interface ImgBase<P extends PixelBase> extends Iterable<P> {
 	 * @param height of the area
 	 * @return spliterator for the specified area.
 	 * @throws IllegalArgumentException if provided area is not within this
-	 * image's bounds.
+	 * image's bounds, or if the area is 0 (width or height =0). 
 	 * 
 	 * @see #spliterator()
 	 * @see #colSpliterator()
@@ -472,7 +472,7 @@ public interface ImgBase<P extends PixelBase> extends Iterable<P> {
 	 * @param height of the area
 	 * @param action to be performed on each pixel
 	 * @throws IllegalArgumentException if provided area is not within this
-	 * images's bounds.
+	 * images's bounds, or if the area is 0 (width or height =0). 
 	 * 
 	 * @see #forEach(Consumer)
 	 * @see #forEach(PixelManipulator)
@@ -561,7 +561,7 @@ public interface ImgBase<P extends PixelBase> extends Iterable<P> {
 	 * @param height of the area
 	 * @param action to be performed on each pixel
 	 * @throws IllegalArgumentException if provided area is not within this
-	 * images's bounds.
+	 * images's bounds, or if the area is 0 (width or height =0). 
 	 * 
 	 * @see #forEach(Consumer)
 	 * @see #forEach(PixelManipulator)
@@ -646,7 +646,6 @@ public interface ImgBase<P extends PixelBase> extends Iterable<P> {
 	 * @param yStart upper boundary of the area (inclusive)
 	 * @param width of the area
 	 * @param height of the area
-	 * @param action to be performed on each pixel
 	 * @param manipulator that will be applied
 	 * @throws IllegalArgumentException if provided area is not within this
 	 * images's bounds.
@@ -674,7 +673,6 @@ public interface ImgBase<P extends PixelBase> extends Iterable<P> {
 	 * @param yStart upper boundary of the area (inclusive)
 	 * @param width of the area
 	 * @param height of the area
-	 * @param action to be performed on each pixel
 	 * @param manipulator that will be applied
 	 * @throws IllegalArgumentException if provided area is not within this
 	 * images's bounds.

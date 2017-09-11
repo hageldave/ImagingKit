@@ -37,7 +37,8 @@ public final class ImagingKitUtils {
 	
 	/**
 	 * Throws an illegal argument exception when the specified area 
-	 * is not within the bounds of the specified image.
+	 * is not within the bounds of the specified image, or if the area
+	 * is 0 (width or height =0).
 	 * This is used for parameter evaluation.
 	 * 
 	 * @param xStart left boundary of the area

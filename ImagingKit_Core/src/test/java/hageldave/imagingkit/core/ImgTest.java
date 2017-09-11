@@ -124,6 +124,11 @@ public class ImgTest {
 		assertEquals(color, p.getValue());
 		assertEquals(Pixel.getGrey(color, 4, 2, 1), p.getGrey(4, 2, 1));
 		assertEquals(Pixel.getLuminance(color), p.getLuminance());
+		
+		img.getPixel(0, 0).setA_fromDouble(1).setR_fromDouble(0).setG_fromDouble(1).setB_fromDouble(0);
+		assertEquals(0xff00ff00, img.getPixel(0,0).getValue());
+		img.getPixel(1, 1).setA_fromDouble(100).setR_fromDouble(-1).setG_fromDouble(2).setB_fromDouble(-0.1);
+		assertEquals(0xff00ff00, img.getPixel(1,1).getValue());
 	}
 
 	@Test
