@@ -14,6 +14,8 @@ import java.util.function.Consumer;
 
 import org.junit.Test;
 
+import hageldave.imagingkit.core.PixelConvertingSpliterator.PixelConverter;
+
 public class ImgTest {
 
 	static final double eps = 0.000001;
@@ -789,6 +791,68 @@ public class ImgTest {
 				}
 			}
 
+		}
+		
+		
+		// forEach/stream with manipulator/converter
+		{
+			PixelManipulator<Color[]> colorManip = new PixelManipulator<Color[]>() {
+				@Override
+				public PixelConverter<PixelBase, Color[]> getConverter() {
+					return PixelConverter.fromFunctions(
+							()->new Color[1], 
+							(px,c)->{
+								c[0] = new Color(
+										(float)px.r_asDouble(), 
+										(float)px.g_asDouble(), 
+										(float)px.b_asDouble(), 
+										(float)px.a_asDouble());
+							},
+							(c,px)->{
+								px.setARGB_fromDouble(
+										c[0].getAlpha()/255.0, 
+										c[0].getRed()/255.0, 
+										c[0].getGreen()/255.0, 
+										c[0].getBlue()/255.0);
+							});
+				}
+
+				@Override
+				public Consumer<Color[]> getAction() {
+					return c->c[0] = c[0].brighter();
+				}
+			};
+
+			// for each
+			Img img = imgAlloc.apply(512, 512);
+			img.forEach(true, px->assertTrue(px.getLuminance()==0));
+			// apply manip to bottom half
+			img.forEach(0, 256, 512, 256, colorManip);
+			img.forEach(true, 0,   0, 512, 256, px->assertTrue(px.getLuminance()==0));
+			img.forEach(true, 0, 256, 512, 256, px->assertTrue(px.getLuminance()>0));
+			// apply to upper half
+			img.forEach(true, 0, 0, 512, 256, colorManip);
+			double avg1 = img.stream(true).mapToInt(Pixel::getLuminance).average().getAsDouble();
+			// average luminance has to be the same as luminance of a single pixel
+			assertTrue(avg1 == img.getPixel().getLuminance());
+			img.forEach(true, colorManip);
+			double avg2 = img.stream(true).mapToInt(Pixel::getLuminance).average().getAsDouble();
+			assertTrue(avg2 > avg1);
+			img.forEach(colorManip);
+			double avg3 = img.stream(true).mapToInt(Pixel::getLuminance).average().getAsDouble();
+			assertTrue(avg3 > avg2);
+			
+			
+			
+			// stream
+			img = imgAlloc.apply(512, 512);
+			img.fill(0xffffffff);
+			img.forEach(px->assertTrue(px.getLuminance()==255));
+			img.stream(colorManip.getConverter(), true).forEach(c->c[0]=c[0].darker());
+			img.forEach(px->assertTrue(px.getLuminance() <255));
+			img.stream(colorManip.getConverter(), true, 0, 256, 512, 256).forEach(c->c[0]=Color.white);
+			img.forEach(0,   0, 512, 256, px->assertTrue(px.getLuminance() <255));
+			img.forEach(0, 256, 512, 256, px->assertTrue(px.getLuminance()==255));
 		}
 
 	}

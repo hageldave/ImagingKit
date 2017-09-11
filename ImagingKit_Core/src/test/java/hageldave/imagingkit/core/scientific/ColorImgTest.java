@@ -1,5 +1,7 @@
 package hageldave.imagingkit.core.scientific;
 
-public class DImgTest {
+public class ColorImgTest {
 
+	
+	
 }
