@@ -346,7 +346,7 @@ public class Img implements ImgBase<Pixel> {
 	}
 
 	private static int blend(final int channel1, final int channel2, final double m){
-		return (int) ((channel2 * m) + (channel1 * (1f-m)));
+		return (int) ((channel2 * m) + (channel1 * (1.0-m)));
 	}
 
 	/**

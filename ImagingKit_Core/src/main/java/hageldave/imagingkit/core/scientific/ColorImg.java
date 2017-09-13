@@ -37,9 +37,7 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.Spliterator;
 import java.util.function.Consumer;
-import java.util.function.DoubleFunction;
 import java.util.function.DoubleToIntFunction;
-import java.util.function.Function;
 
 import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.ImgBase;
@@ -608,7 +606,7 @@ public class ColorImg implements ImgBase<ColorPixel> {
 
 	/* bilinear interpolation between values c00 c01 c10 c11 at position mx my (in [0,1]) */
 	private static double interpolateBilinear(final double c00, final double c01, final double c10, final double c11, final double mx, final double my){
-		return (c00*mx+c10*(1.0-mx))*my + (c01*mx+c11*(1.0-mx))*(1.0-my);
+		return (c00*(1.0-mx)+c10*(mx))*(1.0-my) + (c01*(1.0-mx)+c11*(mx))*(my);
 	}
 
 	@Override
@@ -704,7 +702,8 @@ public class ColorImg implements ImgBase<ColorPixel> {
 							this.getDataB(), srcPos,
 							dest.getDataB(), destPos,
 							len);
-					if(this.hasAlpha() && dest.hasAlpha()) { System.arraycopy(
+					if(this.hasAlpha() && dest.hasAlpha()) { 
+						System.arraycopy(
 							this.getDataA(), srcPos,
 							dest.getDataA(), destPos,
 							len);
@@ -995,36 +994,6 @@ public class ColorImg implements ImgBase<ColorPixel> {
 					fn.applyAsInt(r),
 					fn.applyAsInt(g),
 					fn.applyAsInt(b));
-		}
-		
-		/**
-		 * Returns a {@link TransferFunction} that uses the specified function for each channel.
-		 * The specified function has to guarantee a mapping to the value range of [0,255] (8bit)
-		 * in order for the TransferFunction to produce well formed ARGB values.
-		 * @param fn function to be applied to each channel
-		 * @return a TransferFunction using the specified function on each channel
-		 */
-		static TransferFunction fromFunction(DoubleFunction<Integer> fn){
-			return (a,r,g,b) -> Pixel.argb_fast(
-					fn.apply(a),
-					fn.apply(r),
-					fn.apply(g),
-					fn.apply(b));
-		}
-		
-		/**
-		 * Returns a {@link TransferFunction} that uses the specified function for each channel.
-		 * The specified function has to guarantee a mapping to the value range of [0,255] (8bit)
-		 * in order for the TransferFunction to produce well formed ARGB values.
-		 * @param fn function to be applied to each channel
-		 * @return a TransferFunction using the specified function on each channel
-		 */
-		static TransferFunction fromFunction(Function<Double, Integer> fn){
-			return (a,r,g,b) -> Pixel.argb_fast(
-					fn.apply(a),
-					fn.apply(r),
-					fn.apply(g),
-					fn.apply(b));
 		}
 
 		/**

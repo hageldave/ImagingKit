@@ -219,10 +219,11 @@ public final class Iterators {
 		@Override
 		public Spliterator<P> trySplit() {
 			int currentIdx = Math.min(px.getIndex(), endIndex);
-			int midIdx = currentIdx + (endIndex-currentIdx)/2;
-			if(midIdx > currentIdx+minimumSplitSize){
-				ImgSpliterator<P> split = new ImgSpliterator<>(midIdx, endIndex, minimumSplitSize, pixelSupplier);
-				setEndIndex(midIdx-1);
+			int range = endIndex+1-currentIdx;
+			if(range/2 >= minimumSplitSize){
+				int mid = currentIdx+range/2;
+				ImgSpliterator<P> split = new ImgSpliterator<>(mid, endIndex, minimumSplitSize, pixelSupplier);
+				setEndIndex(mid-1);
 				return split;
 			} else {
 				return null;

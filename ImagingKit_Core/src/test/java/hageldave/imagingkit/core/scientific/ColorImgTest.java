@@ -1,13 +1,25 @@
 package hageldave.imagingkit.core.scientific;
 
 import static hageldave.imagingkit.core.JunitUtils.testException;
-import static hageldave.imagingkit.core.scientific.ColorImg.*;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
+import static hageldave.imagingkit.core.scientific.ColorImg.boundary_mode_mirror;
+import static hageldave.imagingkit.core.scientific.ColorImg.boundary_mode_repeat_edge;
+import static hageldave.imagingkit.core.scientific.ColorImg.boundary_mode_repeat_image;
+import static hageldave.imagingkit.core.scientific.ColorImg.boundary_mode_zero;
+import static hageldave.imagingkit.core.scientific.ColorImg.channel_a;
+import static hageldave.imagingkit.core.scientific.ColorImg.channel_b;
+import static hageldave.imagingkit.core.scientific.ColorImg.channel_g;
+import static hageldave.imagingkit.core.scientific.ColorImg.channel_r;
+import static org.junit.Assert.*;
+
+import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Spliterator;
 
 import org.junit.Test;
 
 import hageldave.imagingkit.core.Img;
+import hageldave.imagingkit.core.scientific.ColorImg.TransferFunction;
 
 public class ColorImgTest {
 
@@ -149,14 +161,207 @@ public class ColorImgTest {
 			assertEquals(-4, img.getValueA( 1, 1, boundary_mode_mirror), 0);
 			assertEquals(1,  img.getValueR( 4, 4, boundary_mode_mirror), 0);
 			assertEquals(1,  img.getValueR(-5,-5, boundary_mode_mirror), 0);
+			assertEquals(1,  img.getValueR( 3, 3, boundary_mode_mirror), 0);
 			
 			assertEquals(1,  img.getValueR( 0,-2, boundary_mode_repeat_edge), 0);
 			assertEquals(20, img.getValueG( 3, 0, boundary_mode_repeat_edge), 0);
 			assertEquals(400,img.getValueB( 1, 4, boundary_mode_repeat_edge), 0);
 			assertEquals(-3, img.getValueA(-2, 1, boundary_mode_repeat_edge), 0);
 			
+			assertEquals(1,   img.getValueR(2, 0, boundary_mode_repeat_image), 0);
+			assertEquals(20,  img.getValueG(1, 2, boundary_mode_repeat_image), 0);
+			assertEquals(400, img.getValueB(-1, 1,boundary_mode_repeat_image), 0);
+			assertEquals(-3,  img.getValueA(0, 3, boundary_mode_repeat_image), 0);
+			assertEquals(1,   img.getValueR(4, 2, boundary_mode_repeat_image), 0);
+			assertEquals(20,  img.getValueG(5, 4, boundary_mode_repeat_image), 0);
+			assertEquals(400, img.getValueB(-3, 3,boundary_mode_repeat_image), 0);
+			assertEquals(-3,  img.getValueA(2, 5, boundary_mode_repeat_image), 0);
 			
+			assertEquals(0,   img.getValueR(2, 0, boundary_mode_zero), 0);
+			assertEquals(0,  img.getValueG(1, 2,  boundary_mode_zero), 0);
+			assertEquals(0, img.getValueB(-1, 1,  boundary_mode_zero), 0);
+			assertEquals(0,  img.getValueA(0, 3,  boundary_mode_zero), 0);
+			assertEquals(0,   img.getValueR(4, 2, boundary_mode_zero), 0);
+			assertEquals(0,  img.getValueG(5, 4,  boundary_mode_zero), 0);
+			assertEquals(0xff000000, img.getValueB(-3, 3,  0xff000000), 0);
+			assertEquals(0xff2f5647,  img.getValueA(2, 5,  0xff2f5647), 0);
+			
+			
+			
+			rBuffer = new double[]{
+					0,1,1,
+					1,2,2,
+					2,1,2,
+			};
+			img = new ColorImg(3, 3, rBuffer, Arrays.copyOf(rBuffer,9), Arrays.copyOf(rBuffer,9), Arrays.copyOf(rBuffer,9));
+			// exact positions
+			assertEquals(0, img.interpolateR(0, 0), 0);
+			assertEquals(2, img.interpolateG(1, 1), 0);
+			assertEquals(2, img.interpolateB(0, 1), 0);
+			assertEquals(1, img.interpolateA(1, 0), 0);
+			
+			assertEquals(1, img.interpolateR(.5, 0), 0);
+			assertEquals(1, img.interpolateG(.5, 1), 0);
+			assertEquals(1, img.interpolateB(0, .5), 0);
+			assertEquals(2, img.interpolateA(1, .5), 0);
+			
+			assertEquals(2, img.interpolateR(.5, .5), 0);
+			
+			// actual interpolation
+			assertEquals(0.5, img.interpolateR(.25,  0), 0);
+			assertEquals(1,   img.interpolateG(.75,  0), 0);
+			assertEquals(1.5, img.interpolateB(.25,  1), 0);
+			assertEquals(1.5, img.interpolateA(.75,  1), 0);
+			assertEquals(1.75,img.interpolateR(.75, .75), 0);
+			assertEquals(1,   img.interpolateR(.25, .25), 0);
+			
+			
+			
+			// copy
+			ColorImg img1 = new ColorImg(100,100, true);
+			ColorImg img2 = new ColorImg(20,20, true);
+			
+			img1.fill(channel_r, 1);
+			img1.fill(channel_g, -2);
+			img1.fill(channel_a, 33);
+			for(i = 0; i < img1.numValues(); i++){
+				assertEquals(1,  img1.getDataR()[i],0);
+				assertEquals(-2, img1.getDataG()[i],0);
+				assertEquals(0,  img1.getDataB()[i],0);
+				assertEquals(33, img1.getDataA()[i],0);
+			}
+			
+			ColorImg img3 = img1.copyArea(0, 0, 100, 100, null, 0, 0);
+			assertArrayEquals(img1.getDataR(), img3.getDataR(), 0);
+			assertArrayEquals(img1.getDataG(), img3.getDataG(), 0);
+			assertArrayEquals(img1.getDataB(), img3.getDataB(), 0);
+			assertArrayEquals(img1.getDataA(), img3.getDataA(), 0);
+			
+			img1.copyArea(0, 0, 100, 100, img2, -3, -2);
+			for(i = 0; i < img2.numValues(); i++){
+				assertEquals(1,  img2.getDataR()[i],0);
+				assertEquals(-2, img2.getDataG()[i],0);
+				assertEquals(0,  img2.getDataB()[i],0);
+				assertEquals(33, img2.getDataA()[i],0);
+			}
+			
+			img1.fill(channel_r, 5);
+			img1.copyArea(0, 0, 100, 100, img3, -2, -4);
+			for(int y = 0; y < 100; y++){
+				for(int x = 0; x < 100; x++){
+					assertEquals(-2, img3.getValue(channel_g, x, y),0);
+					assertEquals(0,  img3.getValue(channel_b, x, y),0);
+					assertEquals(33, img3.getValue(channel_a, x, y),0);
+					if(x < 100-2 && y < 100-4){
+						assertEquals(5, img3.getValue(channel_r, x, y),0);
+					} else {
+						assertEquals(1, img3.getValue(channel_r, x, y),0);
+					}
+				}
+			}
+			
+			img1.fill(channel_r, 6);
+			img1.copyArea(0, 0, 100, 100, img3, 0, -3);
+			for(int y = 0; y < 100; y++){
+				for(int x = 0; x < 100; x++){
+					assertEquals(-2, img3.getValue(channel_g, x, y),0);
+					assertEquals(0,  img3.getValue(channel_b, x, y),0);
+					assertEquals(33, img3.getValue(channel_a, x, y),0);
+					if(y < 100-3){
+						assertEquals(6, img3.getValue(channel_r, x, y),0);
+					} else {
+						assertEquals(1, img3.getValue(channel_r, x, y),0);
+					}
+				}
+			}
+			
+			img3 = img1.copy();
+			assertFalse(img1.getDataA() == img3.getDataA());
+			assertFalse(img1.getDataR() == img3.getDataR());
+			assertFalse(img1.getDataG() == img3.getDataG());
+			assertFalse(img1.getDataB() == img3.getDataB());
+			assertArrayEquals(img1.getDataR(), img3.getDataR(), 0);
+			assertArrayEquals(img1.getDataG(), img3.getDataG(), 0);
+			assertArrayEquals(img1.getDataB(), img3.getDataB(), 0);
+			assertArrayEquals(img1.getDataA(), img3.getDataA(), 0);
+			
+			img1.setValue(channel_r, 1, 0, 44);
+			assertEquals(44, img1.getValue(channel_r, 1, 0),0);
+			img1.fill(channel_a, 0);
+			img1.fill(channel_r, 0);
+			img1.fill(channel_g, 0);
+			img1.fill(channel_b, 0);
+			for(int x=0,y=0; y<100; x++,y++){
+				img1.setValueR(x, y, 78);
+				img1.setValueG(x, y, 79);
+				img1.setValueB(x, y, 80);
+				img1.setValueA(x, y, 81);
+			}
+			for(int y = 0; y < 100; y++){
+				for(int x = 0; x < 100; x++){
+					if(x==y){
+						assertEquals(81, img1.getValue(channel_a, x, y),0);
+						assertEquals(78, img1.getValue(channel_r, x, y),0);
+						assertEquals(79, img1.getValue(channel_g, x, y),0);
+						assertEquals(80, img1.getValue(channel_b, x, y),0);
+					} else{
+						assertEquals(0, img1.getValue(channel_a, x, y),0);
+						assertEquals(0, img1.getValue(channel_r, x, y),0);
+						assertEquals(0, img1.getValue(channel_g, x, y),0);
+						assertEquals(0, img1.getValue(channel_b, x, y),0);
+					}
+				}
+			}
+			
+			
+			
+			// toBufferedImage
+			Img baseImage = new Img(16, 16);
+			baseImage.forEach(px->px.setRGB(px.getIndex(), px.getIndex(), px.getIndex()));
+			img = new ColorImg(baseImage, false);
+			BufferedImage bufferedImage = img.toBufferedImage();
+			Img targetImage = new Img(bufferedImage);
+			assertArrayEquals(baseImage.getData(), targetImage.getData());
+			assertArrayEquals(baseImage.getData(), img.toImg().getData());
+			
+			baseImage.forEach(px->px.setA(px.getIndex()));
+			ColorImg img4 = new ColorImg(baseImage.getDimension(),true);
+			baseImage.forEach(px->{
+				img4.getDataA()[px.getIndex()]=px.a();
+				img4.getDataR()[px.getIndex()]=px.r();
+				img4.getDataG()[px.getIndex()]=px.g();
+				img4.getDataB()[px.getIndex()]=px.b();
+			});
+			
+			bufferedImage = img4.toBufferedImage(TransferFunction.fromFunction(v->(int)v));
+			assertArrayEquals(baseImage.getData(), Img.createRemoteImg(bufferedImage).getData());
+			
+			
+			img = new ColorImg(17,16, true);
+			img.setSpliteratorMinimumSplitSize(11);
+			assertEquals(11, img.getSpliteratorMinimumSplitSize());
+			int minsplitSize = 4;
+			img.setSpliteratorMinimumSplitSize(minsplitSize);
+			assertEquals(minsplitSize, img.getSpliteratorMinimumSplitSize());
+			
+			Spliterator<ColorPixel> spliterator = img.spliterator();
+			ArrayList<Spliterator<ColorPixel>> splits = new ArrayList<>();
+			splits.add(spliterator);
+			for(i = 0; i < splits.size(); i++){
+				Spliterator<ColorPixel> split;
+				while((split=splits.get(i).trySplit())!=null){
+					splits.add(split);
+				}
+			}
+			for(Spliterator<ColorPixel> split: splits){
+				assertTrue(split.estimateSize() >= minsplitSize);
+			}
+			assertEquals(img.numValues(), splits.stream().mapToLong(Spliterator::estimateSize).sum());
+			
+			assertTrue(img.supportsRemoteBufferedImage());
 		}
+		
+		
 		
 	}
 	
