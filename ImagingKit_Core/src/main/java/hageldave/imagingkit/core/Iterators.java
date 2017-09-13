@@ -47,7 +47,6 @@ import java.util.function.Supplier;
  */
 public final class Iterators {
 
-	static{new Iterators();}
 	private Iterators(){/*not to be instantiated*/}
 
 

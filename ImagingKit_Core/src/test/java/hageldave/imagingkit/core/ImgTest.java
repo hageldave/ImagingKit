@@ -1,10 +1,9 @@
 package hageldave.imagingkit.core;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.image.BufferedImage;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -135,6 +134,10 @@ public class ImgTest {
 	public void misc_test(){
 		JunitUtils.testException(()->{new Img(1, 2, new int[]{0});}, IllegalArgumentException.class);
 		JunitUtils.testException(()->{new Img(10,10).setSpliteratorMinimumSplitSize(0);}, IllegalArgumentException.class);
+		assertTrue(new Img(1,1).supportsRemoteBufferedImage());
+		assertEquals(100, new Img(new Dimension(100, 200)).getWidth());
+		assertEquals(200, new Img(new Dimension(100, 200)).getHeight());
+		assertFalse(new Img(1, 1).getPixel().toString().isEmpty());
 	}
 
 	@Test
@@ -458,6 +461,7 @@ public class ImgTest {
 			// test exceptions
 			BufferedImage bimg2 = new BufferedImage(1,1,BufferedImage.TYPE_BYTE_BINARY);
 			JunitUtils.testException(()->{Img.createRemoteImg(bimg2);}, IllegalArgumentException.class);
+			JunitUtils.testException(()->{new Img(3,3).toBufferedImage(new BufferedImage(4, 3, BufferedImage.TYPE_INT_ARGB));}, IllegalArgumentException.class);
 		}
 
 	}

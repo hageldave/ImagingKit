@@ -35,7 +35,6 @@ import java.util.function.Function;
  */
 public class BufferedImageFactory {
 
-	static {/* for code coverage */new BufferedImageFactory();}
 	private BufferedImageFactory(){}
 	
 	/**

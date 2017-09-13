@@ -9,7 +9,6 @@ import hageldave.imagingkit.core.ImgBase;
 public final class ImagingKitUtils {
 
 	// no to be instantiated
-	static{new ImagingKitUtils();}
 	private ImagingKitUtils() {}
 
 

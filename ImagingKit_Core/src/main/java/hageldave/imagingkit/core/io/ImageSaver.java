@@ -42,7 +42,6 @@ import hageldave.imagingkit.core.util.BufferedImageFactory;
  */
 public class ImageSaver {
 	
-	static {/* for code coverage */new ImageSaver();}
 	private ImageSaver(){}
 	
 	/**

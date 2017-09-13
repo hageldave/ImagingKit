@@ -40,8 +40,8 @@ import hageldave.imagingkit.core.util.BufferedImageFactory;
  * @since 1.0
  */
 public class ImageLoader {
+
 	
-	static {/* for code coverage */new ImageLoader();}
 	private ImageLoader(){}
 	
 	/**
