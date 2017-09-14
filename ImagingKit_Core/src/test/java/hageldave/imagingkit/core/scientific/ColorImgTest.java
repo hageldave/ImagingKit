@@ -216,7 +216,9 @@ public class ColorImgTest {
 			assertEquals(1,   img.interpolateR(.25, .25), 0);
 			
 			
-			
+		}
+		
+		{
 			// copy
 			ColorImg img1 = new ColorImg(100,100, true);
 			ColorImg img2 = new ColorImg(20,20, true);
@@ -224,7 +226,7 @@ public class ColorImgTest {
 			img1.fill(channel_r, 1);
 			img1.fill(channel_g, -2);
 			img1.fill(channel_a, 33);
-			for(i = 0; i < img1.numValues(); i++){
+			for(int i = 0; i < img1.numValues(); i++){
 				assertEquals(1,  img1.getDataR()[i],0);
 				assertEquals(-2, img1.getDataG()[i],0);
 				assertEquals(0,  img1.getDataB()[i],0);
@@ -238,7 +240,7 @@ public class ColorImgTest {
 			assertArrayEquals(img1.getDataA(), img3.getDataA(), 0);
 			
 			img1.copyArea(0, 0, 100, 100, img2, -3, -2);
-			for(i = 0; i < img2.numValues(); i++){
+			for(int i = 0; i < img2.numValues(); i++){
 				assertEquals(1,  img2.getDataR()[i],0);
 				assertEquals(-2, img2.getDataG()[i],0);
 				assertEquals(0,  img2.getDataB()[i],0);
@@ -312,13 +314,14 @@ public class ColorImgTest {
 					}
 				}
 			}
-			
-			
-			
+		}
+		
+		
+		{	
 			// toBufferedImage
 			Img baseImage = new Img(16, 16);
 			baseImage.forEach(px->px.setRGB(px.getIndex(), px.getIndex(), px.getIndex()));
-			img = new ColorImg(baseImage, false);
+			ColorImg img = new ColorImg(baseImage, false);
 			BufferedImage bufferedImage = img.toBufferedImage();
 			Img targetImage = new Img(bufferedImage);
 			assertArrayEquals(baseImage.getData(), targetImage.getData());
@@ -347,7 +350,7 @@ public class ColorImgTest {
 			Spliterator<ColorPixel> spliterator = img.spliterator();
 			ArrayList<Spliterator<ColorPixel>> splits = new ArrayList<>();
 			splits.add(spliterator);
-			for(i = 0; i < splits.size(); i++){
+			for(int i = 0; i < splits.size(); i++){
 				Spliterator<ColorPixel> split;
 				while((split=splits.get(i).trySplit())!=null){
 					splits.add(split);
@@ -360,8 +363,78 @@ public class ColorImgTest {
 			
 			assertTrue(img.supportsRemoteBufferedImage());
 		}
-		
-		
+	}
+	
+	@Test
+	public void testPixelIteration(){
+		ColorImg img = new ColorImg(10, 10, true);
+		assertEquals(img, img.getPixel().getSource());
+		for(int i = 0; i < img.numValues(); i++){
+			for(int c=0;c<4;c++){
+				assertEquals(0, img.getData()[c][i],0);
+			}
+		}
+		img.forEach(px->px.setA_fromDouble(px.getIndex()));
+		for(int i = 0; i < img.numValues(); i++){
+			assertEquals(i, img.getDataA()[i],0);
+			assertEquals(0, img.getDataR()[i],0);
+			assertEquals(0, img.getDataG()[i],0);
+			assertEquals(0, img.getDataB()[i],0);
+		}
+		img.forEach(px->px.setARGB_fromDouble(3, 4, 6, 7));
+		for(int i = 0; i < img.numValues(); i++){
+			assertEquals(3, img.getDataA()[i],0);
+			assertEquals(4, img.getDataR()[i],0);
+			assertEquals(6, img.getDataG()[i],0);
+			assertEquals(7, img.getDataB()[i],0);
+		}
+		img.forEach(px->px.setValue(channel_r, 0));
+		for(int i = 0; i < img.numValues(); i++){
+			assertEquals(3, img.getDataA()[i],0);
+			assertEquals(0, img.getDataR()[i],0);
+			assertEquals(6, img.getDataG()[i],0);
+			assertEquals(7, img.getDataB()[i],0);
+		}
+		img.forEach(px->px.setRGB_fromDouble(2,2,2));
+		for(int i = 0; i < img.numValues(); i++){
+			assertEquals(1, img.getDataA()[i],0);
+			assertEquals(2, img.getDataR()[i],0);
+			assertEquals(2, img.getDataG()[i],0);
+			assertEquals(2, img.getDataB()[i],0);
+		}
+		img.forEach(px->px.setA_fromDouble(77).setRGB_fromDouble_preserveAlpha(0, 0, 0));
+		for(int i = 0; i < img.numValues(); i++){
+			assertEquals(77, img.getDataA()[i],0);
+			assertEquals(0, img.getDataR()[i],0);
+			assertEquals(0, img.getDataG()[i],0);
+			assertEquals(0, img.getDataB()[i],0);
+		}
+		img.stream().filter(px->px.getX() == 0).filter(px->px.getY()==0).forEach(px->px.setA_fromDouble(1).setR_fromDouble(1).setG_fromDouble(1).setB_fromDouble(1));
+		for(int i = 0; i < img.numValues(); i++){
+			if(i == 0){
+				assertEquals(1, img.getDataA()[i],0);
+				assertEquals(1, img.getDataR()[i],0);
+				assertEquals(1, img.getDataG()[i],0);
+				assertEquals(1, img.getDataB()[i],0);
+			} else {
+				assertEquals(77, img.getDataA()[i],0);
+				assertEquals(0, img.getDataR()[i],0);
+				assertEquals(0, img.getDataG()[i],0);
+				assertEquals(0, img.getDataB()[i],0);
+			}
+		}
+		img.forEach(px->{int i = px.getIndex();px.setARGB_fromDouble(i,i+1, i+2, i+3);});
+		img.forEach(px->{
+			int i = px.getIndex();
+			assertEquals(i, px.a_asDouble(),0);
+			assertEquals(i+1, px.r_asDouble(),0);
+			assertEquals(i+2, px.g_asDouble(),0);
+			assertEquals(i+3, px.b_asDouble(),0);
+			assertEquals(i, px.getValue(channel_a),0);
+			assertEquals(i+1, px.getValue(channel_r),0);
+			assertEquals(i+2, px.getValue(channel_g),0);
+			assertEquals(i+3, px.getValue(channel_b),0);
+		});
 		
 	}
 	
