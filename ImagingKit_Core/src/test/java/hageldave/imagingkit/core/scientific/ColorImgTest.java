@@ -22,6 +22,8 @@ import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.scientific.ColorImg.TransferFunction;
 
 public class ColorImgTest {
+	
+	static final double eps = 0.00000000001;
 
 	@Test
 	public void testExceptions(){
@@ -436,6 +438,98 @@ public class ColorImgTest {
 			assertEquals(i+3, px.getValue(channel_b),0);
 		});
 		
+		img.getPixel().setPosition(0, 0).setRGB_fromDouble_preserveAlpha(4, 2, 1);
+		assertEquals(4, img.getPixel().setPosition(0, 0).getGrey(1, 0, 0), 0);
+		assertEquals(7, img.getPixel().setPosition(0, 0).getGrey(1, 1, 1), 0);
+		assertNotEquals(img.getPixel().setPosition(0, 0).getLuminance(), img.getPixel().setPosition(1, 0).getLuminance(), 0);
+		assertFalse(img.getPixel().toString().isEmpty());
+		
+		img.getPixel().setARGB_fromDouble(0, 1, 2, 3);
+		img.getPixel().convertRange(1,3, 0,1);
+		assertEquals(0, img.getPixel().a_asDouble(),0);
+		assertEquals(0, img.getPixel().r_asDouble(),0);
+		assertEquals(0.5, img.getPixel().g_asDouble(),0);
+		assertEquals(1, img.getPixel().b_asDouble(),0);
+		
+		img.getPixel().scale(2);
+		assertEquals(0, img.getPixel().a_asDouble(),0);
+		assertEquals(0, img.getPixel().r_asDouble(),0);
+		assertEquals(1, img.getPixel().g_asDouble(),0);
+		assertEquals(2, img.getPixel().b_asDouble(),0);
+		
+		img.getPixel().add(1, 1, 1);
+		assertEquals(0, img.getPixel().a_asDouble(),0);
+		assertEquals(1, img.getPixel().r_asDouble(),0);
+		assertEquals(2, img.getPixel().g_asDouble(),0);
+		assertEquals(3, img.getPixel().b_asDouble(),0);
+		
+		img.getPixel().subtract(1, 2, 3);
+		assertEquals(0, img.getPixel().a_asDouble(),0);
+		assertEquals(0, img.getPixel().r_asDouble(),0);
+		assertEquals(0, img.getPixel().g_asDouble(),0);
+		assertEquals(0, img.getPixel().b_asDouble(),0);
+		
+		img.getPixel().setARGB_fromDouble(1, 1, 0, 0);
+		img.getPixel().cross(0, 1, 0);
+		assertEquals(1, img.getPixel().a_asDouble(),0);
+		assertEquals(0, img.getPixel().r_asDouble(),0);
+		assertEquals(0, img.getPixel().g_asDouble(),0);
+		assertEquals(1, img.getPixel().b_asDouble(),0);
+		
+		img.getPixel().setARGB_fromDouble(1, 1, 0, 0);
+		img.getPixel().cross_(0, 1, 0);
+		assertEquals(1, img.getPixel().a_asDouble(),0);
+		assertEquals(0, img.getPixel().r_asDouble(),0);
+		assertEquals(0, img.getPixel().g_asDouble(),0);
+		assertEquals(-1, img.getPixel().b_asDouble(),0);
+		assertEquals(Math.cos(Math.PI/4)*Math.sqrt(2), img.getPixel().dot(0, 1, -1), eps);
+		
+		double sin90 = Math.sin(Math.PI/2);
+		double cos90 = Math.cos(Math.PI/2);
+		double[][] rotG90 = new double[][]{
+			{ cos90, 0, sin90},
+			{     0, 1,     0},
+			{-sin90, 0, cos90},
+		};
+		img.getPixel().transform(rotG90);
+		assertEquals(1, img.getPixel().a_asDouble(),0);
+		assertEquals(-1, img.getPixel().r_asDouble(),eps);
+		assertEquals(0, img.getPixel().g_asDouble(),eps);
+		assertEquals(0, img.getPixel().b_asDouble(),eps);
+		
+		assertEquals(1, img.getPixel().getLen(), eps);
+		
+		img.getPixel().setRGB_fromDouble(1, 1, 0);
+		assertEquals(Math.sqrt(2), img.getPixel().getLen(), eps);
+		
+		img.getPixel().normalize();
+		assertEquals(1, img.getPixel().getLen(), eps);
+		assertEquals(0, img.getPixel().b_asDouble(), 0);
+		
+		img.getPixel().scale(0);
+		assertEquals(0, img.getPixel().r_asDouble(),0);
+		assertEquals(0, img.getPixel().g_asDouble(),0);
+		assertEquals(0, img.getPixel().b_asDouble(),0);
+		assertEquals(0, img.getPixel().getLen(), 0);
+		
+		img.getPixel().normalize();
+		assertEquals(0, img.getPixel().r_asDouble(),0);
+		assertEquals(0, img.getPixel().g_asDouble(),0);
+		assertEquals(0, img.getPixel().b_asDouble(),0);
+		assertEquals(0, img.getPixel().getLen(), 0);
+		
+		img.getPixel().setRGB_fromDouble(2, 1, 3);
+		assertEquals(1, img.getPixel().minValue(),0);
+		assertEquals(3, img.getPixel().maxValue(),0);
+		assertEquals(channel_g, img.getPixel().minChannel());
+		assertEquals(channel_b, img.getPixel().maxChannel());
+		
+		img.getPixel().setRGB_fromDouble(1, 2, 3);
+		assertEquals(channel_r, img.getPixel().minChannel());
+		assertEquals(channel_b, img.getPixel().maxChannel());
+		img.getPixel().setRGB_fromDouble(3, 2, 1);
+		assertEquals(channel_b, img.getPixel().minChannel());
+		assertEquals(channel_r, img.getPixel().maxChannel());
 	}
 	
 }
