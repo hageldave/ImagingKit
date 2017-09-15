@@ -178,6 +178,8 @@ public enum ColorSpaceTransformation implements Consumer<PixelBase> {
 	
 	// CIE L*a*b* helper class
 	private static final class LAB {
+		private LAB(){};
+		
 		static final double Xn = 0.95047f;
 		static final double Yn = 1.00000f;
 		static final double Zn = 1.08883f;

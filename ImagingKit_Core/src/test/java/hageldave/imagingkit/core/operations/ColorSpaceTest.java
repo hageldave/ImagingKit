@@ -89,6 +89,8 @@ public class ColorSpaceTest {
 			blackandwhite.forEach(backward);
 			assertEquals(black, blackandwhite.getData()[0]);
 			assertEquals(Integer.toHexString(blackandwhite.getData()[1]),white, blackandwhite.getData()[1]);
+			assertNotEquals(0xff123456, forward.transform(blackandwhite.getPixel().setValue(0xff123456)).getValue());
+			assertEquals(white, backward.transform(forward.transform(blackandwhite.getPixel(1,0))).getValue());
 		}
 
 	}
@@ -116,20 +118,6 @@ public class ColorSpaceTest {
 				assertTrue(error[0]< greyErrorThreshold);
 			}
 		}
-
-		// TODO
-//		{ // continuous
-//			ColorImg ref = getTestColorImg();
-//			ColorImg img = new ColorImg(ref.getDimension(), ref.hasAlpha());
-//
-//			for(ColorSpaceTransformation cst : toTest){
-//				ref.copyArea(0, 0, img.getWidth(), img.getHeight(), img, 0, 0);
-//				for(int i = 0; i < 5; i++){
-//					img.forEach(true, cst);
-//					img.forEach(true, cst.inverse());
-//				}
-//			}
-//		}
 
 	}
 
