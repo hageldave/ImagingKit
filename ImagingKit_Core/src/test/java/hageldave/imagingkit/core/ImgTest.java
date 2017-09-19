@@ -805,7 +805,7 @@ public class ImgTest {
 		
 		// forEach/stream with manipulator/converter
 		{
-			PixelManipulator<Color[]> colorManip = new PixelManipulator<Color[]>() {
+			PixelManipulator<PixelBase,Color[]> colorManip = new PixelManipulator<PixelBase,Color[]>() {
 				@Override
 				public PixelConverter<PixelBase, Color[]> getConverter() {
 					return PixelConverter.fromFunctions(

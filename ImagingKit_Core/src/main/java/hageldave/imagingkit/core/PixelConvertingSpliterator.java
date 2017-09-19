@@ -76,7 +76,8 @@ import java.util.stream.Stream;
  * each pixel within that split.
  *
  * @author hageldave
- * @param <T> the type of elements returned by this Spliterator
+ * @param <P> the pixel type of the underlying Spliterator
+ * @param <T> the type of elements returned by the PixelConvertingSpliterator
  * @since 1.4
  */
 public class PixelConvertingSpliterator<P extends PixelBase, T> implements Spliterator<T> {
@@ -203,6 +204,9 @@ public class PixelConvertingSpliterator<P extends PixelBase, T> implements Split
 		return arraySpliterator;
 	}
 
+	/**
+	 * @return Exemplary PixelConverter that converts to double[].
+	 */
 	public static PixelConverter<PixelBase, double[]> getDoubleArrayConverter(){
 		return new PixelConverter<PixelBase, double[]>() {
 
@@ -238,6 +242,7 @@ public class PixelConvertingSpliterator<P extends PixelBase, T> implements Split
 		 * @return element, probably in uninitialized state
 		 */
 		public T allocateElement();
+		
 		/**
 		 * converts the specified pixel to the specified element
 		 * (initiliazation of previously allocated element).
@@ -246,6 +251,7 @@ public class PixelConvertingSpliterator<P extends PixelBase, T> implements Split
 		 * @param element to be set up
 		 */
 		public void convertPixelToElement(P px, T element);
+		
 		/**
 		 * converts the specified element back to the specified pixel
 		 * (set pixel value according to element).
@@ -255,6 +261,13 @@ public class PixelConvertingSpliterator<P extends PixelBase, T> implements Split
 		 */
 		public void convertElementToPixel(T element, P px);
 
+		/**
+		 * Creates a new PixelConverter from the specified functions.
+		 * @param allocator a supplier that allocates a new object of the element type (see {@link #allocateElement()})
+		 * @param pixelToElement a consumer that sets the contents of the element according to a pixel (see {@link #convertPixelToElement(PixelBase, Object)})
+		 * @param elementToPixel a consumer that sets the content of a pixel according to the element (see {@link #convertElementToPixel(Object, PixelBase)})
+		 * @return a new PixelConverter
+		 */
 		public static <P extends PixelBase, T> PixelConverter<P,T> fromFunctions(
 				Supplier<T> allocator,
 				BiConsumer<P,T> pixelToElement,

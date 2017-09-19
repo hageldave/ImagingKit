@@ -163,7 +163,7 @@ public enum Blending {
 	 * @see #getBlendingWith(ImgBase, int, int)
 	 * @see #getBlendingWith(ImgBase)
 	 */
-	public PixelManipulator<PixelBasePair> getAlphaBlendingWith(ImgBase<? extends PixelBase> topImg, int xTopOffset, int yTopOffset, double opacity){
+	public PixelManipulator<PixelBase,PixelBasePair> getAlphaBlendingWith(ImgBase<? extends PixelBase> topImg, int xTopOffset, int yTopOffset, double opacity){
 		return alphaBlendingWith(topImg, xTopOffset, yTopOffset, opacity, blendFunction);
 	}
 
@@ -191,7 +191,7 @@ public enum Blending {
 	 * @see #getAlphaBlendingWith(ImgBase, int, int, double)
 	 * @see #getAlphaBlendingWith(ImgBase, double)
 	 */
-	public PixelManipulator<PixelBasePair> getBlendingWith(ImgBase<? extends PixelBase> topImg, int xTopOffset, int yTopOffset){
+	public PixelManipulator<PixelBase, PixelBasePair> getBlendingWith(ImgBase<? extends PixelBase> topImg, int xTopOffset, int yTopOffset){
 		return blendingWith(topImg, xTopOffset, yTopOffset, blendFunction);
 	}
 
@@ -216,7 +216,7 @@ public enum Blending {
 	 * @return Consumer to apply to bottom Img that will perform the specified
 	 * blending. {@code bottomImg.forEach(blendingConsumer);}
 	 */
-	public PixelManipulator<PixelBasePair> getAlphaBlendingWith(ImgBase<? extends PixelBase> topImg, double opacity){
+	public PixelManipulator<PixelBase, PixelBasePair> getAlphaBlendingWith(ImgBase<? extends PixelBase> topImg, double opacity){
 		return getAlphaBlendingWith(topImg,0,0, opacity);
 	}
 
@@ -241,7 +241,7 @@ public enum Blending {
 	 * @see #getAlphaBlendingWith(ImgBase, int, int, double)
 	 * @see #getAlphaBlendingWith(ImgBase, double)
 	 */
-	public PixelManipulator<PixelBasePair> getBlendingWith(ImgBase<? extends PixelBase> topImg){
+	public PixelManipulator<PixelBase, PixelBasePair> getBlendingWith(ImgBase<? extends PixelBase> topImg){
 		return getBlendingWith(topImg, 0, 0);
 	}
 
@@ -399,7 +399,7 @@ public enum Blending {
 	 * @see #getAlphaBlendingWith(ImgBase, int, int, double)
 	 * @see #getAlphaBlendingWith(ImgBase, double)
 	 */
-	public static PixelManipulator<PixelBasePair> alphaBlendingWith(ImgBase<? extends PixelBase> topImg, int xTopOffset, int yTopOffset, double opacity, BlendFunction func){
+	public static PixelManipulator<PixelBase, PixelBasePair> alphaBlendingWith(ImgBase<? extends PixelBase> topImg, int xTopOffset, int yTopOffset, double opacity, BlendFunction func){
 		return PixelManipulator.fromConverterAndConsumer(
 				getPixelBasePairConverter(topImg),
 				(pair)->
@@ -440,7 +440,7 @@ public enum Blending {
 	 * @see #getBlendingWith(ImgBase, int, int)
 	 * @see #getBlendingWith(ImgBase)
 	 */
-	public static PixelManipulator<PixelBasePair> blendingWith(ImgBase<? extends PixelBase> topImg, int xTopOffset, int yTopOffset, BlendFunction func){
+	public static PixelManipulator<PixelBase, PixelBasePair> blendingWith(ImgBase<? extends PixelBase> topImg, int xTopOffset, int yTopOffset, BlendFunction func){
 		return PixelManipulator.fromConverterAndConsumer(
 				getPixelBasePairConverter(topImg),
 				(pair)->

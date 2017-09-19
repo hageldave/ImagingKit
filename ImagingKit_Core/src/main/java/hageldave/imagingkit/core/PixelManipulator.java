@@ -41,17 +41,18 @@ import hageldave.imagingkit.core.PixelConvertingSpliterator.PixelConverter;
  * This is used with an image's <tt>forEach</tt> method (see {@link ImgBase#forEach(PixelManipulator)})
  * 
  * @author hageldave
+ * @param <P> the pixel type of the converter (PixelBase or an implementation of it)
  * @param <T> the element type of the converter (the type a pixel is converted to before applying the action)
  * @since 2.0
  */
-public interface PixelManipulator<T> {
+public interface PixelManipulator<P extends PixelBase,T> {
 
 	/**
 	 * Returns the converter that converts a pixel to the element 
 	 * accepted by this manipulators action (and the element back to the pixel).
 	 * @return this manipulator's converter
 	 */
-	public PixelConverter<PixelBase, T> getConverter();
+	public PixelConverter<P, T> getConverter();
 
 	/**
 	 * Returns the action performed by this manipulator
@@ -65,10 +66,10 @@ public interface PixelManipulator<T> {
 	 * @param action of the Manipulator
 	 * @return a PixelManipulator consisting of the specified converter and action.
 	 */
-	public static <T> PixelManipulator<T> fromConverterAndConsumer(PixelConverter<PixelBase, T> converter, Consumer<T> action){
-		return new PixelManipulator<T>() {
+	public static <P extends PixelBase,T> PixelManipulator<P,T> fromConverterAndConsumer(PixelConverter<P, T> converter, Consumer<T> action){
+		return new PixelManipulator<P,T>() {
 			@Override
-			public PixelConverter<PixelBase, T> getConverter() {
+			public PixelConverter<P, T> getConverter() {
 				return converter;
 			}
 			@Override
