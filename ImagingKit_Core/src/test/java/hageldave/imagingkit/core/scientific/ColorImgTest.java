@@ -365,6 +365,20 @@ public class ColorImgTest {
 			
 			assertTrue(img.supportsRemoteBufferedImage());
 		}
+		
+		
+		{
+			ColorImg img = new ColorImg(10,10,false);
+			for(int i=0; i < img.numValues(); i++){
+				img.getDataR()[i] = i;
+			}
+			assertEquals(0, img.getMinValue(channel_r), 0);
+			assertEquals(99, img.getMaxValue(channel_r), 0);
+			img.getDataR()[22] = -1;
+			img.getDataR()[23] = 100;
+			assertEquals(22, img.getIndexOfMinValue(channel_r));
+			assertEquals(23, img.getIndexOfMaxValue(channel_r));
+		}
 	}
 	
 	@Test

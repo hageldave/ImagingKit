@@ -517,6 +517,84 @@ public class ColorImg implements ImgBase<ColorPixel> {
 	public double getValueA(int x, int y, final int boundaryMode){
 		return getValue(channel_a, x, y, boundaryMode);
 	}
+	
+	/**
+	 * Returns the index of the maximum value of the specified channel.
+	 * @param channel one of {@link #channel_r},{@link #channel_g},{@link #channel_b},{@link #channel_a} (0,1,2,3)
+	 * @return index of maximum value of specified channel
+	 * @throws ArrayIndexOutOfBoundsException if the specified channel is not in [0,3] 
+	 * or is 3 but the image has no alpha (check using {@link #hasAlpha()}).
+	 * @see #getIndexOfMaxValue(int)
+	 * @see #getIndexOfMinValue(int)
+	 * @see #getMaxValue(int)
+	 * @see #getMinValue(int)
+	 */
+	public int getIndexOfMaxValue(int channel){
+		double[] values = getData()[channel];
+		int index = 0;
+		double val = values[index];
+		for(int i = 1; i < numValues(); i++){
+			if(values[i] > val){
+				index = i;
+				val = values[index];
+			}
+		}
+		return index;
+	}
+	
+	/**
+	 * Returns the maximum value of the specified channel.
+	 * @param channel one of {@link #channel_r},{@link #channel_g},{@link #channel_b},{@link #channel_a} (0,1,2,3)
+	 * @return maximum value of the specified channel
+	 * @throws ArrayIndexOutOfBoundsException if the specified channel is not in [0,3] 
+	 * or is 3 but the image has no alpha (check using {@link #hasAlpha()}).
+	 * @see #getIndexOfMaxValue(int)
+	 * @see #getIndexOfMinValue(int)
+	 * @see #getMaxValue(int)
+	 * @see #getMinValue(int)
+	 */
+	public double getMaxValue(int channel){
+		return getData()[channel][getIndexOfMaxValue(channel)];
+	}
+	
+	/**
+	 * Returns the index of the minimum value of the specified channel.
+	 * @param channel one of {@link #channel_r},{@link #channel_g},{@link #channel_b},{@link #channel_a} (0,1,2,3)
+	 * @return index of minimum value of specified channel
+	 * @throws ArrayIndexOutOfBoundsException if the specified channel is not in [0,3] 
+	 * or is 3 but the image has no alpha (check using {@link #hasAlpha()}).
+	 * @see #getIndexOfMaxValue(int)
+	 * @see #getIndexOfMinValue(int)
+	 * @see #getMaxValue(int)
+	 * @see #getMinValue(int)
+	 */
+	public int getIndexOfMinValue(int channel){
+		double[] values = getData()[channel];
+		int index = 0;
+		double val = values[index];
+		for(int i = 1; i < numValues(); i++){
+			if(values[i] < val){
+				index = i;
+				val = values[index];
+			}
+		}
+		return index;
+	}
+	
+	/**
+	 * Returns the minimum value of the specified channel.
+	 * @param channel one of {@link #channel_r},{@link #channel_g},{@link #channel_b},{@link #channel_a} (0,1,2,3)
+	 * @return minimum value of the specified channel
+	 * @throws ArrayIndexOutOfBoundsException if the specified channel is not in [0,3] 
+	 * or is 3 but the image has no alpha (check using {@link #hasAlpha()}).
+	 * @see #getIndexOfMaxValue(int)
+	 * @see #getIndexOfMinValue(int)
+	 * @see #getMaxValue(int)
+	 * @see #getMinValue(int)
+	 */
+	public double getMinValue(int channel){
+		return getData()[channel][getIndexOfMinValue(channel)];
+	}
 
 	/**
 	 * Returns a bilinearly interpolated value of the image for the
