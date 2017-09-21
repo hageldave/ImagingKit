@@ -91,6 +91,18 @@ public class ColorImgTest {
 		{
 			img.getPixel().setValue(channel_a, 2.5);
 		}, ArrayIndexOutOfBoundsException.class);
+		testException(()->
+		{
+			img.getMinValue(channel_a);
+		}, ArrayIndexOutOfBoundsException.class);
+		testException(()->
+		{
+			img.getMaxValue(channel_a);
+		}, ArrayIndexOutOfBoundsException.class);
+		testException(()->
+		{
+			img.getChannelImage(channel_a);
+		}, ArrayIndexOutOfBoundsException.class);
 		// things that are not supposed to throw even though no alpha
 		img.getPixel().a_asDouble();
 		img.getPixel().setA_fromDouble(0);
@@ -378,6 +390,24 @@ public class ColorImgTest {
 			img.getDataR()[23] = 100;
 			assertEquals(22, img.getIndexOfMinValue(channel_r));
 			assertEquals(23, img.getIndexOfMaxValue(channel_r));
+		}
+		
+		{
+			ColorImg img = new ColorImg(10,10,true);
+			for(int i=0; i < img.numValues(); i++){
+				for(int c=0; c<4; c++){
+					img.getData()[c][i] = i+c;
+				}
+			}
+			for(int c=0; c<4; c++){
+				ColorImg channelImage = img.getChannelImage(c);
+				assertEquals(img.getData()[c], channelImage.getDataR());
+				assertEquals(img.getData()[c], channelImage.getDataG());
+				assertEquals(img.getData()[c], channelImage.getDataB());
+				
+				channelImage.getPixel(0, 0).setRGB_fromDouble(-1, -2, -3);
+				assertEquals(img.getValue(c, 0, 0), -3, 0);
+			}
 		}
 	}
 	

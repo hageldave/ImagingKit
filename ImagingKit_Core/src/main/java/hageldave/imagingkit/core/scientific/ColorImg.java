@@ -43,6 +43,7 @@ import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.ImgBase;
 import hageldave.imagingkit.core.Pixel;
 import hageldave.imagingkit.core.PixelBase;
+import hageldave.imagingkit.core.util.ImageFrame;
 import hageldave.imagingkit.core.util.ImagingKitUtils;
 
 /**
@@ -301,6 +302,55 @@ public class ColorImg implements ImgBase<ColorPixel> {
 	 */
 	public double[] getDataA() {
 		return dataA;
+	}
+	
+	/**
+	 * Returns a ColorImage which uses the specified channel of this image, 
+	 * for all its own channels. This, for example, comes in handy when only 
+	 * a single channel of this image should be displayed with {@link ImageFrame}.<br>
+	 * The image is created like this:<br>
+	 * <pre>
+	 * {@code
+	 * double[] channelData = img.getData()[channel];
+	 * ColorImg channelImg = new ColorImg(img.getWidth(), img.getHeight(), 
+	 *    channelData, // red
+	 *    channelData, // green
+	 *    channelData, // blue
+	 *    null);       // alpha
+	 * }</pre>
+	 * This means that the returned image has 3 redundant channels. Changes to
+	 * that channel are reflected in the original image. Also setting a value
+	 * for a specific channel of the channel image will result in the same value
+	 * in all of its channels. <br>
+	 * The assertions in the following code snippet are true for a channel image:<br>
+	 * <pre>
+	 * {@code
+	 * ColorImg channelImg = img.getChannelImage(channel);
+	 * assert(channelImg.getDataR() == channelImg.getDataG());
+	 * assert(channelImg.getDataG() == channelImg.getDataB());
+	 * }</pre>
+	 * When using one of the setter methods for all channels of a pixel object of a
+	 * channel image, (e.g. {@link ColorPixel#setRGB_fromDouble(double, double, double)})
+	 * then the value specified for the blue channel will be used because it is set last.<br>
+	 * The assertions in the following code snippet are true for a channel image:<br>
+	 * <pre>
+	 * {@code
+	 * ColorImg channelImg = img.getChannelImage(channel);
+	 * channelImg.getPixel(0,0).setRGB_fromDouble(1, 2, 3);
+	 * assert(channelImg.getValue(channel_r, 0, 0) == 3);
+	 * assert(channelImg.getValue(channel_g, 0, 0) == 3);
+	 * assert(channelImg.getValue(channel_b, 0, 0) == 3);
+	 * }</pre>
+	 * 
+	 * @param channel of this image that should be used by the returned channel image.
+	 * One of {@link #channel_r},{@link #channel_g},{@link #channel_b},{@link #channel_a} (0,1,2,3).
+	 * @return a ColorImg using the specified channel of this image for its r,g and b channel.
+	 * @throws ArrayIndexOutOfBoundsException if the specified channel is not in [0,3] 
+	 * or is 3 but the image has no alpha (check using {@link #hasAlpha()}).
+	 */
+	public ColorImg getChannelImage(int channel){
+		double[] channelData = getData()[channel];
+		return new ColorImg(getWidth(), getHeight(), channelData, channelData, channelData, null);
 	}
 
 	/**
