@@ -144,3 +144,6 @@ fabric.properties
 ImagingKit_Core/imagingkit-core.iml
 ImagingKit_Filter/imagingkit-filter.iml
 imagingkit.iml
+
+# specific stuff
+.gitpull.sh

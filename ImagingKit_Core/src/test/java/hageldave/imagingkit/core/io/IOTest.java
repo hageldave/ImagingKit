@@ -1,4 +1,4 @@
-package hageldave.imagingkit.core;
+package hageldave.imagingkit.core.io;
 
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
@@ -16,8 +16,13 @@ import java.nio.file.attribute.BasicFileAttributes;
 import org.junit.After;
 import org.junit.Test;
 
-import hageldave.imagingkit.core.ImageLoader.ImageLoaderException;
-import hageldave.imagingkit.core.ImageSaver.ImageSaverException;
+import hageldave.imagingkit.core.Img;
+import hageldave.imagingkit.core.JunitUtils;
+import hageldave.imagingkit.core.Pixel;
+import hageldave.imagingkit.core.io.ImageLoader;
+import hageldave.imagingkit.core.io.ImageSaver;
+import hageldave.imagingkit.core.io.ImageLoader.ImageLoaderException;
+import hageldave.imagingkit.core.io.ImageSaver.ImageSaverException;
 
 import static org.junit.Assert.*;
 

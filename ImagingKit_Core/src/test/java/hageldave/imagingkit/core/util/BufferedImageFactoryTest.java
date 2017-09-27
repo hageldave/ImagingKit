@@ -1,10 +1,12 @@
-package hageldave.imagingkit.core;
+package hageldave.imagingkit.core.util;
 
 import java.awt.Dimension;
 import java.awt.image.BufferedImage;
 
 import static org.junit.Assert.*;
 import org.junit.Test;
+
+import hageldave.imagingkit.core.util.BufferedImageFactory;
 
 public class BufferedImageFactoryTest {
 

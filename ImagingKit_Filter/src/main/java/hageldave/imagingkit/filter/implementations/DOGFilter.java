@@ -1,4 +1,4 @@
-package hageldave.imagingkit.filter.filterimpl;
+package hageldave.imagingkit.filter.implementations;
 
 
 public class DOGFilter extends ConvolutionFilter {
