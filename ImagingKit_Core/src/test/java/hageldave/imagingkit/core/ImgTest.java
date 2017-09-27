@@ -395,6 +395,7 @@ public class ImgTest {
 		JunitUtils.testException(()->{source.copyArea(0,-1,2,2,null,0,0);}, IllegalArgumentException.class);
 		JunitUtils.testException(()->{source.copyArea(0,0,20,2,null,0,0);}, IllegalArgumentException.class);
 		JunitUtils.testException(()->{source.copyArea(0,0,2,20,null,0,0);}, IllegalArgumentException.class);
+		JunitUtils.testException(()->{source.copyArea(0,0,-1,1,null,0,0);}, IllegalArgumentException.class);
 	}
 
 	@Test

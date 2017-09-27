@@ -72,18 +72,18 @@ public class ColorImg implements ImgBase<ColorPixel> {
 	 */
 	public static final int boundary_mode_zero = Img.boundary_mode_zero;
 
-	/** boundary mode that will repeat the the edge of of an Img for out of
+	/** boundary mode that will repeat the edge of of an image for out of
 	 * bounds positions.
 	 * @see #getValue(int channel, int x, int y, int mode)
 	 */
 	public static final int boundary_mode_repeat_edge = Img.boundary_mode_repeat_edge;
 
-	/** boundary mode that will repeat the Img for out of bounds positions.
+	/** boundary mode that will repeat the image for out of bounds positions.
 	 * @see #getValue(int channel, int x, int y, int mode)
 	 */
 	public static final int boundary_mode_repeat_image = Img.boundary_mode_repeat_image;
 
-	/** boundary mode that will mirror the Img for out of bounds positions
+	/** boundary mode that will mirror the image for out of bounds positions
 	 * @see #getValue(int channel, int x, int y, int mode)
 	 */
 	public static final int boundary_mode_mirror = Img.boundary_mode_mirror;
@@ -110,7 +110,7 @@ public class ColorImg implements ImgBase<ColorPixel> {
 
 	private final int width,height;
 
-	/** minimum number of elements this Img's {@link Spliterator}s can be split to.
+	/** minimum number of elements this image's {@link Spliterator}s can be split to.
 	 * Default value is 1024.
 	 * @since 1.3
 	 */
@@ -244,7 +244,7 @@ public class ColorImg implements ImgBase<ColorPixel> {
 	 * </pre>
 	 * Depending on this image having an alpha channel or not, the returned array is
 	 * of size 3 (no alpha) or 4 (with alpha).
-	 * @return data arrays of this Img
+	 * @return data arrays of this image
 	 * 
 	 * @see #getDataR()
 	 * @see #getDataG()
@@ -645,6 +645,91 @@ public class ColorImg implements ImgBase<ColorPixel> {
 	public double getMinValue(int channel){
 		return getData()[channel][getIndexOfMinValue(channel)];
 	}
+	
+	/**
+	 * Clamps all values of the specified channel to unit range [0,1].
+	 * Values less than 0 are set to zero, values greater than 1 are set to 1.
+	 * @param channel one of {@link #channel_r},{@link #channel_g},{@link #channel_b},{@link #channel_a} (0,1,2,3)
+	 * @return this for chaining
+	 * @throws ArrayIndexOutOfBoundsException if the specified channel is not in [0,3] 
+	 * or is 3 but the image has no alpha (check using {@link #hasAlpha()}).
+	 * 
+	 * @see #clampAllChannelsToUnitRange()
+	 * @see #scaleChannelToUnitRange(int)
+	 */
+	public ColorImg clampChannelToUnitRange(int channel){
+		double[] channelData = getData()[channel];
+		for(int i=0; i<channelData.length; i++){
+			channelData[i] = ImagingKitUtils.clamp_0_1(channelData[i]);
+		}
+		return this;
+	}
+	
+	/**
+	 * Clamps all values of all channels (including alpha if present) to unit range [0,1].
+	 * Values less than 0 are set to zero, values greater than 1 are set to 1.
+	 * @return this for chaining
+	 * 
+	 * @see #clampChannelToUnitRange(int)
+	 */
+	public ColorImg clampAllChannelsToUnitRange(){
+		clampChannelToUnitRange(channel_r);
+		clampChannelToUnitRange(channel_g);
+		clampChannelToUnitRange(channel_b);
+		if(hasAlpha) clampChannelToUnitRange(channel_a);
+		return this;
+	}
+	
+	/**
+	 * Scales all values of the specified channel to unit range [0,1].
+	 * This means that the values are shifted and scaled (proportionally) to fit in unit range.
+	 * It is a 1-dimensional affine transform from the current value range [min,max] to [0,1].
+	 * If all values are the same (min=max), the channel is set to 0.
+	 * @param channel one of {@link #channel_r},{@link #channel_g},{@link #channel_b},{@link #channel_a} (0,1,2,3)
+	 * @return this for chaining
+	 * @throws ArrayIndexOutOfBoundsException if the specified channel is not in [0,3] 
+	 * or is 3 but the image has no alpha (check using {@link #hasAlpha()}).
+	 * 
+	 * @see #scaleRGBToUnitRange()
+	 * @see #clampChannelToUnitRange(int)
+	 */
+	public ColorImg scaleChannelToUnitRange(int channel) {
+		double min=getMinValue(channel), max=getMaxValue(channel);
+		double range = max-min;
+		if(range != 0){
+			double[] channelData = getData()[channel];
+			for(int i=0; i<channelData.length; i++){
+				channelData[i] = (channelData[i]-min)/range;
+			}
+		} else {
+			fill(channel, 0);
+		}
+		return this;
+	}
+	
+	/**
+	 * Scales all values of the R,G and B channel to unit range [0,1].
+	 * This means that the values are shifted and scaled (proportionally) to fit in unit range.
+	 * It is a 1-dimensional affine transform from the current value range [min,max] to [0,1].
+	 * If all values are the same (min=max), the channels are set to 0.
+	 * <br><b>The global minimum and maximum of RGB are considered, channels are not treated seperately.</b>
+	 * This is NOT equal to {@code scaleChannelToUnitRange(channel_r).scaleChannelToUnitRange(channel_g).scaleChannelToUnitRange(channel_b);}
+	 * @return this for chaining
+	 * 
+	 * @see #scaleChannelToUnitRange(int)
+	 */
+	public ColorImg scaleRGBToUnitRange(){
+		double min=Math.min(getMinValue(channel_r), Math.min(getMinValue(channel_g), getMinValue(channel_b)));
+		double max=Math.max(getMaxValue(channel_r), Math.max(getMaxValue(channel_g), getMaxValue(channel_b)));
+		if(min != max){
+			forEach(px->px.convertRange(min,max, 0,1));
+		} else {
+			fill(channel_r, 0);
+			fill(channel_g, 0);
+			fill(channel_b, 0);
+		}
+		return this;
+	}
 
 	/**
 	 * Returns a bilinearly interpolated value of the image for the
@@ -748,10 +833,10 @@ public class ColorImg implements ImgBase<ColorPixel> {
 	}
 
 	/**
-	 * Copies specified area of this Img to the specified destination Img
-	 * at specified destination coordinates. If destination Img is null a new
-	 * Img with the areas size will be created and the destination coordinates
-	 * will be ignored so that the Img will contain all the values of the area.
+	 * Copies specified area of this image to the specified destination image
+	 * at specified destination coordinates. If destination image is null a new
+	 * ColorImage with the areas size will be created and the destination coordinates
+	 * will be ignored so that the image will contain all the values of the area.
 	 * <p>
 	 * The specified area has to be within the bounds of this image or
 	 * otherwise an IllegalArgumentException will be thrown. Only the
@@ -765,12 +850,12 @@ public class ColorImg implements ImgBase<ColorPixel> {
 	 * @param y area origin in this image (y-coordinate)
 	 * @param w width of area
 	 * @param h height of area
-	 * @param dest destination Img
-	 * @param destX area origin in destination Img (x-coordinate)
-	 * @param destY area origin in destination Img (y-coordinate)
-	 * @return the destination Img
+	 * @param dest destination image
+	 * @param destX area origin in destination image (x-coordinate)
+	 * @param destY area origin in destination image (y-coordinate)
+	 * @return the destination image, or newly created image if destination was null.
 	 * @throws IllegalArgumentException if the specified area is not within
-	 * the bounds of this Img or if the size of the area is not positive.
+	 * the bounds of this image or if the size of the area is not positive.
 	 */
 	public ColorImg copyArea(int x, int y, int w, int h, ColorImg dest, int destX, int destY){
 		ImagingKitUtils.requireAreaInImageBounds(x, y, w, h, this);
@@ -931,11 +1016,13 @@ public class ColorImg implements ImgBase<ColorPixel> {
 	 * Fills the specified channel with the specified value.
 	 * @param channel to be filled
 	 * @param value for filling channel
+	 * @return this for chaining
 	 * @throws ArrayIndexOutOfBoundsException if the specified channel is not in [0,3] 
 	 * or is 3 but the image has no alpha (check using {@link #hasAlpha()}).
 	 */
-	public void fill(final int channel, final double value){
+	public ColorImg fill(final int channel, final double value){
 		Arrays.fill(getData()[channel], value);
+		return this;
 	}
 
 	@Override
@@ -1048,11 +1135,11 @@ public class ColorImg implements ImgBase<ColorPixel> {
 
 	/**
 	 * Sets the minimum number of elements in a split of a {@link Spliterator}
-	 * of this Img. Spliterators will only split if they contain more elements than
+	 * of this image. Spliterators will only split if they contain more elements than
 	 * specified by this value. Default is 1024.
 	 * <p>
 	 * It is advised that this number is
-	 * chosen carefully and with respect to the Img's size and application of the
+	 * chosen carefully and with respect to the image's size and application of the
 	 * spliterator, as it can decrease performance of the parallelized methods<br>
 	 * {@link #forEach(boolean parallel, Consumer action)},<br>
 	 * {@link #forEach(boolean parallel, int x, int y, int w, int h, Consumer action)} or<br>

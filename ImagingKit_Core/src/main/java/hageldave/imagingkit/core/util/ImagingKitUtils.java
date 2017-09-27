@@ -8,7 +8,7 @@ import hageldave.imagingkit.core.ImgBase;
  */
 public final class ImagingKitUtils {
 
-	// no to be instantiated
+	// not to be instantiated
 	private ImagingKitUtils() {}
 
 
@@ -25,7 +25,7 @@ public final class ImagingKitUtils {
 
 	/**
 	 * Clamps a value to the range [0.0, 1.0].
-	 * Returns 00 for values less than 0, 1.0 for values greater than 1.0, 
+	 * Returns 0.0 for values less than 0, 1.0 for values greater than 1.0, 
 	 * and the value it self when in range.
 	 * @param val value to be clamped
 	 * @return value clamped to [0.0, 1.0]

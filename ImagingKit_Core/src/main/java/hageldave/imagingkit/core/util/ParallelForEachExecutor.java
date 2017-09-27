@@ -4,13 +4,14 @@ import java.util.Spliterator;
 import java.util.concurrent.CountedCompleter;
 import java.util.function.Consumer;
 
-import hageldave.imagingkit.core.Img;
+import hageldave.imagingkit.core.ImgBase;
 
 /**
  * CountedCompleter class for multithreaded execution of a Consumer on a
- * Pixel Spliterator. Used to realise multithreaded forEach loop.
+ * Spliterator. Used to realise multithreaded forEach loop in {@link ImgBase#forEach(Consumer)}.
+ * 
  * @author hageldave
- * @see Img#forEach(boolean parallel, Consumer action)
+ * @see ImgBase#forEach(boolean parallel, Consumer action)
  * @since 2.0 (relocated from Img class)
  */
 public final class ParallelForEachExecutor<T> extends CountedCompleter<Void> {

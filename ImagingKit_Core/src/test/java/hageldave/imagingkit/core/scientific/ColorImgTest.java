@@ -409,6 +409,64 @@ public class ColorImgTest {
 				assertEquals(img.getValue(c, 0, 0), -3, 0);
 			}
 		}
+		
+		{
+			ColorImg img = new ColorImg(10,10,true);
+			
+			for(int i=0; i < img.numValues(); i++){
+				for(int c=0; c<4; c++){
+					img.getData()[c][i] = i+c;
+				}
+			}
+			img.clampAllChannelsToUnitRange();
+			for(int i=0; i < img.numValues(); i++){
+				for(int c=0; c<4; c++){
+					assertTrue(img.getData()[c][i] >= 0);
+					assertTrue(img.getData()[c][i] <= 1);
+				}
+			}
+			
+			for(int i=0; i < img.numValues(); i++){
+				for(int c=0; c<4; c++){
+					img.getData()[c][i] = i+c;
+				}
+			}
+			img.scaleChannelToUnitRange(channel_r);
+			for(int i=0; i < img.numValues(); i++){
+				assertTrue(img.getDataR()[i] >= 0);
+				assertTrue(img.getDataR()[i] <= 1);
+			}
+			assertEquals(3/99.0, img.getDataR()[3], 0);
+			
+			for(int i=0; i < img.numValues(); i++){
+				for(int c=0; c<4; c++){
+					img.getData()[c][i] = i+c;
+				}
+			}
+			img.scaleRGBToUnitRange();
+			for(int i=0; i < img.numValues(); i++){
+				for(int c=0; c<3; c++){
+					assertTrue(img.getData()[c][i] >= 0);
+					assertTrue(img.getData()[c][i] <= 1);
+				}
+			}
+			assertEquals(3/101.0, img.getDataR()[3], 0);
+			
+			img.fill(channel_r, -1);
+			img.scaleChannelToUnitRange(channel_r);
+			for(int i=0; i < img.numValues(); i++){
+				assertEquals(0, img.getDataR()[i], 0);
+			}
+			
+			img.fill(channel_r, 3).fill(channel_g, 3).fill(channel_b, 3);
+			img.scaleRGBToUnitRange();
+			for(int i=0; i < img.numValues(); i++){
+				for(int c=0; c<3; c++){
+					assertEquals(0, img.getData()[c][i], 0);
+				}
+			}
+			
+		}
 	}
 	
 	@Test

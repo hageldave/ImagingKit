@@ -33,6 +33,8 @@ import java.util.Arrays;
 import java.util.Spliterator;
 import java.util.function.Consumer;
 
+import hageldave.imagingkit.core.util.ImagingKitUtils;
+
 /**
  * Image class with data stored in an int array.
  * <p>
@@ -94,7 +96,7 @@ public class Img implements ImgBase<Pixel> {
 	 */
 	public static final int boundary_mode_zero = 0;
 
-	/** boundary mode that will repeat the the edge of of an Img for out of
+	/** boundary mode that will repeat the edge of of an Img for out of
 	 * bounds positions.
 	 * @see #getValue(int, int, int)
 	 * @since 1.0
@@ -403,16 +405,7 @@ public class Img implements ImgBase<Pixel> {
 	 * @since 1.0
 	 */
 	public Img copyArea(int x, int y, int w, int h, Img dest, int destX, int destY){
-		if(w <= 0 || h <= 0){
-			throw new IllegalArgumentException(String.format(
-					"specified area size is not positive! specified size w,h = [%dx%d]",
-					w,h));
-		}
-		if(x < 0 || y < 0 || x+w > getWidth() || y+h > getHeight()){
-			throw new IllegalArgumentException(String.format(
-					"specified area is not within image bounds! specified x,y = [%d,%d] w,h = [%dx%d], image dimensions are [%dx%d]",
-					x,y,w,h,getWidth(),getHeight()));
-		}
+		ImagingKitUtils.requireAreaInImageBounds(x, y, w, h, this);
 		if(dest == null){
 			return copyArea(x, y, w, h, new Img(w,h), 0, 0);
 		}
@@ -479,10 +472,12 @@ public class Img implements ImgBase<Pixel> {
 	/**
 	 * Fills the whole image with the specified value.
 	 * @param value for filling image
+	 * @return this for chaining
 	 * @since 1.0
 	 */
-	public void fill(final int value){
+	public Img fill(final int value){
 		Arrays.fill(getData(), value);
+		return this;
 	}
 
 	/**

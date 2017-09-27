@@ -1,6 +1,5 @@
 package hageldave.imagingkit.fourier;
 
-import java.util.Arrays;
 import java.util.function.Supplier;
 
 import org.bytedeco.javacpp.DoublePointer;
@@ -15,31 +14,7 @@ import hageldave.imagingkit.core.util.ImageFrame;
 
 public class Testing {
 
-	public static void main(String[] args) {
-//		int w=6000,h=6000;
-//		double[] a = new double[w*h];
-//		for(int i = 0; i < a.length; i++){
-//			a[i]=i;
-//		}
-//		double[] shift = Arrays.copyOf(a, a.length);
-//		long t = System.currentTimeMillis();
-//		for(int y = 0; y < 40; y+=7){
-//			for(int x = 0; x < 40; x+=9){
-//				System.arraycopy(a, 0, shift, 0, a.length);
-//				shift2D(shift, w, h, x, y);
-////				for(int i = 0; i < a.length; i++){
-////					if(a[i] != shift[shiftedIndex(i, w, h, x, y)]){
-//////						throw new RuntimeException("faalsch " + x + " " +y);
-////						System.out.println("faalsch " + x + " " +y);
-////						break;
-////					}
-////				}
-//			}
-//		}
-//		System.out.println(System.currentTimeMillis()-t);
-//		
-//		if(true) return;
-		
+	public static void main(String[] args) {		
 		Loader.load(fftw3.class);
 		
 		ColorImg img = new ColorImg(256,256, false);
