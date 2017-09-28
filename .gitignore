@@ -147,3 +147,5 @@ imagingkit.iml
 
 # specific stuff
 .gitpull.sh
+*.png
+*.jpg

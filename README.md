@@ -16,7 +16,7 @@ So far the *ImagingKit-Core* artifact of the library is available through the ma
 <dependency>
   <groupId>com.github.hageldave.imagingkit</groupId>
   <artifactId>imagingkit-core</artifactId>
-  <version>1.4</version>
+  <version>2.0</version>
 </dependency>
 ```
 
@@ -30,7 +30,7 @@ for(Pixel px: img){
 ```
 And now for the parallel processing part:
 ```java
-img.parallelStream().forEach( px -> {
+img.stream().parallel().forEach( px -> {
     int grey = px.getLuminance();
     px.setRGB(grey, grey, grey);
 });
@@ -43,9 +43,9 @@ Convert an image to grayscale:
 ```java
 BufferedImage buffimg = ImageLoader.loadImage("myimage_colored.png", BufferedImage.TYPE_INT_ARGB);
 Img img = Img.createRemoteImg(buffimg);
-img.forEachParallel((pixel) -> {
-	int gray = (pixel.r() + pixel.g() + pixel.b())/3;
-	pixel.setARGB(pixel.a(), gray, gray, gray);
+img.forEach(true, (pixel) -> {
+    int gray = (pixel.r() + pixel.g() + pixel.b())/3;
+    pixel.setARGB(pixel.a(), gray, gray, gray);
 });
 ImageSaver.saveImage(buffimg,"myimage_grayscale.png");
 ```
@@ -67,66 +67,80 @@ Fancy polar color thing:
 ```java
 Img img = new Img(1024, 1024);
 img.forEach(px -> {
-	double x = (px.getX()-512)/512.0;
-	double y = (px.getY()-512)/512.0;
+	double x = px.getXnormalized()*2-1;
+	double y = px.getYnormalized()*2-1;
 	double len = Math.max(Math.abs(x),Math.abs(y));
 	double angle = (Math.atan2(x,y)+Math.PI)*(180/Math.PI);
 	
-	double r = 255*Math.max(0,1-Math.abs((angle-120)/120.0));
-	double g = 255*Math.max(0, 1-Math.abs((angle-240)/120.0));
-	double b = 255*Math.max(0, angle <= 120 ? 
+	double r = Math.max(0,1-Math.abs((angle-120)/120.0));
+	double g = Math.max(0, 1-Math.abs((angle-240)/120.0));
+	double b = Math.max(0, angle <= 120 ? 
 			1-Math.abs((angle)/120.0):1-Math.abs((angle-360)/120.0));
 	
-	px.setRGB((int)(r*(1-len)), (int)(g*(1-len)), (int)(b*(1-len)));
+	px.setRGB_fromDouble(r*(1-len), g*(1-len), b*(1-len));
 });
 ImageFrame.display(img);
 ```
 Shifting hue (using color space transformation):
 ```java
-Img img = ImageLoader.loadImgFromURL("http://sipi.usc.edu/database/preview/misc/4.2.04.png");
+Img img = ImageLoader.loadImgFromURL("http://sipi.usc.edu/database/preview/misc/4.2.03.png");
 
-img.forEach(ColorSpaceTransformation.RGB_2_HSV.get());
-int hueShift = (int)((360-30) * (256.0f/360.0f));
+img.forEach(ColorSpaceTransformation.RGB_2_HSV);
+double hueShift = (360-90)/360.0;
 img.forEach(pixel -> {
-	// R channel corresponds to hue
-	pixel.setR((pixel.r()+hueShift));
+	// R channel corresponds to hue (modulo 1.0 for cyclic behaviour)
+	pixel.setR_fromDouble((pixel.r_asDouble()+hueShift) % 1.0);
 });
-img.forEach(ColorSpaceTransformation.HSV_2_RGB.get());
+img.forEach(ColorSpaceTransformation.HSV_2_RGB);
 
 ImageFrame.display(img);
 ```
-Swing framebuffer rendering:
+Normal Map from Height Map (using pixel to vector mapping):
 ```java
-BiConsumer<Pixel, Long> shader = (px, time)->{
-	px.setRGB(
-		(int)(px.getXnormalized()*255)+(int)((time/10)%255), 
-		(int)(px.getYnormalized()*255), 
-		(int)(px.getYnormalized()*255));		
-	ColorSpaceTransformation.HSV_2_RGB.get().accept(px);
+PixelConverter<Pixel, Map.Entry<java.awt.Point, javax.vecmath.Vector3f>> converter
+	= new PixelConverter<Pixel, Map.Entry<Point,Vector3f>>()
+{
+	Vector3f offset = new Vector3f(.5f, .5f, .5f);
+	@Override
+	public Map.Entry<Point,Vector3f> allocateElement() {
+		return new AbstractMap.SimpleEntry<Point,Vector3f>(new Point(), new Vector3f());
+	}
+	@Override
+	public void convertPixelToElement(Pixel px, Map.Entry<Point,Vector3f> el) {
+		el.getKey().setLocation(px.getX(), px.getY());
+		el.getValue().set(
+				(float)px.r_asDouble(), 
+				(float)px.g_asDouble(), 
+				(float)px.b_asDouble());
+	}
+	@Override
+	public void convertElementToPixel(Map.Entry<Point,Vector3f> el, Pixel px) {
+		Vector3f vec = el.getValue();
+		vec.scaleAdd(.5f, offset);
+		px.setRGB_fromDouble(vec.x, vec.y, vec.z);
+	}
 };
 
-Img img = new Img(160, 90); 
-BufferedImage bimg = img.getRemoteBufferedImage();
-JPanel canvas = new JPanel(){ public void paint(Graphics g) { 
-	long now = System.currentTimeMillis();
-	img.forEachParallel(px->{shader.accept(px, now);});
-	g.drawImage(bimg, 0,0,getWidth(),getHeight(), 0,0,img.getWidth(),img.getHeight(), null);
-
-	String shaderTime = String.format("%02dms",System.currentTimeMillis()-now);
-	g.drawString(shaderTime, 2, getHeight()); g.setColor(Color.white);
-	g.drawString(shaderTime, 1, getHeight()-1);
-}};
-canvas.setPreferredSize(img.getDimension());
-JFrame f = new JFrame("IMG"); f.setContentPane(canvas); 
-f.pack(); f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-SwingUtilities.invokeLater(()->{f.setVisible(true);});
-
-final long fpsLimitTime = 1000/25; // 25fps
-long target = System.currentTimeMillis()+fpsLimitTime;
-while(true){
-	long now = System.currentTimeMillis();
-	canvas.repaint();
-	Thread.sleep(Math.max(0, target-now));
-	target = now+fpsLimitTime;
-}
+Img heightmap = ImageLoader.loadImgFromURL("https://upload.wikimedia.org/wikipedia/commons/5/57/Heightmap.png");
+Img normalmap = new Img(heightmap.getDimension());
+final boolean parallel = true;
+normalmap.forEach(converter, parallel, pair -> {
+	Point pos = pair.getKey();
+	Vector3f vec = pair.getValue();
+	// get heights of surrounding poiunts
+	float hx0 = heightmap.getValue(pos.x-1, pos.y, Img.boundary_mode_repeat_edge);
+	float hx1 = heightmap.getValue(pos.x+1, pos.y, Img.boundary_mode_repeat_edge);
+	float hy0 = heightmap.getValue(pos.x, pos.y-1, Img.boundary_mode_repeat_edge);
+	float hy1 = heightmap.getValue(pos.x, pos.y+1, Img.boundary_mode_repeat_edge);
+	// cross product of central difference vectors is normal
+	float zH = (hx1-hx0)/2; // yH=0  xH=1
+	float zV = (hy1-hy0)/2; // yV=1  xV=0
+	vec.set(
+		zH*1-zV*0, 
+		zH*0-zV*1, 
+		1*0- 0*1);
+	if(vec.lengthSquared() > 0) vec.normalize();
+});
+ImageFrame.display(normalmap);
+ImageFrame.display(heightmap);
 ```
