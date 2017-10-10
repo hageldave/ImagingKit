@@ -27,6 +27,8 @@ public class ComplexImg implements ImgBase<ComplexPixel> {
 	private int currentXshift = 0;
 	private int currentYshift = 0;
 	
+	private boolean synchronizePowerSpectrum = false;
+	
 	public ComplexImg(int width, int height) {
 		this(width, height, new double[width*height],new double[width*height],new double[width*height]);
 	}
@@ -158,17 +160,50 @@ public class ComplexImg implements ImgBase<ComplexPixel> {
 	public double interpolateP(double xNormalized, double yNormalized) {
 		return delegate.interpolateB(xNormalized, yNormalized);
 	}
+	
+	public double getValueR_atIndex(int index){
+		return real[index];
+	}
+	
+	public double getValueI_atIndex(int index){
+		return imag[index];
+	}
+	
+	public void setValueR_atIndex(int index, double value){
+		real[index] = value;
+		if(synchronizePowerSpectrum){
+			computePower(index);
+		}
+	}
+	
+	public void setValueI_atIndex(int index, double value){
+		imag[index] = value;
+		if(synchronizePowerSpectrum){
+			computePower(index);
+		}
+	}
+	
+	public void setComplex_atIndex(int index, double real, double imag){
+		this.real[index] = real;
+		this.imag[index] = imag;
+		if(synchronizePowerSpectrum){
+			computePower(index);
+		}
+	}
 
 	public void setValueR(int x, int y, double value) {
 		int idx=y*width+x;
-		real[idx]=value;
-		computePower(idx);
+		setValueR_atIndex(idx, value);
 	}
 
 	public void setValueI(int x, int y, double value) {
 		int idx=y*width+x;
-		imag[idx]=value;
-		computePower(idx);
+		setValueI_atIndex(idx, value);
+	}
+	
+	public void setComplex(int x, int y, double real, double imag){
+		int idx=y*width+x;
+		setComplex_atIndex(idx, real, imag);
 	}
 	
 	public double computePower(int idx){
@@ -221,4 +256,13 @@ public class ComplexImg implements ImgBase<ComplexPixel> {
 	public double[] getDataPower() {
 		return power;
 	}
+	
+	public boolean isSynchronizePowerSpectrum() {
+		return synchronizePowerSpectrum;
+	}
+	
+	public void enableSynchronizePowerSpectrum(boolean synchronizePowerSpectrum) {
+		this.synchronizePowerSpectrum = synchronizePowerSpectrum;
+	}
+	
 }

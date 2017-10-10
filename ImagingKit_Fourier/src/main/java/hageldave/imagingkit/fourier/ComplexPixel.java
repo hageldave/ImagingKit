@@ -19,12 +19,12 @@ public class ComplexPixel implements PixelBase {
 
 	@Override
 	public double r_asDouble() {
-		return getSource().getDataReal()[index];
+		return getSource().getValueR_atIndex(index);
 	}
 
 	@Override
 	public double g_asDouble() {
-		return getSource().getDataImag()[index];
+		return getSource().getValueI_atIndex(index);
 	}
 
 	@Override
@@ -40,29 +40,25 @@ public class ComplexPixel implements PixelBase {
 
 	@Override
 	public ComplexPixel setR_fromDouble(double r) {
-		getSource().getDataReal()[index] = r;
-		getSource().computePower(index);
+		getSource().setValueR_atIndex(index, r);
 		return this;
 	}
 
 	@Override
 	public ComplexPixel setG_fromDouble(double g) {
-		getSource().getDataImag()[index] = g;
-		getSource().computePower(index);
+		getSource().setValueI_atIndex(index, g);
 		return this;
 	}
 
 	@Override
 	public ComplexPixel setB_fromDouble(double b) {
-		// ignore, this channel is auto calculated
+		// ignore, this channel is not setable (can only be computed from other 2 channels)
 		return this;
 	}
 	
 	@Override
 	public ComplexPixel setRGB_fromDouble(double r, double g, double b) {
-		getSource().getDataReal()[index] = r;
-		getSource().getDataImag()[index] = g;
-		getSource().computePower(index);
+		getSource().setComplex_atIndex(index, r, g);
 		return this;
 	}
 	
@@ -108,6 +104,22 @@ public class ComplexPixel implements PixelBase {
 		return this.source;
 	}
 
+	public ComplexPixel computePower(){
+		getSource().computePower(index);
+		return this;
+	}
+	
+	public double real(){
+		return r_asDouble();
+	}
+	
+	public double imag(){
+		return g_asDouble();
+	}
+	
+	public double power(){
+		return b_asDouble();
+	}
 
 
 }
