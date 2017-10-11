@@ -120,6 +120,34 @@ public class ComplexPixel implements PixelBase {
 	public double power(){
 		return b_asDouble();
 	}
+	
+	public ComplexPixel setReal(double r){
+		return setR_fromDouble(r);
+	}
+	
+	public ComplexPixel setImag(double i){
+		return setG_fromDouble(i);
+	}
+	
+	public ComplexPixel setComplex(double r, double i){
+		return setRGB_fromDouble(r, i, 0);
+	}
 
+	public ComplexPixel add(double r, double i){
+		return setComplex(real()+r, imag()+i);
+	}
+	
+	public ComplexPixel subtract(double r, double i){
+		return add(-r,-i);
+	}
+	
+	public ComplexPixel conjugate(){
+		return setImag(-imag());
+	}
+	
+	public ComplexPixel mult(double r, double i){
+		return setComplex(real()*r-imag()*i, real()*i+r*imag());
+	}
+	
 
 }
