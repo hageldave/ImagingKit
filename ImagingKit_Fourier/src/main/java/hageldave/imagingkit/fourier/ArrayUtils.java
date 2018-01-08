@@ -4,8 +4,8 @@ import java.util.function.Supplier;
 
 public class ArrayUtils {
 
-	
-	static void shift2D(double[] a, int w, int h, int x, int y){
+
+	public static void shift2D(double[] a, int w, int h, int x, int y){
 		assertPositive(w, ()->"specified width is not positive. w="+w);
 		assertPositive(h, ()->"specified height is not positive. h="+h);
 		while(x < 0) x = w+x;
@@ -21,8 +21,8 @@ public class ArrayUtils {
 		}
 		rotateArray(a,w*h, 0, y*w);
 	}
-	
-	static void rotateArray(double[] a, final int size, final int offset, int distance){
+
+	public static void rotateArray(double[] a, final int size, final int offset, int distance){
 		// this is a copy of Collections.rotate1(...) for double[]
 		if (size == 0)
 			return;
@@ -46,11 +46,17 @@ public class ArrayUtils {
 			} while (i != cycleStart);
 		}
 	}
-	
-	static void assertPositive(int x, Supplier<String> errmsg){
+
+	public static void assertPositive(int x, Supplier<String> errmsg){
 		if(x < 1){
 			throw new IllegalArgumentException(errmsg.get());
 		}
 	}
-	
+
+	public static void assertArraySize(int size, double[] array, Supplier<String> errmsg){
+		if(array.length != size){
+			throw new IllegalArgumentException(errmsg.get());
+		}
+	}
+
 }
