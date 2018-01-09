@@ -261,27 +261,29 @@ public class ComplexImg implements ImgBase<ComplexPixel> {
 		return synchronizePowerSpectrum;
 	}
 
-	public void enableSynchronizePowerSpectrum(boolean synchronizePowerSpectrum) {
+	public ComplexImg enableSynchronizePowerSpectrum(boolean synchronizePowerSpectrum) {
 		this.synchronizePowerSpectrum = synchronizePowerSpectrum;
 		if(synchronizePowerSpectrum){
 			recomputePowerChannel();
 		}
+		return this;
 	}
 
-	public void shift(int x, int y){
+	public ComplexImg shift(int x, int y){
 		ArrayUtils.shift2D(real, width, height, x, y);
 		ArrayUtils.shift2D(imag, width, height, x, y);
 		if(synchronizePowerSpectrum)
 			ArrayUtils.shift2D(power, width, height, x, y);
 		setCurrentShift(x, y);
+		return this;
 	}
 
-	public void shiftCornerToCenter(){
-		shift(width/2, height/2);
+	public ComplexImg shiftCornerToCenter(){
+		return shift(width/2, height/2);
 	}
 
-	public void resetShift(int x, int y){
-		shift(width-currentXshift, height-currentYshift);
+	public ComplexImg resetShift(int x, int y){
+		return shift(width-currentXshift, height-currentYshift);
 	}
 
 	protected void setCurrentShift(int xshift, int yshift){

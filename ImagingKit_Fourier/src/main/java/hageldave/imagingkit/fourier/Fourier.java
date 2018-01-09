@@ -1,5 +1,6 @@
 package hageldave.imagingkit.fourier;
 
+import java.awt.image.BufferedImage;
 import java.util.Arrays;
 import java.util.function.Supplier;
 
@@ -217,6 +218,9 @@ public class Fourier {
 		ColorImg img = new ColorImg(gauss, false);
 		ImageFrame.display(img.getRemoteBufferedImage());
 		ComplexImg fft = fft2D_real2complexImg(img.getDataR(), img.getWidth(),img.getHeight());
+		ComplexImg copy = fft.copy();
+		copy.shiftCornerToCenter().enableSynchronizePowerSpectrum(true).getDelegate().forEach(px->px.setValue(2, Math.log(px.getValue(2))));
+		ImageFrame.display(copy.getDelegate().scaleChannelToUnitRange(2).getChannelImage(2).toBufferedImage());
 		ifft2D_complexImg2complexImg(fft, fft);
 		ImageFrame.display(fft.getDelegate().getChannelImage(0).scaleChannelToUnitRange(0).toBufferedImage());
 	}
