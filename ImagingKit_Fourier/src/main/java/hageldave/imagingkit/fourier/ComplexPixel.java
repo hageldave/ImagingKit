@@ -146,8 +146,11 @@ public class ComplexPixel implements PixelBase {
 	}
 	
 	public ComplexPixel mult(double r, double i){
-		return setComplex(real()*r-imag()*i, real()*i+r*imag());
+		double thisr = real(), thisi = imag();
+		return setComplex(thisr*r-thisi*i, thisr*i+r*thisi);
 	}
+	
+	
 	
 
 }

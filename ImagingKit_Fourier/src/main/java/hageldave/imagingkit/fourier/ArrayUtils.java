@@ -53,4 +53,10 @@ public class ArrayUtils {
 		}
 	}
 	
+	static void scaleArray(final double[] array, final double factor){
+		for(int i = 0; i < array.length; i++){
+			array[i] *= factor;
+		}
+	}
+	
 }

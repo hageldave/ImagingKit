@@ -26,6 +26,8 @@ public class ComplexImg implements ImgBase<ComplexPixel> {
 	
 	private int currentXshift = 0;
 	private int currentYshift = 0;
+	private double currentScale = 1.0;
+	
 	
 	private boolean synchronizePowerSpectrum = false;
 	
@@ -261,8 +263,51 @@ public class ComplexImg implements ImgBase<ComplexPixel> {
 		return synchronizePowerSpectrum;
 	}
 	
-	public void enableSynchronizePowerSpectrum(boolean synchronizePowerSpectrum) {
+	public ComplexImg enableSynchronizePowerSpectrum(boolean synchronizePowerSpectrum) {
 		this.synchronizePowerSpectrum = synchronizePowerSpectrum;
+		return this;
+	}
+	
+	public ComplexImg scale(double factor){
+		ArrayUtils.scaleArray(real, factor);
+		ArrayUtils.scaleArray(imag, factor);
+		if(synchronizePowerSpectrum){
+			recomputePowerChannel();
+		}
+		this.currentScale *= factor;
+		return this;
+	}
+	
+	public double getScaling(){
+		return currentScale;
+	}
+	
+	public double getDC(){
+		return getValueR(currentXshift, currentYshift);
+	}
+	
+	public void shift(int xShift, int yShift){
+		while(xShift < 0) xShift += getWidth();
+		while(yShift < 0) yShift += getHeight();
+		xShift %= getWidth();
+		yShift %= getHeight();
+		
+		ArrayUtils.shift2D(real, getWidth(), getHeight(), xShift, yShift);
+		ArrayUtils.shift2D(imag, getWidth(), getHeight(), xShift, yShift);
+		if(synchronizePowerSpectrum){
+			recomputePowerChannel();
+		}
+		
+		this.currentXshift = xShift;
+		this.currentYshift = yShift;
+	}
+	
+	public int getXshift() {
+		return currentXshift;
+	}
+	
+	public int getYshift() {
+		return currentYshift;
 	}
 	
 }
