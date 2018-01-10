@@ -8,55 +8,53 @@ import hageldave.imagingkit.core.ImgBase;
 import hageldave.imagingkit.core.scientific.ColorImg;
 
 public class ComplexImg implements ImgBase<ComplexPixel> {
-	
+
 	public static final int channel_real = ColorImg.channel_r;
 	public static final int channel_imag = ColorImg.channel_g;
 	public static final int channel_power = ColorImg.channel_b;
-	
+
 
 	private final int width;
 	private final int height;
-	
+
 	private final double[] real;
 	private final double[] imag;
 	/* power spectrum: real*real+imag*imag */
 	private final double[] power;
-	
+
 	private final ColorImg delegate;
-	
+
 	private int currentXshift = 0;
 	private int currentYshift = 0;
-	private double currentScale = 1.0;
-	
-	
+
 	private boolean synchronizePowerSpectrum = false;
-	
+
 	public ComplexImg(int width, int height) {
 		this(width, height, new double[width*height],new double[width*height],new double[width*height]);
 	}
-	
+
 	public ComplexImg(int width, int height, double[] real, double[] imag, double[] power){
 		// sanity check 1:
 		Objects.requireNonNull(real);
 		if(width*height != real.length){
 			throw new IllegalArgumentException(String.format("Provided Dimension (width=%d, height=$d) does not match number of provided Pixels %d", width, height, real.length));
 		}
-		
+
 		this.width = width;
 		this.height = height;
 		this.real = real;
-		this.imag = imag!= null ?  imag:new double[width*height];
+		this.imag = imag !=null ?  imag:new double[width*height];
 		this.power= power!=null ? power:new double[width*height];
-		
+
 		// sanity check 2:
 		if(this.real.length != this.imag.length || this.imag.length != this.power.length){
 			throw new IllegalArgumentException(String.format("Provided data arrays are not of same size. real[%d] imag[%d] power[%d]", this.real.length, this.imag.length, this.power.length));
 		}
-		
+
 		this.delegate = new ColorImg(this.width, this.height, this.real, this.imag, this.power, null);
 	}
-	
-	
+
+
 	@Override
 	public int getWidth() {
 		return this.width;
@@ -89,10 +87,10 @@ public class ComplexImg implements ImgBase<ComplexPixel> {
 	@Override
 	public ComplexImg copy() {
 		ComplexImg copy = new ComplexImg(
-				getWidth(), 
-				getHeight(), 
-				Arrays.copyOf(real, real.length), 
-				Arrays.copyOf(imag, imag.length), 
+				getWidth(),
+				getHeight(),
+				Arrays.copyOf(real, real.length),
+				Arrays.copyOf(imag, imag.length),
 				Arrays.copyOf(power, power.length));
 		copy.currentXshift = currentXshift;
 		copy.currentYshift = currentYshift;
@@ -162,29 +160,29 @@ public class ComplexImg implements ImgBase<ComplexPixel> {
 	public double interpolateP(double xNormalized, double yNormalized) {
 		return delegate.interpolateB(xNormalized, yNormalized);
 	}
-	
+
 	public double getValueR_atIndex(int index){
 		return real[index];
 	}
-	
+
 	public double getValueI_atIndex(int index){
 		return imag[index];
 	}
-	
+
 	public void setValueR_atIndex(int index, double value){
 		real[index] = value;
 		if(synchronizePowerSpectrum){
 			computePower(index);
 		}
 	}
-	
+
 	public void setValueI_atIndex(int index, double value){
 		imag[index] = value;
 		if(synchronizePowerSpectrum){
 			computePower(index);
 		}
 	}
-	
+
 	public void setComplex_atIndex(int index, double real, double imag){
 		this.real[index] = real;
 		this.imag[index] = imag;
@@ -202,26 +200,26 @@ public class ComplexImg implements ImgBase<ComplexPixel> {
 		int idx=y*width+x;
 		setValueI_atIndex(idx, value);
 	}
-	
+
 	public void setComplex(int x, int y, double real, double imag){
 		int idx=y*width+x;
 		setComplex_atIndex(idx, real, imag);
 	}
-	
+
 	public double computePower(int idx){
 		double r = real[idx];
 		double i = imag[idx];
 		power[idx] = r*r+i*i;
 		return power[idx];
 	}
-	
+
 	public ComplexImg recomputePowerChannel(){
 		for(int i=0; i<real.length; i++){
 			computePower(i);
 		}
 		return this;
 	}
-	
+
 	public double computePower(int x, int y){
 		return computePower(y*width+x);
 	}
@@ -238,76 +236,74 @@ public class ComplexImg implements ImgBase<ComplexPixel> {
 	public boolean supportsRemoteBufferedImage() {
 		return delegate.supportsRemoteBufferedImage();
 	}
-	
+
 	public ColorImg copyArea(int x, int y, int w, int h, ComplexImg dest, int destX, int destY) {
 		return delegate.copyArea(x, y, w, h, dest.delegate, destX, destY);
 	}
-	
+
 	public ColorImg getDelegate(){
 		return delegate;
 	}
-	
+
 	public double[] getDataReal() {
 		return real;
 	}
-	
+
 	public double[] getDataImag() {
 		return imag;
 	}
-	
+
 	public double[] getDataPower() {
 		return power;
 	}
-	
+
 	public boolean isSynchronizePowerSpectrum() {
 		return synchronizePowerSpectrum;
 	}
-	
+
 	public ComplexImg enableSynchronizePowerSpectrum(boolean synchronizePowerSpectrum) {
 		this.synchronizePowerSpectrum = synchronizePowerSpectrum;
-		return this;
-	}
-	
-	public ComplexImg scale(double factor){
-		ArrayUtils.scaleArray(real, factor);
-		ArrayUtils.scaleArray(imag, factor);
 		if(synchronizePowerSpectrum){
 			recomputePowerChannel();
 		}
-		this.currentScale *= factor;
 		return this;
 	}
-	
-	public double getScaling(){
-		return currentScale;
+
+	public ComplexImg shift(int x, int y){
+		while(x < 0) x += getWidth();
+		while(y < 0) y += getHeight();
+		x %= getWidth();
+		y %= getHeight();
+		ArrayUtils.shift2D(real, width, height, x, y);
+		ArrayUtils.shift2D(imag, width, height, x, y);
+		if(synchronizePowerSpectrum)
+			ArrayUtils.shift2D(power, width, height, x, y);
+		setCurrentShift(x, y);
+		return this;
 	}
-	
-	public double getDC(){
+
+	public ComplexImg shiftCornerToCenter(){
+		return shift(width/2, height/2);
+	}
+
+	public ComplexImg resetShift(int x, int y){
+		return shift(width-currentXshift, height-currentYshift);
+	}
+
+	protected void setCurrentShift(int xshift, int yshift){
+		this.currentXshift = xshift;
+		this.currentYshift = yshift;
+	}
+
+	public double getDCreal(){
 		return getValueR(currentXshift, currentYshift);
 	}
-	
-	public void shift(int xShift, int yShift){
-		while(xShift < 0) xShift += getWidth();
-		while(yShift < 0) yShift += getHeight();
-		xShift %= getWidth();
-		yShift %= getHeight();
-		
-		ArrayUtils.shift2D(real, getWidth(), getHeight(), xShift, yShift);
-		ArrayUtils.shift2D(imag, getWidth(), getHeight(), xShift, yShift);
-		if(synchronizePowerSpectrum){
-			recomputePowerChannel();
-		}
-		
-		this.currentXshift = xShift;
-		this.currentYshift = yShift;
-	}
-	
-	public int getXshift() {
+
+	public int getCurrentXshift() {
 		return currentXshift;
 	}
-	
-	public int getYshift() {
+
+	public int getCurrentYshift() {
 		return currentYshift;
 	}
-	
 }
