@@ -36,8 +36,7 @@ img.stream().parallel().forEach( px -> {
 });
 ```
 
-
---
+---
 ### Code Examples
 Convert an image to grayscale:
 ```java
@@ -49,9 +48,12 @@ img.forEach(true, (pixel) -> {
 });
 ImageSaver.saveImage(buffimg,"myimage_grayscale.png");
 ```
+![original lena image](ImagingKit_Core/src/test/resources/lena.128.png)
+![greyscale lena image]( ImagingKit_Core/src/test/resources/exampleimages/lenagrey.png)
+
 Draw into image (using java.awt.Graphics2D):
 ```java
-Img img = new Img(400, 300);
+Img img = new Img(128, 128);
 img.fill(0xff000000);
 img.paint(g2d -> {
 	g2d.setColor(Color.white);
@@ -63,9 +65,11 @@ img.paint(g2d -> {
 ImageFrame.display(img);
 ImageSaver.saveImage(img.getRemoteBufferedImage(), "hello_world.png");
 ```
+![hello world image](ImagingKit_Core/src/test/resources/exampleimages/helloworld.png)
+
 Fancy polar color thing:
 ```java
-Img img = new Img(1024, 1024);
+Img img = new Img(128, 128);
 img.forEach(px -> {
 	double x = px.getXnormalized()*2-1;
 	double y = px.getYnormalized()*2-1;
@@ -81,6 +85,8 @@ img.forEach(px -> {
 });
 ImageFrame.display(img);
 ```
+![fancy polor color image](ImagingKit_Core/src/test/resources/exampleimages/fancypolarcolor.png)
+
 Shifting hue (using color space transformation):
 ```java
 Img img = ImageLoader.loadImgFromURL("http://sipi.usc.edu/database/preview/misc/4.2.03.png");
@@ -95,6 +101,9 @@ img.forEach(ColorSpaceTransformation.HSV_2_RGB);
 
 ImageFrame.display(img);
 ```
+![baboon image](ImagingKit_Core/src/test/resources/baboon.128.png)
+![hue shifted baboom image](ImagingKit_Core/src/test/resources/exampleimages/hueshift.png)
+
 Normal Map from Height Map (using pixel to vector mapping):
 ```java
 PixelConverter<Pixel, Map.Entry<java.awt.Point, javax.vecmath.Vector3f>> converter
