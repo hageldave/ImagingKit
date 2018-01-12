@@ -36,8 +36,7 @@ img.stream().parallel().forEach( px -> {
 });
 ```
 
-
---
+---
 ### Code Examples
 Convert an image to grayscale:
 ```java
