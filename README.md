@@ -54,7 +54,7 @@ ImageSaver.saveImage(buffimg,"myimage_grayscale.png");
 
 Draw into image (using java.awt.Graphics2D):
 ```java
-Img img = new Img(400, 300);
+Img img = new Img(128, 128);
 img.fill(0xff000000);
 img.paint(g2d -> {
 	g2d.setColor(Color.white);
