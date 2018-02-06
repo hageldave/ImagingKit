@@ -7,6 +7,7 @@ jdk:
   
 before_script:
   - "export DISPLAY=:99.0"
+  - "export MAVEN_OPTS="-Xms2g -Xmx2g""
   - "sh -e /etc/init.d/xvfb start"
   - sleep 3 # give xvfb some time to start (x virtual frame buffer for gui testing)
 
