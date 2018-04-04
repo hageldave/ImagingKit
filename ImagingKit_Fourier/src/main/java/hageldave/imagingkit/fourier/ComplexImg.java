@@ -1,5 +1,6 @@
 package hageldave.imagingkit.fourier;
 
+import java.awt.Dimension;
 import java.awt.image.BufferedImage;
 import java.util.Arrays;
 import java.util.Objects;
@@ -29,6 +30,10 @@ public class ComplexImg implements ImgBase<ComplexPixel> {
 
 	private boolean synchronizePowerSpectrum = false;
 
+	public ComplexImg(Dimension dims){
+		this(dims.width, dims.height);
+	}
+	
 	public ComplexImg(int width, int height) {
 		this(width, height, new double[width*height],new double[width*height],new double[width*height]);
 	}
