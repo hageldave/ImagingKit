@@ -283,7 +283,7 @@ public class ComplexImg implements ImgBase<ComplexPixel> {
 		ArrayUtils.shift2D(imag, width, height, x, y);
 		if(synchronizePowerSpectrum)
 			ArrayUtils.shift2D(power, width, height, x, y);
-		setCurrentShift(x, y);
+		setCurrentShift(this.currentXshift+x, this.currentYshift+y);
 		return this;
 	}
 
@@ -291,13 +291,13 @@ public class ComplexImg implements ImgBase<ComplexPixel> {
 		return shift(width/2, height/2);
 	}
 
-	public ComplexImg resetShift(int x, int y){
+	public ComplexImg resetShift(){
 		return shift(width-currentXshift, height-currentYshift);
 	}
 
 	protected void setCurrentShift(int xshift, int yshift){
-		this.currentXshift = xshift;
-		this.currentYshift = yshift;
+		this.currentXshift = xshift%width;
+		this.currentYshift = yshift%height;
 	}
 
 	public double getDCreal(){

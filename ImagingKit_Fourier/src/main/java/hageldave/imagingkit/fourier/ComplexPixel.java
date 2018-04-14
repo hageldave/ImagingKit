@@ -150,7 +150,19 @@ public class ComplexPixel implements PixelBase {
 		return setComplex(thisr*r-thisi*i, thisr*i+r*thisi);
 	}
 	
+	public int getXFrequency() {
+		int w = getSource().getWidth();
+		int center = getSource().getCurrentXshift();
+		int freq = ((getX()+w-center+(w-1)/2)%w)-(w-1)/2;
+		return freq;
+	}
 	
+	public int getYFrequency() {
+		int h = getSource().getHeight();
+		int center = getSource().getCurrentYshift();
+		int freq = ((getY()+h-center+(h-1)/2)%h)-(h-1)/2;
+		return freq;
+	}
 	
 
 }
