@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.Objects;
 
 import hageldave.imagingkit.core.ImgBase;
+import hageldave.imagingkit.core.operations.ColorSpaceTransformation;
 import hageldave.imagingkit.core.scientific.ColorImg;
 
 public class ComplexImg implements ImgBase<ComplexPixel> {
@@ -33,7 +34,7 @@ public class ComplexImg implements ImgBase<ComplexPixel> {
 	public ComplexImg(Dimension dims){
 		this(dims.width, dims.height);
 	}
-	
+
 	public ComplexImg(int width, int height) {
 		this(width, height, new double[width*height],new double[width*height],new double[width*height]);
 	}
@@ -229,6 +230,16 @@ public class ComplexImg implements ImgBase<ComplexPixel> {
 		return computePower(y*width+x);
 	}
 
+	public double computePhase(int idx){
+		double r = real[idx];
+		double i = imag[idx];
+		return atan2(r, i);
+	}
+
+	public double computePhase(int x, int y){
+		return computePhase(y*width+x);
+	}
+
 	public ComplexImg fill(int channel, double value) {
 		delegate.fill(channel, value);
 		return this;
@@ -310,5 +321,57 @@ public class ComplexImg implements ImgBase<ComplexPixel> {
 
 	public int getCurrentYshift() {
 		return currentYshift;
+	}
+
+	public ColorImg getPowerSpectrumImg(){
+		this.recomputePowerChannel();
+		// get copy of power channel
+		ColorImg powerSpectrum = this.getDelegate().getChannelImage(ComplexImg.channel_power).copy();
+		// logarithmize values
+		powerSpectrum.forEach(px->px.setValue(0, Math.log(1+px.getValue(0))));
+		// normalize values
+		powerSpectrum.scaleChannelToUnitRange(0);
+		// copy 1st channel to others to retain grayscale
+		System.arraycopy(powerSpectrum.getData()[0], 0, powerSpectrum.getData()[1], 0, powerSpectrum.numValues());
+		System.arraycopy(powerSpectrum.getData()[0], 0, powerSpectrum.getData()[2], 0, powerSpectrum.numValues());
+		return powerSpectrum;
+	}
+
+	public ColorImg getPhaseSpectrumImg(){
+		ColorImg phaseImg = new ColorImg(this.getDimension(), false);
+		// compute phase values
+		phaseImg.forEach(px->px.setValue(0, this.computePhase(px.getIndex())));
+		// normalize values (are in [0..2pi])
+		phaseImg.scaleChannelToUnitRange(0);
+		// set other channels to 1 (value and saturation)
+		phaseImg.fill(1, 1);
+		phaseImg.fill(2, 1);
+		// TODO: use HSL for constant luminance (percieved brightness)
+		// convert to RGB (hue corresponds to phase)
+		phaseImg.forEach(ColorSpaceTransformation.HSV_2_RGB);
+		return phaseImg;
+	}
+
+	public ColorImg getPowerPhaseSpectrumImg(){
+		ColorImg powerphase = new ColorImg(this.getDimension(), false);
+		// compute phase values
+		powerphase.forEach(px->{
+			px.setValue(0, this.computePhase(px.getIndex()));
+			px.setValue(2, Math.log(1+this.computePower(px.getIndex())));
+		});
+		// normalize hue (phase) values and brightness (power) values
+		powerphase.scaleChannelToUnitRange(0);
+		powerphase.scaleChannelToUnitRange(2);
+		// set saturation to 1
+		powerphase.fill(1, 1);
+		// TODO: use HSL for constant luminance (percieved brightness)
+		// convert to RGB (hue corresponds to phase)
+		powerphase.forEach(ColorSpaceTransformation.HSV_2_RGB);
+		return powerphase;
+	}
+
+	private final static double TWOPI = Math.PI*2;
+	public static double atan2(double x, double y){
+		return (TWOPI+Math.atan2(y,x))%TWOPI;
 	}
 }
