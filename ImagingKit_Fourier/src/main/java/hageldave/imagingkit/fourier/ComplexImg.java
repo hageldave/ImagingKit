@@ -339,34 +339,49 @@ public class ComplexImg implements ImgBase<ComplexPixel> {
 
 	public ColorImg getPhaseSpectrumImg(){
 		ColorImg phaseImg = new ColorImg(this.getDimension(), false);
-		// compute phase values
-		phaseImg.forEach(px->px.setValue(0, this.computePhase(px.getIndex())));
-		// normalize values (are in [0..2pi])
-		phaseImg.scaleChannelToUnitRange(0);
-		// set other channels to 1 (value and saturation)
-		phaseImg.fill(1, 1);
-		phaseImg.fill(2, 1);
-		// TODO: use HSL for constant luminance (percieved brightness)
-		// convert to RGB (hue corresponds to phase)
-		phaseImg.forEach(ColorSpaceTransformation.HSV_2_RGB);
+		// compute phase colors
+		phaseImg.forEach(px->{
+			double phase = this.computePhase(px.getIndex());
+			// get phase position on unit circle in a*b* plane
+			double x = Math.cos(phase);
+			double y = Math.sin(phase);
+			// set color (0.2 is ~max radius for which colors are still in RGB gammut at L*=0.74 )
+			px.setValue(1, 0.5+0.2*x);
+			px.setValue(2, 0.5+0.2*y);
+		});
+		// set luminance to 0.74 (greatest RGB range around center here)
+		phaseImg.fill(0, 0.74);
+		// convert from LAB 2 RGB
+		phaseImg.forEach(ColorSpaceTransformation.LAB_2_RGB);
 		return phaseImg;
 	}
 
 	public ColorImg getPowerPhaseSpectrumImg(){
+		// calculate power spectrum
+		this.recomputePowerChannel();
+		// get upper bound (used for normalization)
+		final double maxLogPow = Math.log(1+this.getMaxValue(channel_power));
 		ColorImg powerphase = new ColorImg(this.getDimension(), false);
-		// compute phase values
+		// create phase image in L*a*b* color space
 		powerphase.forEach(px->{
-			px.setValue(0, this.computePhase(px.getIndex()));
-			px.setValue(2, Math.log(1+this.computePower(px.getIndex())));
+			// calculate phase (in [0..2pi])
+			double phase = this.computePhase(px.getIndex());
+			// get power
+			double logPower = Math.log(1+this.getDataPower()[px.getIndex()]);
+			// normalize power
+			double normLogPow = logPower/maxLogPow;
+			// get phase position on unit circle in a*b* plane
+			double x = Math.cos(phase);
+			double y = Math.sin(phase);
+			// calc radius in a*b* plane (0.2 is ~max radius for which colors are still in RGB gammut at L*=0.74)
+			double radius = 0.2*normLogPow;
+			// set L* according to power (L*=0.74 has a*b* plane with maximum RGB gammut around center)
+			px.setValue(0, 0.74*normLogPow);
+			// set color according to phase (also scale by radius because RGB gammut gets smaller with decreasing L*)
+			px.setValue(1, 0.5+radius*x);
+			px.setValue(2, 0.5+radius*y);
 		});
-		// normalize hue (phase) values and brightness (power) values
-		powerphase.scaleChannelToUnitRange(0);
-		powerphase.scaleChannelToUnitRange(2);
-		// set saturation to 1
-		powerphase.fill(1, 1);
-		// TODO: use HSL for constant luminance (percieved brightness)
-		// convert to RGB (hue corresponds to phase)
-		powerphase.forEach(ColorSpaceTransformation.HSV_2_RGB);
+		powerphase.forEach(ColorSpaceTransformation.LAB_2_RGB);
 		return powerphase;
 	}
 

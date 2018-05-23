@@ -345,6 +345,49 @@ public enum ColorSpaceTransformation implements Consumer<PixelBase> {
 		default: px.setRGB_fromDouble_preserveAlpha(v,t,p);break;
 		}
 	}
+	
+	private static void hsl2rgb_continuous(PixelBase px)
+	{
+		double h = px.r_asDouble();
+		h -= Math.floor(h);
+		h *= 360;
+		double s = px.g_asDouble();
+		double l = px.b_asDouble();
+		double hi = h/60;
+		double c = (1-Math.abs(2*l-1))*s;
+		double x = c*(1-Math.abs((hi%2)-1));
+		double m = l-0.5*c;
+		switch ((int)hi) {
+		case 1:  px.setRGB_fromDouble_preserveAlpha(x+m,c+m,0+m);break;
+		case 2:  px.setRGB_fromDouble_preserveAlpha(0+m,c+m,x+m);break;
+		case 3:  px.setRGB_fromDouble_preserveAlpha(0+m,x+m,c+m);break;
+		case 4:  px.setRGB_fromDouble_preserveAlpha(x+m,0+m,c+m);break;
+		case 5:  px.setRGB_fromDouble_preserveAlpha(c+m,0+m,x+m);break;
+		default: px.setRGB_fromDouble_preserveAlpha(c+m,x+m,0+m);break;
+		}
+	}
+	
+	private static void hcy2rgb_continuous(PixelBase  px)
+	{
+		double h = px.r_asDouble();
+		h -= Math.floor(h);
+		h *= 360;
+		double c = px.g_asDouble();
+		double y = px.b_asDouble();
+		double hi = h/60;
+		double x = c*(1-Math.abs((hi%2)-1));
+		double r,g,b;
+		switch ((int)hi) {
+		case 1:  r=x;g=c;b=0;break;
+		case 2:  r=0;g=c;b=x;break;
+		case 3:  r=0;g=x;b=c;break;
+		case 4:  r=x;g=0;b=c;break;
+		case 5:  r=c;g=0;b=x;break;
+		default: r=c;g=x;b=0;break;
+		}
+		double m=y-(0.30*r+0.59*g+0.11*b);
+		px.setRGB_fromDouble_preserveAlpha(r+m, g+m, b+m);
+	}
 
 	private static void rgb2ycbcr_continuous(PixelBase px)
 	{
