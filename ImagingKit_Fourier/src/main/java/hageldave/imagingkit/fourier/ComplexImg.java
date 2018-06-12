@@ -9,6 +9,29 @@ import hageldave.imagingkit.core.ImgBase;
 import hageldave.imagingkit.core.operations.ColorSpaceTransformation;
 import hageldave.imagingkit.core.scientific.ColorImg;
 
+/**
+ * The ComplexImg class represents an image of complex values.
+ * It thus consists of two channels, the real part channel and the
+ * imaginary part channel. A third channel can be leveraged to store
+ * the power spectrum of the image which consists of the squared lengths
+ * of the complex values {@code (complex=a+bi, power=a*a+b*b)}, see
+ * {@link #enableSynchronizePowerSpectrum(boolean)} and {@link #recomputePowerChannel()}.
+ * <p>
+ * The main purpose of the ComplexImg is to store the result of a Fourier transformation
+ * of another image, which can be obtained using the {@link Fourier} class.
+ * Therefore ComplexImg offers specific methods tailored to Fourier use cases such as<br>
+ * <ul>
+ * <li>{@link #getDCreal()} for obtaining the DC component, </li>
+ * <li>{@link #shiftCornerToCenter()} for DC centering </li>
+ * <li>{@link #shift(int, int)}, {@link #resetShift()}, {@link #getCurrentXshift()}, {@link #getCurrentYshift()}
+ * for any kinds of shifting stuff</li>
+ * <li>{@link #computePower(int, int)},{@link #computePhase(int, int)} to obtain power and phase</li>
+ * <li>{@link #getPowerSpectrumImg()}, {@link #getPhaseSpectrumImg()}, {@link #getPowerPhaseSpectrumImg()}
+ * for displaying and examining interesting quantities of the transform</li>
+ * </ul>
+ *
+ * @author hageldave
+ */
 public class ComplexImg implements ImgBase<ComplexPixel> {
 
 	public static final int channel_real = ColorImg.channel_r;
@@ -173,6 +196,10 @@ public class ComplexImg implements ImgBase<ComplexPixel> {
 
 	public double getValueI_atIndex(int index){
 		return imag[index];
+	}
+
+	public double getValueP_atIndex(int index){
+		return power[index];
 	}
 
 	public void setValueR_atIndex(int index, double value){
