@@ -31,13 +31,16 @@ import hageldave.imagingkit.core.scientific.ColorImg;
  * </ul>
  *
  * @author hageldave
+ * 
  */
 public class ComplexImg implements ImgBase<ComplexPixel> {
 
+	/** real part channel index - equal to red channel */
 	public static final int channel_real = ColorImg.channel_r;
+	/** imaginary part channel index - equal to green channel */
 	public static final int channel_imag = ColorImg.channel_g;
+	/** power channel index - equal to blue channel */
 	public static final int channel_power = ColorImg.channel_b;
-
 
 	private final int width;
 	private final int height;
@@ -47,6 +50,7 @@ public class ComplexImg implements ImgBase<ComplexPixel> {
 	/* power spectrum: real*real+imag*imag */
 	private final double[] power;
 
+	/* delegate image for operations like interpolate that already are implemented */
 	private final ColorImg delegate;
 
 	private int currentXshift = 0;
@@ -54,6 +58,10 @@ public class ComplexImg implements ImgBase<ComplexPixel> {
 
 	private boolean synchronizePowerSpectrum = false;
 
+	/**
+	 * Creates a new ComplexImg of given dimensions
+	 * @param dims desired dimensions
+	 */
 	public ComplexImg(Dimension dims){
 		this(dims.width, dims.height);
 	}
