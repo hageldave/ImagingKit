@@ -31,16 +31,16 @@ import hageldave.imagingkit.core.scientific.ColorImg;
  * </ul>
  *
  * @author hageldave
- * 
+ *
  */
 public class ComplexImg implements ImgBase<ComplexPixel> {
 
 	/** real part channel index - equal to red channel */
-	public static final int channel_real = ColorImg.channel_r;
+	public static final int CHANNEL_REAL = ColorImg.channel_r;
 	/** imaginary part channel index - equal to green channel */
-	public static final int channel_imag = ColorImg.channel_g;
+	public static final int CHANNEL_IMAG = ColorImg.channel_g;
 	/** power channel index - equal to blue channel */
-	public static final int channel_power = ColorImg.channel_b;
+	public static final int CHANNEL_POWER = ColorImg.channel_b;
 
 	private final int width;
 	private final int height;
@@ -59,27 +59,43 @@ public class ComplexImg implements ImgBase<ComplexPixel> {
 	private boolean synchronizePowerSpectrum = false;
 
 	/**
-	 * Creates a new ComplexImg of given dimensions
+	 * Creates a new ComplexImg of specified dimension
 	 * @param dims desired dimensions
 	 */
 	public ComplexImg(Dimension dims){
 		this(dims.width, dims.height);
 	}
 
+	/**
+	 * Creates a new ComplexImg of specified dimension
+	 * @param width of the image
+	 * @param height of the image
+	 */
 	public ComplexImg(int width, int height) {
 		this(width, height, new double[width*height],new double[width*height],new double[width*height]);
 	}
 
+	/**
+	 * Creates a new ComplexImg of specified dimension, using the provided arrays as channels.
+	 * Only the real channel is mandatory, the others may be null and will then be initialized by the constructor.
+	 * @param width of the image
+	 * @param height of the image
+	 * @param real the real part array to be used by this image (has to have length {@code width*height})
+	 * @param imag (optional, may be null) the imaginary part array to be used by this image (has to have length {@code width*height})
+	 * @param power (optional, may be null) the power channel array to be used by ths image (has to have length {@code width*height})
+	 *
+	 * @throws NullPointerException when real array is null
+	 * @throws IllegalArgumentException when provided arrays are not of length width*height
+	 */
 	public ComplexImg(int width, int height, double[] real, double[] imag, double[] power){
 		// sanity check 1:
-		Objects.requireNonNull(real);
+		this.real = Objects.requireNonNull(real);
 		if(width*height != real.length){
 			throw new IllegalArgumentException(String.format("Provided Dimension (width=%d, height=$d) does not match number of provided Pixels %d", width, height, real.length));
 		}
 
 		this.width = width;
 		this.height = height;
-		this.real = real;
 		this.imag = imag !=null ?  imag:new double[width*height];
 		this.power= power!=null ? power:new double[width*height];
 
@@ -134,18 +150,69 @@ public class ComplexImg implements ImgBase<ComplexPixel> {
 		return copy;
 	}
 
+	/**
+	 * Returns the value of this image at the specified position for the specified channel.
+	 * No bounds checks will be performed, positions outside of this
+	 * image's dimension can either result in a value for a different position
+	 * or an ArrayIndexOutOfBoundsException.
+	 * <p>
+	 * Valid channels are {@link #CHANNEL_REAL}, {@link #CHANNEL_IMAG} and {@link #CHANNEL_POWER}.
+	 * @param x coordinate
+	 * @param y coordinate
+	 * @return value for specified position and channel
+	 * @throws ArrayIndexOutOfBoundsException if resulting index from x and y
+	 * is not within the data arrays bounds or if the specified channel is not in [0,2]
+	 */
 	public double getValue(int channel, int x, int y) {
 		return delegate.getValue(channel, x, y);
 	}
 
+	/**
+	 * Returns the real value (a of a+bi) of this image at the specified position.
+	 * No bounds checks will be performed, positions outside of this
+	 * image's dimension can either result in a value for a different position
+	 * or an ArrayIndexOutOfBoundsException.
+	 * @param x coordinate
+	 * @param y coordinate
+	 * @return real value for specified position
+	 * @throws ArrayIndexOutOfBoundsException if resulting index from x and y
+	 * is not within the data arrays bounds
+	 */
 	public double getValueR(int x, int y) {
 		return delegate.getValueR(x, y);
 	}
 
+	/**
+	 * Returns the imaginary value (b of a+bi) of this image at the specified position.
+	 * No bounds checks will be performed, positions outside of this
+	 * image's dimension can either result in a value for a different position
+	 * or an ArrayIndexOutOfBoundsException.
+	 * @param x coordinate
+	 * @param y coordinate
+	 * @return imaginary value for specified position
+	 * @throws ArrayIndexOutOfBoundsException if resulting index from x and y
+	 * is not within the data arrays bounds
+	 */
 	public double getValueI(int x, int y) {
 		return delegate.getValueG(x, y);
 	}
 
+	/**
+	 * Returns the power value ({@code a*a+b*b} of {@code a+bi}) of this image at the specified position. <br>
+	 * <b>Please Note:</b> there is no guarantee that the power channel is up to date, except when {@link #recomputePowerChannel()}
+	 * has been called before. You can also use {@link #synchronizePowerSpectrum} to enable power spectrum synchronization
+	 * on changes via the set and pixel methods. Alternatively to {@link #getValueP(int, int)} you can use
+	 * {@link #computePower(int, int)}.
+	 * <p>
+	 * No bounds checks will be performed, positions outside of this
+	 * image's dimension can either result in a value for a different position
+	 * or an ArrayIndexOutOfBoundsException.
+	 * @param x coordinate
+	 * @param y coordinate
+	 * @return imaginary value for specified position
+	 * @throws ArrayIndexOutOfBoundsException if resulting index from x and y
+	 * is not within the data arrays bounds
+	 */
 	public double getValueP(int x, int y) {
 		return delegate.getValueB(x, y);
 	}
@@ -361,7 +428,7 @@ public class ComplexImg implements ImgBase<ComplexPixel> {
 	public ColorImg getPowerSpectrumImg(){
 		this.recomputePowerChannel();
 		// get copy of power channel
-		ColorImg powerSpectrum = this.getDelegate().getChannelImage(ComplexImg.channel_power).copy();
+		ColorImg powerSpectrum = this.getDelegate().getChannelImage(ComplexImg.CHANNEL_POWER).copy();
 		// logarithmize values
 		powerSpectrum.forEach(px->px.setValue(0, Math.log(1+px.getValue(0))));
 		// normalize values
@@ -395,7 +462,7 @@ public class ComplexImg implements ImgBase<ComplexPixel> {
 		// calculate power spectrum
 		this.recomputePowerChannel();
 		// get upper bound (used for normalization)
-		final double maxLogPow = Math.log(1+this.getMaxValue(channel_power));
+		final double maxLogPow = Math.log(1+this.getMaxValue(CHANNEL_POWER));
 		ColorImg powerphase = new ColorImg(this.getDimension(), false);
 		// create phase image in L*a*b* color space
 		powerphase.forEach(px->{
