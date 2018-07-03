@@ -4,8 +4,7 @@ import java.util.Arrays;
 import java.util.Random;
 import java.util.function.Consumer;
 
-public class Performance {
-
+public class PerformanceNonlinear {
 	public static void main(String[] args) {
 
 		long time;
@@ -143,16 +142,6 @@ public class Performance {
 			}
 		}
 
-	}
-
-
-	static abstract class IndexedRunnable implements Runnable {
-		int startIndex;
-		int endIndex;
-		public IndexedRunnable(int startIndex, int endIndex) {
-			this.startIndex = startIndex;
-			this.endIndex = endIndex;
-		}
 	}
 
 
