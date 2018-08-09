@@ -91,7 +91,9 @@ public class ComplexImg implements ImgBase<ComplexPixel> {
 		// sanity check 1:
 		this.real = Objects.requireNonNull(real);
 		if(width*height != real.length){
-			throw new IllegalArgumentException(String.format("Provided Dimension (width=%d, height=$d) does not match number of provided Pixels %d", width, height, real.length));
+			throw new IllegalArgumentException(String.format(
+					"Provided Dimension (width=%d, height=$d) does not match number of provided Pixels %d", 
+					width, height, real.length));
 		}
 
 		this.width = width;
@@ -101,7 +103,9 @@ public class ComplexImg implements ImgBase<ComplexPixel> {
 
 		// sanity check 2:
 		if(this.real.length != this.imag.length || this.imag.length != this.power.length){
-			throw new IllegalArgumentException(String.format("Provided data arrays are not of same size. real[%d] imag[%d] power[%d]", this.real.length, this.imag.length, this.power.length));
+			throw new IllegalArgumentException(String.format(
+					"Provided data arrays are not of same size. real[%d] imag[%d] power[%d]", 
+					this.real.length, this.imag.length, this.power.length));
 		}
 
 		this.delegate = new ColorImg(this.width, this.height, this.real, this.imag, this.power, null);
@@ -217,66 +221,191 @@ public class ComplexImg implements ImgBase<ComplexPixel> {
 		return delegate.getValueB(x, y);
 	}
 
+	/**
+	 * See {@link ColorImg#getValue(int, int, int, int)}.
+	 * <p>
+	 * Please Notice that when using {@link #CHANNEL_POWER}, 
+	 * this will not calculate the power in case it is not up to date.
+	 * Use {@link #recomputePowerChannel()} to make sure this method yields reasonable results.
+	 * @param channel one of {@link #CHANNEL_REAL},{@link #CHANNEL_IMAG},{@link #CHANNEL_POWER}(0,1,2)
+	 * @param x coordinate
+	 * @param y coordinate
+	 * @param boundaryMode one of the boundary modes e.g. {@link ColorImg#boundary_mode_repeat_image}
+	 * @return value at specified position or a value depending on the
+	 * boundary mode for out of bounds positions.
+	 */
 	public double getValue(int channel, int x, int y, int boundaryMode) {
 		return delegate.getValue(channel, x, y, boundaryMode);
 	}
 
+	/**
+	 * Equivalent to {@link #getValue(int, int, int, int)} with <br>
+	 * {@code getValue(CHANNEL_REAL, x, y, boundaryMode)}.
+	 * @param x coordinate
+	 * @param y coordinate
+	 * @param boundaryMode one of the boundary modes e.g. {@link ColorImg#boundary_mode_repeat_image}
+	 * @return real part at specified position or a value depending on the
+	 * boundary mode for out of bounds positions.
+	 */
 	public double getValueR(int x, int y, int boundaryMode) {
 		return delegate.getValueR(x, y, boundaryMode);
 	}
 
+	/**
+	 * Equivalent to {@link #getValue(int, int, int, int)} with <br>
+	 * {@code getValue(CHANNEL_IMAG, x, y, boundaryMode)}.
+	 * @param x coordinate
+	 * @param y coordinate
+	 * @param boundaryMode one of the boundary modes e.g. {@link ColorImg#boundary_mode_repeat_image}
+	 * @return imaginary part at specified position or a value depending on the
+	 * boundary mode for out of bounds positions.
+	 */
 	public double getValueI(int x, int y, int boundaryMode) {
 		return delegate.getValueG(x, y, boundaryMode);
 	}
 
+	/**
+	 * Equivalent to {@link #getValue(int, int, int, int)} with <br>
+	 * {@code getValue(CHANNEL_POWER, x, y, boundaryMode)}.
+	 * <p>
+	 * Please Notice that this will not calculate the power in case it is not up to date.
+	 * Use {@link #recomputePowerChannel()} to make sure this method yields reasonable results.
+	 * @param x coordinate
+	 * @param y coordinate
+	 * @param boundaryMode one of the boundary modes e.g. {@link ColorImg#boundary_mode_repeat_image}
+	 * @return power value (real*real+imag*imag) at specified position or a value depending on the
+	 * boundary mode for out of bounds positions.
+	 */
 	public double getValueP(int x, int y, int boundaryMode) {
 		return delegate.getValueB(x, y, boundaryMode);
 	}
 
+	/**
+	 * Returns the index of the pixel with highest value for specified channel
+	 * @param channel one of {@link #CHANNEL_REAL},{@link #CHANNEL_IMAG},{@link #CHANNEL_POWER}(0,1,2)
+	 * @return index of pixel with max channel value
+	 */
 	public int getIndexOfMaxValue(int channel) {
 		return delegate.getIndexOfMaxValue(channel);
 	}
 
+	/**
+	 * Returns the highest value for specified channel
+	 * @param channel one of {@link #CHANNEL_REAL},{@link #CHANNEL_IMAG},{@link #CHANNEL_POWER}(0,1,2)
+	 * @return max channel value
+	 */
 	public double getMaxValue(int channel) {
 		return delegate.getMaxValue(channel);
 	}
 
+	/**
+	 * Returns the index of the pixel with lowest value for specified channel
+	 * @param channel one of {@link #CHANNEL_REAL},{@link #CHANNEL_IMAG},{@link #CHANNEL_POWER}(0,1,2)
+	 * @return index of pixel with min channel value
+	 */
 	public int getIndexOfMinValue(int channel) {
 		return delegate.getIndexOfMinValue(channel);
 	}
 
+	/**
+	 * Returns lowest value for specified channel
+	 * @param channel one of {@link #CHANNEL_REAL},{@link #CHANNEL_IMAG},{@link #CHANNEL_POWER}(0,1,2)
+	 * @return min channel value
+	 */
 	public double getMinValue(int channel) {
 		return delegate.getMinValue(channel);
 	}
 
+	/**
+	 * Bilinearly interpolates the value for the specified channel at the specified coordinates.
+	 * See {@link ColorImg#interpolate(int, double, double)} for details.
+	 * @param channel one of {@link #CHANNEL_REAL},{@link #CHANNEL_IMAG},{@link #CHANNEL_POWER}(0,1,2)
+	 * @param xNormalized coordinate within [0,1]
+	 * @param yNormalized coordinate within [0,1]
+	 * @return bilinearly interpolated value
+	 */
 	public double interpolate(int channel, double xNormalized, double yNormalized) {
 		return delegate.interpolate(channel, xNormalized, yNormalized);
 	}
 
+	/**
+	 * Bilinearly interpolates the real part at the specified coordinates.
+	 * See {@link ColorImg#interpolate(int, double, double)} for details.
+	 * @param xNormalized coordinate within [0,1]
+	 * @param yNormalized coordinate within [0,1]
+	 * @return bilinearly interpolated value
+	 */
 	public double interpolateR(double xNormalized, double yNormalized) {
 		return delegate.interpolateR(xNormalized, yNormalized);
 	}
 
+	/**
+	 * Bilinearly interpolates the imaginary part at the specified coordinates.
+	 * See {@link ColorImg#interpolate(int, double, double)} for details.
+	 * @param xNormalized coordinate within [0,1]
+	 * @param yNormalized coordinate within [0,1]
+	 * @return bilinearly interpolated value
+	 */
 	public double interpolateI(double xNormalized, double yNormalized) {
 		return delegate.interpolateG(xNormalized, yNormalized);
 	}
 
+	/**
+	 * Bilinearly interpolates the power (real*real+imag*imag) at the specified coordinates.
+	 * See {@link ColorImg#interpolate(int, double, double)} for details.
+	 * <p>
+	 * Please Notice that this will not calculate the power in case it is not up to date.
+	 * Use {@link #recomputePowerChannel()} to make sure this method yields reasonable results.
+	 * @param xNormalized coordinate within [0,1]
+	 * @param yNormalized coordinate within [0,1]
+	 * @return bilinearly interpolated value
+	 */
 	public double interpolateP(double xNormalized, double yNormalized) {
 		return delegate.interpolateB(xNormalized, yNormalized);
 	}
 
+	/**
+	 * Equivalent to {@link #getDataReal()}[index].
+	 * @param index of the desired value
+	 * @return value at index
+	 */
 	public double getValueR_atIndex(int index){
 		return real[index];
 	}
 
+	/**
+	 * Equivalent to {@link #getDataImag()}[index].
+	 * @param index of the desired value
+	 * @return value at index
+	 */
 	public double getValueI_atIndex(int index){
 		return imag[index];
 	}
 
+	/**
+	 * Equivalent to {@link #getDataPower()}[index].
+	 * <p>
+	 * Please Notice that this will not calculate the power in case it is not up to date.
+	 * Use {@link #recomputePowerChannel()} before to make sure this method yields reasonable results.
+	 * Alternatively you can use {@link #computePower(int)}.
+	 * @param index of the desired value
+	 * @return value at index
+	 */
 	public double getValueP_atIndex(int index){
 		return power[index];
 	}
 
+	/**
+	 * Equivalent to {@link #getDataReal()}[index] = value.
+	 * <br>
+	 * If {@link #isSynchronizePowerSpectrum()} is true, then this will also
+	 * update the corresponding power value.
+	 * @param index for the value to be set
+	 * @param value to be set at index
+	 * 
+	 * @see #setValueI_atIndex(int, double)
+	 * @see #setComplex_atIndex(int, double, double)
+	 */
 	public void setValueR_atIndex(int index, double value){
 		real[index] = value;
 		if(synchronizePowerSpectrum){
@@ -284,6 +413,17 @@ public class ComplexImg implements ImgBase<ComplexPixel> {
 		}
 	}
 
+	/**
+	 * Equivalent to {@link #getDataImag()}[index] = value.
+	 * <br>
+	 * If {@link #isSynchronizePowerSpectrum()} is true, then this will also
+	 * update the corresponding power value.
+	 * @param index for the value to be set
+	 * @param value to be set at index
+	 * 
+	 * @see #setValueR_atIndex(int, double)
+	 * @see #setComplex_atIndex(int, double, double)
+	 */
 	public void setValueI_atIndex(int index, double value){
 		imag[index] = value;
 		if(synchronizePowerSpectrum){
@@ -291,6 +431,15 @@ public class ComplexImg implements ImgBase<ComplexPixel> {
 		}
 	}
 
+	/**
+	 * Sets real part and imaginary part of the complex number at specified index.
+	 * <br>
+	 * If {@link #isSynchronizePowerSpectrum()} is true, then this will also
+	 * update the corresponding power value.
+	 * @param index for the value to be set
+	 * @param real part
+	 * @param imag part
+	 */
 	public void setComplex_atIndex(int index, double real, double imag){
 		this.real[index] = real;
 		this.imag[index] = imag;
@@ -299,6 +448,7 @@ public class ComplexImg implements ImgBase<ComplexPixel> {
 		}
 	}
 
+	
 	public void setValueR(int x, int y, double value) {
 		int idx=y*width+x;
 		setValueR_atIndex(idx, value);
