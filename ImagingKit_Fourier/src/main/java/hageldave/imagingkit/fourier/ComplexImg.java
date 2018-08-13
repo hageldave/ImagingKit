@@ -448,29 +448,54 @@ public class ComplexImg implements ImgBase<ComplexPixel> {
 		}
 	}
 
-	
+	/**
+	 * Sets the real part at the specified position
+	 * <br>
+	 * If {@link #isSynchronizePowerSpectrum()} is true, then this will also
+	 * update the corresponding power value.
+	 * @param x coordinate
+	 * @param y coordinate
+	 * @param value to be set
+	 */
 	public void setValueR(int x, int y, double value) {
 		int idx=y*width+x;
 		setValueR_atIndex(idx, value);
 	}
 
+	/**
+	 * Sets the imaginary part at the specified position
+	 * <br>
+	 * If {@link #isSynchronizePowerSpectrum()} is true, then this will also
+	 * update the corresponding power value.
+	 * @param x coordinate
+	 * @param y coordinate
+	 * @param value to be set
+	 */
 	public void setValueI(int x, int y, double value) {
 		int idx=y*width+x;
 		setValueI_atIndex(idx, value);
 	}
 
+	/**
+	 * Sets the real and imaginary part at the specified position
+	 * <br>
+	 * If {@link #isSynchronizePowerSpectrum()} is true, then this will also
+	 * update the corresponding power value.
+	 * @param x coordinate
+	 * @param y coordinate
+	 * @param value to be set
+	 */
 	public void setComplex(int x, int y, double real, double imag){
 		int idx=y*width+x;
 		setComplex_atIndex(idx, real, imag);
 	}
 
-	public double computePower(int idx){
-		double r = real[idx];
-		double i = imag[idx];
-		power[idx] = r*r+i*i;
-		return power[idx];
-	}
-
+	/**
+	 * Computes the power for all pixels of this image.
+	 * Subsequent calls to e.g. {@link #getValueP(int, int)} will be up to date
+	 * until real or imaginary parts are modified.
+	 * @return this
+	 */
 	public ComplexImg recomputePowerChannel(){
 		for(int i=0; i<real.length; i++){
 			computePower(i);
@@ -478,57 +503,169 @@ public class ComplexImg implements ImgBase<ComplexPixel> {
 		return this;
 	}
 
+	/**
+	 * Calculates, stores and returns the power at the specified index.
+	 * The power is the squared magnitude of the complex number ( c=a+bi -> power = a*a+b*b ).
+	 * Subsequent calls to e.g. {@link #getValueP_atIndex(int)} will return the stored result.
+	 * @param idx index
+	 * @return power of pixel at index
+	 */
+	public double computePower(int idx){
+		double r = real[idx];
+		double i = imag[idx];
+		power[idx] = r*r+i*i;
+		return power[idx];
+	}
+	
+	/**
+	 * Calculates, stores and returns the power at the specified position.
+	 * The power is the squared magnitude of the complex number ( c=a+bi -> power = a*a+b*b ).
+	 * Subsequent calls to e.g. {@link #getValueP(int, int)} will return the stored result.
+	 * @param x coordinate
+	 * @param y coordinate
+	 * @return power of pixel at position
+	 */
 	public double computePower(int x, int y){
 		return computePower(y*width+x);
 	}
 
+	/**
+	 * Calculates the phase of the pixel at the specified index.
+	 * The phase is the argument of the complex number, i.e. the angle of the complex vector
+	 * in the complex plane. 
+	 * @param idx
+	 * @return the phase in [0,2pi] of the complex number at index
+	 */
 	public double computePhase(int idx){
 		double r = real[idx];
 		double i = imag[idx];
 		return atan2(r, i);
 	}
 
+	/**
+	 * Calculates the phase of the pixel at the specified position.
+	 * The phase is the argument of the complex number, i.e. the angle of the complex vector
+	 * in the complex plane. 
+	 * @param x coordinate
+	 * @param y coordinate
+	 * @return the phase in [0,2pi] of the complex number at position
+	 */
 	public double computePhase(int x, int y){
 		return computePhase(y*width+x);
 	}
 
+	/**
+	 * Fills the specified channel with the specified value.
+	 * All values of this channel will be same afterwards.
+	 * <br>
+	 * If {@link #isSynchronizePowerSpectrum()} is true, then this will also
+	 * call {@link #recomputePowerChannel()}.
+	 * 
+	 * @param channel to fill
+	 * @param value to fill with
+	 * @return this
+	 */
 	public ComplexImg fill(int channel, double value) {
 		delegate.fill(channel, value);
+		if(synchronizePowerSpectrum && (channel == CHANNEL_REAL || channel == CHANNEL_IMAG)){
+			recomputePowerChannel();
+		}
 		return this;
 	}
 
+	/**
+	 * Calls {@link ColorImg#getRemoteBufferedImage()} on delegate ({@link #getDelegate()}).
+	 * <br>
+	 * For display you probably want to use {@link #getPowerSpectrumImg()} or {@link #getPhaseSpectrumImg()}
+	 * 
+	 * @return {@code getDelegate().getRemoteBufferedImage() }
+	 */
 	public BufferedImage getRemoteBufferedImage() {
 		return delegate.getRemoteBufferedImage();
 	}
 
+	/**
+	 * Returns true.
+	 */
 	public boolean supportsRemoteBufferedImage() {
 		return delegate.supportsRemoteBufferedImage();
 	}
 
-	public ColorImg copyArea(int x, int y, int w, int h, ComplexImg dest, int destX, int destY) {
-		return delegate.copyArea(x, y, w, h, dest.delegate, destX, destY);
+	/**
+	 * See {@link ColorImg#copyArea(int, int, int, int, ColorImg, int, int)}
+	 * 
+	 * @param x area origin in this image (x-coordinate)
+	 * @param y area origin in this image (y-coordinate)
+	 * @param w width of area
+	 * @param h height of area
+	 * @param dest destination image
+	 * @param destX area origin in destination image (x-coordinate)
+	 * @param destY area origin in destination image (y-coordinate)
+	 * @return the destination image, or newly created image if destination was null.
+	 * @throws IllegalArgumentException if the specified area is not within
+	 * the bounds of this image or if the size of the area is not positive.
+	 */
+	public ComplexImg copyArea(int x, int y, int w, int h, ComplexImg dest, int destX, int destY) {
+		if(dest == null){
+			dest = new ComplexImg(w, h);
+		}
+		delegate.copyArea(x, y, w, h, dest.delegate, destX, destY);
+		return dest;
 	}
 
+	/**
+	 * Returns the delegate {@link ColorImg} backing this {@link ComplexImg}.
+	 * The delegate is used to implement functionality like {@link #getRemoteBufferedImage()}
+	 * or {@link #interpolate(int, double, double)}.
+	 * @return {@link ColorImg} delegate of this complex image.
+	 */
 	public ColorImg getDelegate(){
 		return delegate;
 	}
 
+	/**
+	 * Returns the real part channel
+	 * @return real part channel
+	 */
 	public double[] getDataReal() {
 		return real;
 	}
 
+	/**
+	 * Returns the imaginary part channel
+	 * @return imaginary part channel
+	 */
 	public double[] getDataImag() {
 		return imag;
 	}
 
+	/**
+	 * Returns the power channel
+	 * @return power spectrum channel
+	 */
 	public double[] getDataPower() {
 		return power;
 	}
 
+	/**
+	 * Returns wether {@link #enableSynchronizePowerSpectrum(boolean)} has been set to true or false
+	 * @return true when synchronization is enabled, else false
+	 */
 	public boolean isSynchronizePowerSpectrum() {
 		return synchronizePowerSpectrum;
 	}
 
+	/**
+	 * Enables or disables power channel synchronization.
+	 * When enabled this will update the power value (squared magnitude of the complex number) when changes to
+	 * the real or imaginary values are made.
+	 * Only changes made using methods like {@link #setValueR(int, int, double)} or {@link ComplexPixel#setImag(double)}
+	 * will result in the power being updated, indirect modifications via {@link #getDataReal()} or {@link #getDelegate()}
+	 * are not noticed.
+	 * When enabling, this will also call {@link #recomputePowerChannel()} in order to have the power synchronized
+	 * @param synchronizePowerSpectrum true when enabling, false when disabling
+	 * @return this
+	 */
 	public ComplexImg enableSynchronizePowerSpectrum(boolean synchronizePowerSpectrum) {
 		this.synchronizePowerSpectrum = synchronizePowerSpectrum;
 		if(synchronizePowerSpectrum){
@@ -537,6 +674,20 @@ public class ComplexImg implements ImgBase<ComplexPixel> {
 		return this;
 	}
 
+	/**
+	 * Shifts this image by the specified translation.
+	 * The shift is torus like, so when shifting pixels to the right over the image border, 
+	 * they will reappear on the left side of the image.
+	 * This is useful when the DC value should be centered instead of in the top left corner
+	 * (you may use {@link #shiftCornerToCenter()} for this special task though).
+	 * To reset use {@link #resetShift()}, 
+	 * use {@link #getCurrentXshift()} and {@link #getCurrentYshift()} to get the current shift
+	 * of this image.
+	 * 
+	 * @param x shift (positive shifts right)
+	 * @param y shift (positive shift down)
+	 * @return this
+	 */
 	public ComplexImg shift(int x, int y){
 		while(x < 0) x += getWidth();
 		while(y < 0) y += getHeight();
@@ -550,19 +701,38 @@ public class ComplexImg implements ImgBase<ComplexPixel> {
 		return this;
 	}
 
+	/**
+	 * Shifts the image so that the current top left pixel (0,0) will be at the center 
+	 * (width/2, height/2).
+	 * Useful when you want to display the spectrum where DC is in the center.
+	 * @return this
+	 */
 	public ComplexImg shiftCornerToCenter(){
 		return shift(width/2, height/2);
 	}
 
+	/**
+	 * Resets the current shift, so that DC is in top left corner (0,0).
+	 * @return this
+	 */
 	public ComplexImg resetShift(){
 		return shift(width-currentXshift, height-currentYshift);
 	}
 
+	/**
+	 * Sets the current shift values
+	 * @param xshift shift in x direction
+	 * @param yshift shift in y direction
+	 */
 	protected void setCurrentShift(int xshift, int yshift){
 		this.currentXshift = xshift%width;
 		this.currentYshift = yshift%height;
 	}
 
+	/**
+	 * Returns the real part of the DC value, i.e. the zero frequency component.
+	 * @return DC value
+	 */
 	public double getDCreal(){
 		return getValueR(currentXshift, currentYshift);
 	}
