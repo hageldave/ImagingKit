@@ -737,14 +737,31 @@ public class ComplexImg implements ImgBase<ComplexPixel> {
 		return getValueR(currentXshift, currentYshift);
 	}
 
+	/**
+	 * Returns the current shift in x direction
+	 * @return x direction shift
+	 */
 	public int getCurrentXshift() {
 		return currentXshift;
 	}
 
+	/**
+	 * Returns the current shift in y direction
+	 * @return y direction shift
+	 */
 	public int getCurrentYshift() {
 		return currentYshift;
 	}
 
+	/**
+	 * Returns a {@link ColorImg} consisting of this ComplexImg's power channel
+	 * log-scaled for display.
+	 * Values are displayed in grayscale.
+	 * @return image of power spectrum for display
+	 * 
+	 * @see #getPhaseSpectrumImg()
+	 * @see #getPowerPhaseSpectrumImg()
+	 */
 	public ColorImg getPowerSpectrumImg(){
 		this.recomputePowerChannel();
 		// get copy of power channel
@@ -759,6 +776,17 @@ public class ComplexImg implements ImgBase<ComplexPixel> {
 		return powerSpectrum;
 	}
 
+	/**
+	 * Returns a {@link ColorImg} showing the phase of this ComplexImg intended for display.
+	 * The phase angle values are mapped to the a*b* plane of CIE L*a*b* so that same color 
+	 * indicates same angle. 
+	 * CIE L*a*b* is chosen to ensure a perceived constant luminance of the colors. 
+	 * 
+	 * @return phase spectrum image for display
+	 * 
+	 * @see #getPowerSpectrumImg()
+	 * @see #getPowerPhaseSpectrumImg()
+	 */
 	public ColorImg getPhaseSpectrumImg(){
 		ColorImg phaseImg = new ColorImg(this.getDimension(), false);
 		// compute phase colors
@@ -778,6 +806,17 @@ public class ComplexImg implements ImgBase<ComplexPixel> {
 		return phaseImg;
 	}
 
+	/**
+	 * Returns a combination of power and phase spectrum image for display.
+	 * This maps power (squared magnitude) to luminance and phase angle to color.
+	 * As in {@link #getPhaseSpectrumImg()} color is mapped to the a*b* plane of 
+	 * CIE L*a*b* to ensure constant perceived luminance for constant power.
+	 * 
+	 * @return power phase spectrum image (combination of both spectra) for display
+	 * 
+	 * @see #getPowerSpectrumImg()
+	 * @see #getPhaseSpectrumImg()
+	 */
 	public ColorImg getPowerPhaseSpectrumImg(){
 		// calculate power spectrum
 		this.recomputePowerChannel();
@@ -808,6 +847,14 @@ public class ComplexImg implements ImgBase<ComplexPixel> {
 	}
 
 	private final static double TWOPI = Math.PI*2;
+	/**
+	 * Returns angle of point (x,y) in polar coordinates.
+	 * Other than {@link Math#atan2(double, double)} this
+	 * returns a value in [0, 2pi] instead of [-pi, pi].
+	 * @param x coord of point
+	 * @param y coord of point
+	 * @return angle of point in polar coords
+	 */
 	public static double atan2(double x, double y){
 		return (TWOPI+Math.atan2(y,x))%TWOPI;
 	}
