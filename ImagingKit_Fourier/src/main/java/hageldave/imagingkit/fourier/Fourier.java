@@ -1,7 +1,6 @@
 package hageldave.imagingkit.fourier;
 
 import java.awt.Dimension;
-import java.util.Arrays;
 
 import hageldave.ezfftw.dp.FFT;
 import hageldave.ezfftw.dp.FFTW_Guru;
@@ -15,193 +14,96 @@ import hageldave.imagingkit.core.scientific.ColorPixel;
 
 public class Fourier {
 
-	public static ComplexImg[] transform(ColorImg img, int ...channels) {
-		sanityCheckForward(img, channels);
-		// make transforms
-		ComplexImg[] fourierPerChannel = new ComplexImg[channels.length];
-		for(int i = 0; i < channels.length; i++){
-			int ch = channels[i];
-			ComplexImg transformed = new ComplexImg(img.getDimension());
-			FFT.fft(
-					img.getData()[ch], // input
-					transformed.getDataReal(), // real out
-					transformed.getDataImag(), // imaginary out
-					img.getWidth(), img.getHeight()); // dimensions
-			fourierPerChannel[i] = transformed;
-		}
-		return fourierPerChannel;
+	/**
+	 * Fourier transforms the specified channel of the specified {@link ColorImg}.
+	 * @param img of which one channel is to be transformed
+	 * @param channel the channel which will be transformed
+	 * @return the transform as ComplexImg
+	 */
+	public static ComplexImg transform(ColorImg img, int channel) {
+		sanityCheckForward(img, channel);
+		// transform
+		ComplexImg transformed = new ComplexImg(img.getDimension());
+		FFT.fft(
+				img.getData()[channel], // input
+				transformed.getDataReal(), // real out
+				transformed.getDataImag(), // imaginary out
+				img.getWidth(), img.getHeight()); // dimensions
+		return transformed;
 	}
 	
-	public static ComplexImg[] transformHorizontal(ColorImg img, int ...channels) {
+	/**
+	 * Executes row wise Fourier transforms of the specified channel of the specified {@link ColorImg}.
+	 * A 1-dimensional Fourier transform is done for each row of the image's channel.
+	 * @param img of which one channel is to be transformed
+	 * @param channel the channel which will be transformed
+	 * @return transform as ComplexImg
+	 */
+	public static ComplexImg transformHorizontal(ColorImg img, int channel) {
 		// sanity checks
-		sanityCheckForward(img, channels);
+		sanityCheckForward(img, channel);
 		// make transforms
-		ComplexImg[] fourierPerChannel = new ComplexImg[channels.length];
-		for(int i = 0; i < channels.length; i++){
-			int ch = channels[i];
-			ComplexImg transformed = new ComplexImg(img.getDimension());
-			try(
+		ComplexImg transformed = new ComplexImg(img.getDimension());
+		try(
 				NativeRealArray row = new NativeRealArray(img.getWidth());
 				NativeRealArray fft_r = new NativeRealArray(row.length);
 				NativeRealArray fft_i = new NativeRealArray(row.length);
-			) {
-				for(int y = 0; y < img.getHeight(); y++){
-					row.set(0, img.getWidth(), y*img.getWidth(), img.getData()[ch]);
-					FFTW_Guru.execute_split_r2c(row, fft_r, fft_i, img.getWidth());
-					fft_r.get(0, img.getWidth(), y*img.getWidth(), transformed.getDataReal());
-					fft_i.get(0, img.getWidth(), y*img.getWidth(), transformed.getDataImag());
-				}
+		) {
+			for(int y = 0; y < img.getHeight(); y++){
+				row.set(0, img.getWidth(), y*img.getWidth(), img.getData()[channel]);
+				FFTW_Guru.execute_split_r2c(row, fft_r, fft_i, img.getWidth());
+				fft_r.get(0, img.getWidth(), y*img.getWidth(), transformed.getDataReal());
+				fft_i.get(0, img.getWidth(), y*img.getWidth(), transformed.getDataImag());
 			}
-			fourierPerChannel[i] = transformed;
 		}
-		return fourierPerChannel;
+		return transformed;
 	}
 	
-	public static ComplexImg[] transformVertical(ColorImg img, int ...channels) {
-		sanityCheckForward(img, channels);
+	/**
+	 * Executes column wise Fourier transforms of the specified channel of the specified {@link ColorImg}.
+	 * A 1-dimensional Fourier transform is done for each column of the image's channel.
+	 * @param img of which one channel is to be transformed
+	 * @param channel the channel which will be transformed
+	 * @return transform as ComplexImg
+	 */
+	public static ComplexImg transformVertical(ColorImg img, int channel) {
+		sanityCheckForward(img, channel);
 		// make transforms
-		ComplexImg[] fourierPerChannel = new ComplexImg[channels.length];
-		for(int i = 0; i < channels.length; i++){
-			int ch = channels[i];
-			ComplexImg transformed = new ComplexImg(img.getDimension());
-			try(
+		ComplexImg transformed = new ComplexImg(img.getDimension());
+		try(
 				NativeRealArray col = new NativeRealArray(img.getHeight());
 				NativeRealArray fft_r = new NativeRealArray(col.length);
 				NativeRealArray fft_i = new NativeRealArray(col.length);
-			) {
-				ColorPixel px = img.getPixel();
-				ComplexPixel tpx = transformed.getPixel();
-				
-				for(int x = 0; x < img.getWidth(); x++){
-					for(int y = 0; y < img.getHeight(); y++){
-						px.setPosition(x, y);
-						col.set(y, px.getValue(ch));
-					}
-					FFTW_Guru.execute_split_r2c(col, fft_r, fft_i, img.getHeight());
-					for(int y = 0; y < img.getHeight(); y++){
-						tpx.setPosition(x, y);
-						tpx.setComplex(fft_r.get(y), fft_i.get(y));
-					}
+		) {
+			ColorPixel px = img.getPixel();
+			ComplexPixel tpx = transformed.getPixel();
+			for(int x = 0; x < img.getWidth(); x++){
+				for(int y = 0; y < img.getHeight(); y++){
+					px.setPosition(x, y);
+					col.set(y, px.getValue(channel));
+				}
+				FFTW_Guru.execute_split_r2c(col, fft_r, fft_i, img.getHeight());
+				for(int y = 0; y < img.getHeight(); y++){
+					tpx.setPosition(x, y);
+					tpx.setComplex(fft_r.get(y), fft_i.get(y));
 				}
 			}
-			fourierPerChannel[i] = transformed;
 		}
-		return fourierPerChannel;
+		return transformed;
 	}
 	
-	public static ColorImg inverseTransformHorizontal(ColorImg target, ComplexImg[] fourierPerChannel, int...channels) {
-		sanityCheckInverse_fftsAndChannels(fourierPerChannel, channels);
-		Dimension dim = fourierPerChannel[0].getDimension();
-		// if no target was specified create a new one
-		if(target == null) {
-			target = new ColorImg(dim, Arrays.asList(channels).contains(ColorImg.channel_a));
-		}
-		// continue sanity checks
-		sanityCheckInverse_target(target, dim, channels);
-		// now do the transforms
-		for(int c = 0; c < channels.length; c++){
-			int ch = channels[c];
-			ComplexImg fourier = fourierPerChannel[c];
-			try(
-					NativeRealArray row = new NativeRealArray(target.getWidth());
-					NativeRealArray fft_r = new NativeRealArray(row.length);
-					NativeRealArray fft_i = new NativeRealArray(row.length);
-			){
-				if(fourier.getCurrentXshift() != 0 || fourier.getCurrentYshift() != 0){
-					ComplexValuedSampler complexIn = getSamplerForShiftedComplexImg(fourier);
-					for(int y = 0; y < target.getHeight(); y++){
-						for(int x = 0; x < target.getWidth(); x++){
-							fft_r.set(x, complexIn.getValueAt(false, x,y));
-							fft_i.set(x, complexIn.getValueAt(true,  x,y));
-						}
-						FFTW_Guru.execute_split_c2r(fft_r, fft_i, row, target.getWidth());
-						row.get(0, target.getWidth(), y*target.getWidth(), target.getData()[ch]);
-					}
-				} else {
-					for(int y = 0; y < target.getHeight(); y++){
-						fft_r.set(0, target.getWidth(), y*target.getWidth(), fourier.getDataReal());
-						fft_i.set(0, target.getWidth(), y*target.getWidth(), fourier.getDataImag());
-						FFTW_Guru.execute_split_c2r(fft_r, fft_i, row, target.getWidth());
-						row.get(0, target.getWidth(), y*target.getWidth(), target.getData()[ch]);
-					}
-				}
-			}
-			double scaling = 1.0/target.getWidth();
-			ArrayUtils.scaleArray(target.getData()[ch], scaling);
-		}
-		
-		return target;
-	}
-	
-	public static ColorImg inverseTransformVertical(ColorImg target, ComplexImg[] fourierPerChannel, int...channels) {
-		sanityCheckInverse_fftsAndChannels(fourierPerChannel, channels);
-		Dimension dim = fourierPerChannel[0].getDimension();
-		// if no target was specified create a new one
-		if(target == null) {
-			target = new ColorImg(dim, Arrays.asList(channels).contains(ColorImg.channel_a));
-		}
-		// continue sanity checks
-		sanityCheckInverse_target(target, dim, channels);
-		// now do the transforms
-		for(int c = 0; c < channels.length; c++){
-			int ch = channels[c];
-			ComplexImg fourier = fourierPerChannel[c];
-			try(
-					NativeRealArray col = new NativeRealArray(target.getHeight());
-					NativeRealArray fft_r = new NativeRealArray(col.length);
-					NativeRealArray fft_i = new NativeRealArray(col.length);
-			){
-				ComplexValuedSampler complexIn = getSamplerForShiftedComplexImg(fourier);
-				ColorPixel px = target.getPixel();
-				for(int x = 0; x < target.getWidth(); x++){
-					for(int y = 0; y < target.getHeight(); y++){
-						fft_r.set(y, complexIn.getValueAt(false, x,y));
-						fft_i.set(y, complexIn.getValueAt(true,  x,y));
-					}
-					FFTW_Guru.execute_split_c2r(fft_r, fft_i, col, target.getHeight());
-					for(int y = 0; y < target.getHeight(); y++){
-						px.setPosition(x, y);
-						px.setValue(ch, col.get(y));
-					}
-				}
-			}
-			double scaling = 1.0/target.getHeight();
-			ArrayUtils.scaleArray(target.getData()[ch], scaling);
-		}
-		
-		return target;
-	}
-	
-	public static ColorImg inverseTransform(ColorImg target, ComplexImg[] fourierPerChannel, int...channels) {
-		sanityCheckInverse_fftsAndChannels(fourierPerChannel, channels);
-		Dimension dim = fourierPerChannel[0].getDimension();
-		// if no target was specified create a new one
-		if(target == null) {
-			target = new ColorImg(dim, Arrays.asList(channels).contains(ColorImg.channel_a));
-		}
-		// continue sanity checks
-		sanityCheckInverse_target(target, dim, channels);
-		// now do the transforms
-		for(int c = 0; c < channels.length; c++){
-			int ch = channels[c];
-			ComplexImg fourier = fourierPerChannel[c];
-			if(fourier.getCurrentXshift() != 0 || fourier.getCurrentYshift() != 0){
-				ComplexValuedSampler complexIn = getSamplerForShiftedComplexImg(fourier);
-				RowMajorArrayAccessor realOut = new RowMajorArrayAccessor(target.getData()[ch], target.getWidth(), target.getHeight());
-				FFT.ifft(complexIn, realOut, realOut.getDimensions());
-			} else {
-				FFT.ifft(	fourier.getDataReal(), 
-							fourier.getDataImag(), 
-							target.getData()[ch], 
-							target.getWidth(), target.getHeight());
-			}
-			double scaling = 1.0/target.numValues();
-			ArrayUtils.scaleArray(target.getData()[ch], scaling);
-		}
-		
-		return target;
-	}
-	
+	/**
+	 * Fourier transforms the specified {@link ComplexImg} (inversely if specified).
+	 * The result of the transform will be stored in the specified target image (if specified, may be null).
+	 * Shifts of the specified images are taken into account, so that the transform is independent of the
+	 * shift of the transformed image and the resulting transform will be shifted according to the targets shift.
+	 * @param inverse calculates inverse transform if true, otherwise forward transform
+	 * @param toTransform ComplexImg to be transformed
+	 * @param target (may be null) the target image for the transform.
+	 * @return target image or new {@link ComplexImg} if target was null
+	 * 
+	 * @throws IllegalArgumentException if specified target does not match dimensions of transformed image
+	 */
 	public static ComplexImg transform(final boolean inverse, ComplexImg toTransform, ComplexImg target){
 		if(target == null){
 			target = new ComplexImg(toTransform.getDimension());
@@ -249,53 +151,140 @@ public class Fourier {
 		}
 		return target;
 	}
-	
-	private static void sanityCheckForward(ColorImg img, int ...channels) throws IllegalArgumentException {
-		if(channels.length < 1 || channels.length > 4){
-			throw new IllegalArgumentException(
-					"Need to at least specify 1 channel, can at most specify 4 (ARGB). Got " + channels.length);
+
+	/**
+	 * Executes the inverse Fourier transforms on the specified {@link ComplexImg} that corresponds
+	 * to a specific channel of a {@link ColorImg} defined by the channel argument.
+	 * The resulting transform will be stored in the specified channel of the specified target.
+	 * If target is null a new ColorImg will be created and returned.
+	 * <p>
+	 * If the alpha channel was specified the specified target has to contain an alpha channel 
+	 * ({@link ColorImg#hasAlpha()}).
+	 * 
+	 * @param target image where the transform is stored to
+	 * @param fourier the ComplexImg that will be transformed and corresponds to the specified channel
+	 * @param channel the specified ComplexImg correspond to
+	 * @return the target img or a new ColorImg if target was null
+	 * 
+	 * @throws IllegalArgumentException <br>
+	 * if images are not of the same dimensions <br>
+	 * if alpha is specified as channel but specified target (if not null) is does not have an alpha channel
+	 */
+	public static ColorImg inverseTransform(ColorImg target, ComplexImg fourier, int channel) {
+		Dimension dim = fourier.getDimension();
+		// if no target was specified create a new one
+		if(target == null) {
+			target = new ColorImg(dim, channel==ColorImg.channel_a);
 		}
-		for(int ch: channels){
-			if( ch < 0 || ch > 3 || (ch > 2 && !img.hasAlpha()) ){
-				throw new IllegalArgumentException(String.format(
-						"Channels can be 0,1,2 (also 3 if image has alpha). But one channel is %d and image %s alpha",
-						ch, img.hasAlpha() ? "has":"does not have"));
+		// continue sanity checks
+		sanityCheckInverse_target(target, dim, channel);
+		// now do the transforms
+		if(fourier.getCurrentXshift() != 0 || fourier.getCurrentYshift() != 0){
+			ComplexValuedSampler complexIn = getSamplerForShiftedComplexImg(fourier);
+			RowMajorArrayAccessor realOut = new RowMajorArrayAccessor(target.getData()[channel], target.getWidth(), target.getHeight());
+			FFT.ifft(complexIn, realOut, realOut.getDimensions());
+		} else {
+			FFT.ifft(	fourier.getDataReal(), 
+						fourier.getDataImag(), 
+						target.getData()[channel], 
+						target.getWidth(), target.getHeight());
+		}
+		double scaling = 1.0/target.numValues();
+		ArrayUtils.scaleArray(target.getData()[channel], scaling);
+		return target;
+	}
+
+	
+	public static ColorImg inverseTransformHorizontal(ColorImg target, ComplexImg fourier, int channel) {
+		Dimension dim = fourier.getDimension();
+		// if no target was specified create a new one
+		if(target == null) {
+			target = new ColorImg(dim, channel==ColorImg.channel_a);
+		}
+		// continue sanity checks
+		sanityCheckInverse_target(target, dim, channel);
+		// now do the transforms
+		try(
+				NativeRealArray row = new NativeRealArray(target.getWidth());
+				NativeRealArray fft_r = new NativeRealArray(row.length);
+				NativeRealArray fft_i = new NativeRealArray(row.length);
+		){
+			if(fourier.getCurrentXshift() != 0 || fourier.getCurrentYshift() != 0){
+				ComplexValuedSampler complexIn = getSamplerForShiftedComplexImg(fourier);
+				for(int y = 0; y < target.getHeight(); y++){
+					for(int x = 0; x < target.getWidth(); x++){
+						fft_r.set(x, complexIn.getValueAt(false, x,y));
+						fft_i.set(x, complexIn.getValueAt(true,  x,y));
+					}
+					FFTW_Guru.execute_split_c2r(fft_r, fft_i, row, target.getWidth());
+					row.get(0, target.getWidth(), y*target.getWidth(), target.getData()[channel]);
+				}
+			} else {
+				for(int y = 0; y < target.getHeight(); y++){
+					fft_r.set(0, target.getWidth(), y*target.getWidth(), fourier.getDataReal());
+					fft_i.set(0, target.getWidth(), y*target.getWidth(), fourier.getDataImag());
+					FFTW_Guru.execute_split_c2r(fft_r, fft_i, row, target.getWidth());
+					row.get(0, target.getWidth(), y*target.getWidth(), target.getData()[channel]);
+				}
 			}
 		}
+		double scaling = 1.0/target.getWidth();
+		ArrayUtils.scaleArray(target.getData()[channel], scaling);
+		return target;
 	}
 	
-	private static void sanityCheckInverse_fftsAndChannels(ComplexImg[] fourierPerChannel, int ...channels) throws IllegalArgumentException {
-		if(channels.length < 1 || channels.length > 4){
-			throw new IllegalArgumentException(
-					"Need to at least specify 1 channel, can at most specify 4 (ARGB). Got " + channels.length);
+	public static ColorImg inverseTransformVertical(ColorImg target, ComplexImg fourier, int channel) {
+		Dimension dim = fourier.getDimension();
+		// if no target was specified create a new one
+		if(target == null) {
+			target = new ColorImg(dim, channel==ColorImg.channel_a);
 		}
-		for(int ch: channels){
-			if( ch < 0 || ch > 3 ){
-				throw new IllegalArgumentException(String.format("Channels can be 0,1,2,3. But one channel is %d", ch));
+		// continue sanity checks
+		sanityCheckInverse_target(target, dim, channel);
+		// now do the transforms
+		try(
+				NativeRealArray col = new NativeRealArray(target.getHeight());
+				NativeRealArray fft_r = new NativeRealArray(col.length);
+				NativeRealArray fft_i = new NativeRealArray(col.length);
+		){
+			ComplexValuedSampler complexIn = getSamplerForShiftedComplexImg(fourier);
+			ColorPixel px = target.getPixel();
+			for(int x = 0; x < target.getWidth(); x++){
+				for(int y = 0; y < target.getHeight(); y++){
+					fft_r.set(y, complexIn.getValueAt(false, x,y));
+					fft_i.set(y, complexIn.getValueAt(true,  x,y));
+				}
+				FFTW_Guru.execute_split_c2r(fft_r, fft_i, col, target.getHeight());
+				for(int y = 0; y < target.getHeight(); y++){
+					px.setPosition(x, y);
+					px.setValue(channel, col.get(y));
+				}
 			}
 		}
-		if(fourierPerChannel.length != channels.length) {
+		double scaling = 1.0/target.getHeight();
+		ArrayUtils.scaleArray(target.getData()[channel], scaling);
+		return target;
+	}
+	
+	
+	
+	private static void sanityCheckForward(ColorImg img, int channel) throws IllegalArgumentException {
+		if( channel < 0 || channel > 3 || (channel > 2 && !img.hasAlpha()) ){
 			throw new IllegalArgumentException(String.format(
-					"Number of provided fourier images does not match number of specified channels. %d images, %d channels"
-					,fourierPerChannel.length, channels.length));
-		}
-		Dimension dim = fourierPerChannel[0].getDimension();
-		for(ComplexImg f: fourierPerChannel){
-			if(!f.getDimension().equals(dim)){
-				throw new IllegalArgumentException("Dimensions of fourier images, are inconsistent. They have to be equal.");
-			}
+					"Channels can be 0,1,2 (also 3 if image has alpha). But channel is %d and image %s alpha",
+					channel, img.hasAlpha() ? "has":"does not have"));
 		}
 	}
 	
-	private static void sanityCheckInverse_target(ColorImg target, Dimension dim, int...channels) throws IllegalArgumentException {
+	private static void sanityCheckInverse_target(ColorImg target, Dimension dim, int channel) throws IllegalArgumentException {
 		if(!target.getDimension().equals(dim)){
 			throw new IllegalArgumentException(String.format(
-					"The specified target image has wrong dimensions (%s). Fourier images have %s.", 
+					"The specified target image has wrong dimensions (%s). Fourier image has %s.", 
 					target.getDimension(), dim));
 		}
-		if(Arrays.asList(channels).contains(ColorImg.channel_a) && !target.hasAlpha()){
+		if(channel==ColorImg.channel_a && !target.hasAlpha()){
 			throw new IllegalArgumentException(
-					"One of the specified channels is alpha, but the specified target image has no alpha.");
+					"Specified channel is alpha, but the specified target image has no alpha.");
 		}
 	}
 	

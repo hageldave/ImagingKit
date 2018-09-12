@@ -50,7 +50,7 @@ public class ComplexImg implements ImgBase<ComplexPixel> {
 	/* power spectrum: real*real+imag*imag */
 	private final double[] power;
 
-	/* delegate image for operations like interpolate that already are implemented */
+	/* delegate image for operations like interpolate that are already implemented */
 	private final ColorImg delegate;
 
 	private int currentXshift = 0;
