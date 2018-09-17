@@ -17,6 +17,8 @@ import hageldave.imagingkit.core.scientific.ColorPixel;
  * @author hageldave
  */
 public class Fourier {
+	
+	private Fourier(){/* not constructable */}
 
 	/**
 	 * Fourier transforms the specified channel of the specified {@link ColorImg}.
@@ -349,9 +351,9 @@ public class Fourier {
 					ini.set(y, complexIn.getValueAt(true,  x,y));
 				}
 				if(inverse){
-					FFTW_Guru.execute_split_c2c(ini,inr, outi,outr, w);
+					FFTW_Guru.execute_split_c2c(ini,inr, outi,outr, h);
 				} else {
-					FFTW_Guru.execute_split_c2c(ini,inr, outi,outr, w);
+					FFTW_Guru.execute_split_c2c(ini,inr, outi,outr, h);
 				}
 				for(int y = 0; y < h; y++){
 					complexOut.setValueAt(outr.get(y), false, x,y);
