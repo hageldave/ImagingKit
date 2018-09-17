@@ -33,66 +33,6 @@ public class Fourier {
 	}
 	
 	/**
-	 * Executes row wise Fourier transforms of the specified channel of the specified {@link ColorImg}.
-	 * A 1-dimensional Fourier transform is done for each row of the image's channel.
-	 * @param img of which one channel is to be transformed
-	 * @param channel the channel which will be transformed
-	 * @return transform as ComplexImg
-	 */
-	public static ComplexImg transformHorizontal(ColorImg img, int channel) {
-		// sanity checks
-		sanityCheckForward(img, channel);
-		// make transforms
-		ComplexImg transformed = new ComplexImg(img.getDimension());
-		try(
-				NativeRealArray row = new NativeRealArray(img.getWidth());
-				NativeRealArray fft_r = new NativeRealArray(row.length);
-				NativeRealArray fft_i = new NativeRealArray(row.length);
-		) {
-			for(int y = 0; y < img.getHeight(); y++){
-				row.set(0, img.getWidth(), y*img.getWidth(), img.getData()[channel]);
-				FFTW_Guru.execute_split_r2c(row, fft_r, fft_i, img.getWidth());
-				fft_r.get(0, img.getWidth(), y*img.getWidth(), transformed.getDataReal());
-				fft_i.get(0, img.getWidth(), y*img.getWidth(), transformed.getDataImag());
-			}
-		}
-		return transformed;
-	}
-	
-	/**
-	 * Executes column wise Fourier transforms of the specified channel of the specified {@link ColorImg}.
-	 * A 1-dimensional Fourier transform is done for each column of the image's channel.
-	 * @param img of which one channel is to be transformed
-	 * @param channel the channel which will be transformed
-	 * @return transform as ComplexImg
-	 */
-	public static ComplexImg transformVertical(ColorImg img, int channel) {
-		sanityCheckForward(img, channel);
-		// make transforms
-		ComplexImg transformed = new ComplexImg(img.getDimension());
-		try(
-				NativeRealArray col = new NativeRealArray(img.getHeight());
-				NativeRealArray fft_r = new NativeRealArray(col.length);
-				NativeRealArray fft_i = new NativeRealArray(col.length);
-		) {
-			ColorPixel px = img.getPixel();
-			ComplexPixel tpx = transformed.getPixel();
-			for(int x = 0; x < img.getWidth(); x++){
-				for(int y = 0; y < img.getHeight(); y++){
-					px.setPosition(x, y);
-					col.set(y, px.getValue(channel));
-				}
-				FFTW_Guru.execute_split_r2c(col, fft_r, fft_i, img.getHeight());
-				for(int y = 0; y < img.getHeight(); y++){
-					tpx.setPosition(x, y);
-					tpx.setComplex(fft_r.get(y), fft_i.get(y));
-				}
-			}
-		}
-		return transformed;
-	}
-	
-	/**
 	 * Fourier transforms the specified {@link ComplexImg} (inversely if specified).
 	 * The result of the transform will be stored in the specified target image (if specified, may be null).
 	 * Shifts of the specified images are taken into account, so that the transform is independent of the
@@ -151,6 +91,176 @@ public class Fourier {
 		}
 		return target;
 	}
+	
+	/**
+	 * Executes row wise Fourier transforms of the specified channel of the specified {@link ColorImg}.
+	 * A 1-dimensional Fourier transform is done for each row of the image's channel.
+	 * @param img of which one channel is to be transformed
+	 * @param channel the channel which will be transformed
+	 * @return transform as ComplexImg
+	 */
+	public static ComplexImg horizontalTransform(ColorImg img, int channel) {
+		// sanity checks
+		sanityCheckForward(img, channel);
+		// make transforms
+		ComplexImg transformed = new ComplexImg(img.getDimension());
+		try(
+				NativeRealArray row = new NativeRealArray(img.getWidth());
+				NativeRealArray fft_r = new NativeRealArray(row.length);
+				NativeRealArray fft_i = new NativeRealArray(row.length);
+		) {
+			for(int y = 0; y < img.getHeight(); y++){
+				row.set(0, img.getWidth(), y*img.getWidth(), img.getData()[channel]);
+				FFTW_Guru.execute_split_r2c(row, fft_r, fft_i, img.getWidth());
+				fft_r.get(0, img.getWidth(), y*img.getWidth(), transformed.getDataReal());
+				fft_i.get(0, img.getWidth(), y*img.getWidth(), transformed.getDataImag());
+			}
+		}
+		return transformed;
+	}
+	
+	/**
+	 * Executes column wise Fourier transforms of the specified channel of the specified {@link ColorImg}.
+	 * A 1-dimensional Fourier transform is done for each column of the image's channel.
+	 * @param img of which one channel is to be transformed
+	 * @param channel the channel which will be transformed
+	 * @return transform as ComplexImg
+	 */
+	public static ComplexImg verticalTransform(ColorImg img, int channel) {
+		sanityCheckForward(img, channel);
+		// make transforms
+		ComplexImg transformed = new ComplexImg(img.getDimension());
+		try(
+				NativeRealArray col = new NativeRealArray(img.getHeight());
+				NativeRealArray fft_r = new NativeRealArray(col.length);
+				NativeRealArray fft_i = new NativeRealArray(col.length);
+		) {
+			ColorPixel px = img.getPixel();
+			ComplexPixel tpx = transformed.getPixel();
+			for(int x = 0; x < img.getWidth(); x++){
+				for(int y = 0; y < img.getHeight(); y++){
+					px.setPosition(x, y);
+					col.set(y, px.getValue(channel));
+				}
+				FFTW_Guru.execute_split_r2c(col, fft_r, fft_i, img.getHeight());
+				for(int y = 0; y < img.getHeight(); y++){
+					tpx.setPosition(x, y);
+					tpx.setComplex(fft_r.get(y), fft_i.get(y));
+				}
+			}
+		}
+		return transformed;
+	}
+	
+	/**
+	 * Executes row wise Fourier transforms of the specified {@link ComplexImg} (inversely if specified).
+	 * The result of the transform will be stored in the specified target image (if specified, may be null).
+	 * Shifts of the specified images are taken into account, so that the transform is independent of the
+	 * shift of the transformed image and the resulting transform will be shifted according to the targets shift.
+	 * @param inverse calculates inverse transforms if true, otherwise forward transform
+	 * @param toTransform ComplexImg to be transformed
+	 * @param target (may be null) the target image for the transform.
+	 * @return target image or new {@link ComplexImg} if target was null
+	 * 
+	 * @throws IllegalArgumentException if specified target does not match dimensions of transformed image
+	 */
+	public static ComplexImg horizontalTransform(final boolean inverse, ComplexImg toTransform, ComplexImg target){
+		if(target == null){
+			target = new ComplexImg(toTransform.getDimension());
+		} else if(!target.getDimension().equals(toTransform.getDimension())){
+			throw new IllegalArgumentException(String.format(
+					"specified target is of wrong dimensions. Expected %s but has %s.", 
+					toTransform.getDimension(), target.getDimension()));
+		}
+		final int w = toTransform.getWidth();
+		final int h = toTransform.getHeight();
+		try(
+				NativeRealArray inr = new NativeRealArray(w);
+				NativeRealArray ini = new NativeRealArray(w);
+				NativeRealArray outr = new NativeRealArray(w);
+				NativeRealArray outi = new NativeRealArray(w);
+		){
+			ComplexValuedSampler complexIn = getSamplerForShiftedComplexImg(toTransform);
+			ComplexValuedWriter  complexOut = getWriterForShiftedComplexImg(target);
+			for(int y = 0; y < h; y++){
+				for(int x = 0; x < w; x++){
+					inr.set(x, complexIn.getValueAt(false, x,y));
+					ini.set(x, complexIn.getValueAt(true,  x,y));
+				}
+				if(inverse){
+					FFTW_Guru.execute_split_c2c(ini,inr, outi,outr, w);
+				} else {
+					FFTW_Guru.execute_split_c2c(ini,inr, outi,outr, w);
+				}
+				for(int x = 0; x < w; x++){
+					complexOut.setValueAt(outr.get(x), false, x,y);
+					complexOut.setValueAt(outi.get(x), true,  x,y);
+				}
+			}
+		}
+		if(inverse){
+			// need to rescale
+			double scaling = 1.0/w;
+			ArrayUtils.scaleArray(target.getDataReal(), scaling);
+			ArrayUtils.scaleArray(target.getDataImag(), scaling);
+		}
+		return target;
+	}
+	
+	/**
+	 * Executes column wise Fourier transforms of the specified {@link ComplexImg} (inversely if specified).
+	 * The result of the transform will be stored in the specified target image (if specified, may be null).
+	 * Shifts of the specified images are taken into account, so that the transform is independent of the
+	 * shift of the transformed image and the resulting transform will be shifted according to the targets shift.
+	 * @param inverse calculates inverse transforms if true, otherwise forward transform
+	 * @param toTransform ComplexImg to be transformed
+	 * @param target (may be null) the target image for the transform.
+	 * @return target image or new {@link ComplexImg} if target was null
+	 * 
+	 * @throws IllegalArgumentException if specified target does not match dimensions of transformed image
+	 */
+	public static ComplexImg verticalTransform(final boolean inverse, ComplexImg toTransform, ComplexImg target){
+		if(target == null){
+			target = new ComplexImg(toTransform.getDimension());
+		} else if(!target.getDimension().equals(toTransform.getDimension())){
+			throw new IllegalArgumentException(String.format(
+					"specified target is of wrong dimensions. Expected %s but has %s.", 
+					toTransform.getDimension(), target.getDimension()));
+		}
+		final int w = toTransform.getWidth();
+		final int h = toTransform.getHeight();
+		try(
+				NativeRealArray inr = new NativeRealArray(h);
+				NativeRealArray ini = new NativeRealArray(h);
+				NativeRealArray outr = new NativeRealArray(h);
+				NativeRealArray outi = new NativeRealArray(h);
+		){
+			ComplexValuedSampler complexIn = getSamplerForShiftedComplexImg(toTransform);
+			ComplexValuedWriter  complexOut = getWriterForShiftedComplexImg(target);
+			for(int x = 0; x < w; x++){
+				for(int y = 0; y < h; y++){
+					inr.set(y, complexIn.getValueAt(false, x,y));
+					ini.set(y, complexIn.getValueAt(true,  x,y));
+				}
+				if(inverse){
+					FFTW_Guru.execute_split_c2c(ini,inr, outi,outr, w);
+				} else {
+					FFTW_Guru.execute_split_c2c(ini,inr, outi,outr, w);
+				}
+				for(int y = 0; y < h; y++){
+					complexOut.setValueAt(outr.get(y), false, x,y);
+					complexOut.setValueAt(outi.get(y), true,  x,y);
+				}
+			}
+		}
+		if(inverse){
+			// need to rescale
+			double scaling = 1.0/h;
+			ArrayUtils.scaleArray(target.getDataReal(), scaling);
+			ArrayUtils.scaleArray(target.getDataImag(), scaling);
+		}
+		return target;
+	}
 
 	/**
 	 * Executes the inverse Fourier transforms on the specified {@link ComplexImg} that corresponds
@@ -195,7 +305,7 @@ public class Fourier {
 	}
 
 	
-	public static ColorImg inverseTransformHorizontal(ColorImg target, ComplexImg fourier, int channel) {
+	public static ColorImg horizontalInverseTransform(ColorImg target, ComplexImg fourier, int channel) {
 		Dimension dim = fourier.getDimension();
 		// if no target was specified create a new one
 		if(target == null) {
@@ -233,7 +343,7 @@ public class Fourier {
 		return target;
 	}
 	
-	public static ColorImg inverseTransformVertical(ColorImg target, ComplexImg fourier, int channel) {
+	public static ColorImg verticalInverseTransform(ColorImg target, ComplexImg fourier, int channel) {
 		Dimension dim = fourier.getDimension();
 		// if no target was specified create a new one
 		if(target == null) {
