@@ -1,6 +1,6 @@
 package hageldave.imagingkit.fourier;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.util.function.DoubleBinaryOperator;
@@ -48,32 +48,34 @@ public class FourierTest {
 	@Test
 	public void test1D() throws IOException {
 		ColorImg img = createImg(201, 301, (x,y)->CIRCLE.applyAsDouble(x+0.2,y+0.2)-CIRCLE.applyAsDouble(x*4,y*4));
-		
+		// forward
 		ComplexImg transform1 = Fourier.verticalTransform(img, ColorImg.channel_r);
 		ComplexImg transform2 = Fourier.horizontalTransform(img, ColorImg.channel_r);
-		
-		Fourier.horizontalTransform(false, transform1, transform1);
-		Fourier.verticalTransform(false, transform2, transform2);
-		
-		// order does not really matter transforms are the same but complex conjugated
-		transform2.forEach(ComplexPixel::conjugate);
+		// backward
+		ColorImg inv1 = Fourier.verticalInverseTransform(null, transform1, ColorImg.channel_r);
+		ColorImg inv2 = Fourier.horizontalInverseTransform(null, transform2, ColorImg.channel_r);
+		// test - restored original
+		img.forEach(px->{
+			assertEquals(px.r_asDouble(), inv1.getValueR(px.getX(), px.getY()), 0.00001);
+			assertEquals(px.r_asDouble(), inv2.getValueR(px.getX(), px.getY()), 0.00001);
+		});
+		// complex forward
+		ComplexImg cmplxtrnsfrm1 = Fourier.horizontalTransform(false, transform1, null);
+		ComplexImg cmplxtrnsfrm2 = Fourier.verticalTransform(false, transform2, null);
+		// test - both transforms are the same, order of vertical and horizontal does not matter
+		assertArrayEquals(cmplxtrnsfrm1.getDataReal(), cmplxtrnsfrm2.getDataReal(), 0.00001);
+		assertArrayEquals(cmplxtrnsfrm1.getDataImag(), cmplxtrnsfrm2.getDataImag(), 0.00001);
+		// complex backward
+		Fourier.horizontalTransform(true, cmplxtrnsfrm1, cmplxtrnsfrm1);
+		Fourier.verticalTransform(true, cmplxtrnsfrm2, cmplxtrnsfrm2);
+		// test - retsoreed original
 		transform1.forEach(px->{
-			assertEquals(px.real(), transform2.getValueR(px.getX(), px.getY()),0.00001);
-			assertEquals(px.imag(), transform2.getValueI(px.getX(), px.getY()),0.00001);
+			assertEquals(px.real(), cmplxtrnsfrm1.getValueR(px.getX(), px.getY()), 0.00001);
+			assertEquals(px.imag(), cmplxtrnsfrm1.getValueI(px.getX(), px.getY()), 0.00001);
 		});
-		
-		// test 2D inverse is equal to horizontal then vertical inverse
-		ColorImg imgInversed1 = Fourier.inverseTransform(null, transform1, ColorImg.channel_r);
-		ComplexImg horizontalInv = Fourier.horizontalTransform(true, transform2, null);
-		ColorImg imgInversed2 = Fourier.verticalInverseTransform(null, horizontalInv, ColorImg.channel_r);
-		imgInversed1.forEach(px->{
-			assertEquals(px.r_asDouble(), imgInversed2.getValueR(px.getX(), px.getY()), 0.00001);
-		});
-		// also vertical first then horizontal equals 2D inverse
-		ComplexImg verticalInv = Fourier.verticalTransform(true, transform2, null);
-		ColorImg imgInversed3 = Fourier.horizontalInverseTransform(null, verticalInv, ColorImg.channel_r);
-		imgInversed3.forEach(px->{
-			assertEquals(px.r_asDouble(), imgInversed2.getValueR(px.getX(), px.getY()), 0.00001);
+		transform2.forEach(px->{
+			assertEquals(px.real(), cmplxtrnsfrm2.getValueR(px.getX(), px.getY()), 0.00001);
+			assertEquals(px.imag(), cmplxtrnsfrm2.getValueI(px.getX(), px.getY()), 0.00001);
 		});
 	}
 	

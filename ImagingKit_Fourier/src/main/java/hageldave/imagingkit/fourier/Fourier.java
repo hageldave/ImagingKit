@@ -211,7 +211,7 @@ public class Fourier {
 				if(inverse){
 					FFTW_Guru.execute_split_c2c(ini,inr, outi,outr, w);
 				} else {
-					FFTW_Guru.execute_split_c2c(ini,inr, outi,outr, w);
+					FFTW_Guru.execute_split_c2c(inr,ini, outr,outi, w);
 				}
 				for(int x = 0; x < w; x++){
 					complexOut.setValueAt(outr.get(x), false, x,y);
@@ -255,23 +255,14 @@ public class Fourier {
 				NativeRealArray fft_r = new NativeRealArray(row.length);
 				NativeRealArray fft_i = new NativeRealArray(row.length);
 		){
-			if(fourier.getCurrentXshift() != 0 || fourier.getCurrentYshift() != 0){
-				ComplexValuedSampler complexIn = getSamplerForShiftedComplexImg(fourier);
-				for(int y = 0; y < target.getHeight(); y++){
-					for(int x = 0; x < target.getWidth(); x++){
-						fft_r.set(x, complexIn.getValueAt(false, x,y));
-						fft_i.set(x, complexIn.getValueAt(true,  x,y));
-					}
-					FFTW_Guru.execute_split_c2r(fft_r, fft_i, row, target.getWidth());
-					row.get(0, target.getWidth(), y*target.getWidth(), target.getData()[channel]);
+			ComplexValuedSampler complexIn = getSamplerForShiftedComplexImg(fourier);
+			for(int y = 0; y < target.getHeight(); y++){
+				for(int x = 0; x < target.getWidth(); x++){
+					fft_r.set(x, complexIn.getValueAt(false, x,y));
+					fft_i.set(x, complexIn.getValueAt(true,  x,y));
 				}
-			} else {
-				for(int y = 0; y < target.getHeight(); y++){
-					fft_r.set(0, target.getWidth(), y*target.getWidth(), fourier.getDataReal());
-					fft_i.set(0, target.getWidth(), y*target.getWidth(), fourier.getDataImag());
-					FFTW_Guru.execute_split_c2r(fft_r, fft_i, row, target.getWidth());
-					row.get(0, target.getWidth(), y*target.getWidth(), target.getData()[channel]);
-				}
+				FFTW_Guru.execute_split_c2r(fft_r, fft_i, row, target.getWidth());
+				row.get(0, target.getWidth(), y*target.getWidth(), target.getData()[channel]);
 			}
 		}
 		double scaling = 1.0/target.getWidth();
@@ -353,7 +344,7 @@ public class Fourier {
 				if(inverse){
 					FFTW_Guru.execute_split_c2c(ini,inr, outi,outr, h);
 				} else {
-					FFTW_Guru.execute_split_c2c(ini,inr, outi,outr, h);
+					FFTW_Guru.execute_split_c2c(inr,ini, outr,outi, h);
 				}
 				for(int y = 0; y < h; y++){
 					complexOut.setValueAt(outr.get(y), false, x,y);
