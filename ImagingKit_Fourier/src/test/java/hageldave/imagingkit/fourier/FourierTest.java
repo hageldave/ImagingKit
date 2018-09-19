@@ -1,16 +1,14 @@
 package hageldave.imagingkit.fourier;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 
-import java.io.IOException;
 import java.util.function.DoubleBinaryOperator;
 
 import org.junit.Test;
 
 import hageldave.imagingkit.core.PixelBase;
-import hageldave.imagingkit.core.io.ImageSaver;
 import hageldave.imagingkit.core.scientific.ColorImg;
-import hageldave.imagingkit.core.util.ImageFrame;
 
 public class FourierTest {
 
@@ -46,7 +44,7 @@ public class FourierTest {
 	}
 	
 	@Test
-	public void test1D() throws IOException {
+	public void test1D() {
 		ColorImg img = createImg(201, 301, (x,y)->CIRCLE.applyAsDouble(x+0.2,y+0.2)-CIRCLE.applyAsDouble(x*4,y*4));
 		// forward
 		ComplexImg transform1 = Fourier.verticalTransform(img, ColorImg.channel_r);
@@ -79,7 +77,43 @@ public class FourierTest {
 		});
 	}
 	
-	
+	@Test
+	public void testExceptions() {
+		ColorImg img = new ColorImg(100, 100, false);
+		ComplexImg fft = new ComplexImg(99, 99);
+		// test bad channel
+		JunitUtils.testException(()->{
+			Fourier.transform(img, ColorImg.channel_a);
+		},IllegalArgumentException.class);
+		JunitUtils.testException(()->{
+			Fourier.verticalTransform(img, -1);
+		},IllegalArgumentException.class);
+		JunitUtils.testException(()->{
+			Fourier.horizontalTransform(img, 4);
+		},IllegalArgumentException.class);
+		JunitUtils.testException(()->{
+			Fourier.inverseTransform(null, fft, -1);
+		},IllegalArgumentException.class);
+		JunitUtils.testException(()->{
+			Fourier.inverseTransform(null, fft, 4);
+		},IllegalArgumentException.class);
+		JunitUtils.testException(()->{
+			Fourier.inverseTransform(new ColorImg(fft.getDimension(), false), fft, ColorImg.channel_a);
+		},IllegalArgumentException.class);
+		// test dimension mismatch
+		JunitUtils.testException(()->{
+			Fourier.inverseTransform(img, fft, 0);
+		},IllegalArgumentException.class);
+		JunitUtils.testException(()->{
+			Fourier.transform(true, fft, new ComplexImg(100, 100));
+		},IllegalArgumentException.class);
+		JunitUtils.testException(()->{
+			Fourier.verticalTransform(true, fft, new ComplexImg(100, 100));
+		},IllegalArgumentException.class);
+		JunitUtils.testException(()->{
+			Fourier.horizontalTransform(true, fft, new ComplexImg(100, 100));
+		},IllegalArgumentException.class);
+	}
 	
 	static ColorImg createImg(int width, int height, DoubleBinaryOperator objectFn){
 		ColorImg img = new ColorImg(width,height, false);

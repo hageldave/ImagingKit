@@ -423,9 +423,10 @@ public class Fourier {
 					"The specified target image has wrong dimensions (%s). Fourier image has %s.", 
 					target.getDimension(), dim));
 		}
-		if(channel==ColorImg.channel_a && !target.hasAlpha()){
-			throw new IllegalArgumentException(
-					"Specified channel is alpha, but the specified target image has no alpha.");
+		if( channel < 0 || channel > 3 || (channel > 2 && !target.hasAlpha()) ){
+			throw new IllegalArgumentException(String.format(
+					"Channels can be 0,1,2 (also 3 if image has alpha). But channel is %d and image %s alpha",
+					channel, target.hasAlpha() ? "has":"does not have"));
 		}
 	}
 	
