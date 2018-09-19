@@ -131,7 +131,7 @@ public class ComplexImg implements ImgBase<ComplexPixel> {
 
 	@Override
 	public ComplexPixel getPixel(int x, int y) {
-		return new ComplexPixel(this, 0).setPosition(x, y);
+		return getPixel().setPosition(x, y);
 	}
 
 
@@ -161,6 +161,7 @@ public class ComplexImg implements ImgBase<ComplexPixel> {
 	 * or an ArrayIndexOutOfBoundsException.
 	 * <p>
 	 * Valid channels are {@link #CHANNEL_REAL}, {@link #CHANNEL_IMAG} and {@link #CHANNEL_POWER}.
+	 * @param channel the desired channel
 	 * @param x coordinate
 	 * @param y coordinate
 	 * @return value for specified position and channel
@@ -730,7 +731,8 @@ public class ComplexImg implements ImgBase<ComplexPixel> {
 	}
 
 	/**
-	 * Returns the real part of the DC value, i.e. the zero frequency component.
+	 * Returns the real part of the DC value, i.e. the zero frequency component 
+	 * of the Fourier transform this image may represent.
 	 * @return DC value
 	 */
 	public double getDCreal(){
