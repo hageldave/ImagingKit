@@ -318,54 +318,6 @@ public class ComplexImg implements ImgBase<ComplexPixel> {
 	}
 
 	/**
-	 * Bilinearly interpolates the value for the specified channel at the specified coordinates.
-	 * See {@link ColorImg#interpolate(int, double, double)} for details.
-	 * @param channel one of {@link #CHANNEL_REAL},{@link #CHANNEL_IMAG},{@link #CHANNEL_POWER}(0,1,2)
-	 * @param xNormalized coordinate within [0,1]
-	 * @param yNormalized coordinate within [0,1]
-	 * @return bilinearly interpolated value
-	 */
-	public double interpolate(int channel, double xNormalized, double yNormalized) {
-		return delegate.interpolate(channel, xNormalized, yNormalized);
-	}
-
-	/**
-	 * Bilinearly interpolates the real part at the specified coordinates.
-	 * See {@link ColorImg#interpolate(int, double, double)} for details.
-	 * @param xNormalized coordinate within [0,1]
-	 * @param yNormalized coordinate within [0,1]
-	 * @return bilinearly interpolated value
-	 */
-	public double interpolateR(double xNormalized, double yNormalized) {
-		return delegate.interpolateR(xNormalized, yNormalized);
-	}
-
-	/**
-	 * Bilinearly interpolates the imaginary part at the specified coordinates.
-	 * See {@link ColorImg#interpolate(int, double, double)} for details.
-	 * @param xNormalized coordinate within [0,1]
-	 * @param yNormalized coordinate within [0,1]
-	 * @return bilinearly interpolated value
-	 */
-	public double interpolateI(double xNormalized, double yNormalized) {
-		return delegate.interpolateG(xNormalized, yNormalized);
-	}
-
-	/**
-	 * Bilinearly interpolates the power (real*real+imag*imag) at the specified coordinates.
-	 * See {@link ColorImg#interpolate(int, double, double)} for details.
-	 * <p>
-	 * Please Notice that this will not calculate the power in case it is not up to date.
-	 * Use {@link #recomputePowerChannel()} to make sure this method yields reasonable results.
-	 * @param xNormalized coordinate within [0,1]
-	 * @param yNormalized coordinate within [0,1]
-	 * @return bilinearly interpolated value
-	 */
-	public double interpolateP(double xNormalized, double yNormalized) {
-		return delegate.interpolateB(xNormalized, yNormalized);
-	}
-
-	/**
 	 * Equivalent to {@link #getDataReal()}[index].
 	 * @param index of the desired value
 	 * @return value at index
@@ -611,6 +563,9 @@ public class ComplexImg implements ImgBase<ComplexPixel> {
 			dest = new ComplexImg(w, h);
 		}
 		delegate.copyArea(x, y, w, h, dest.delegate, destX, destY);
+		if(dest.isSynchronizePowerSpectrum()){
+			dest.recomputePowerChannel();
+		}
 		return dest;
 	}
 
