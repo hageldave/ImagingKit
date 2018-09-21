@@ -35,14 +35,6 @@ public class ComplexImgTest {
 		img.toBufferedImage();
 		if(img.supportsRemoteBufferedImage())
 			img.getRemoteBufferedImage();
-		ComplexImg copy = img.copy();
-		for(int y=0;y<img.getHeight();y++)
-			for(int x=0;x<img.getWidth();x++)
-				assertEquals(
-						img.getValue(ComplexImg.CHANNEL_POWER, x, y), 
-						copy.getValue(ComplexImg.CHANNEL_POWER, -(x+1), -(y+1), ColorImg.boundary_mode_mirror),
-						0
-				);
 		// test shift stuff
 		img.setComplex(0, 0, 3, 4);
 		assertEquals(3, img.getDCreal(),0);
@@ -71,6 +63,37 @@ public class ComplexImgTest {
 		assertEquals(10, img.getMaxValue(ComplexImg.CHANNEL_IMAG),0);
 		assertEquals(4, img.getIndexOfMaxValue(ComplexImg.CHANNEL_REAL)%img.getWidth());
 		assertEquals(9, img.getIndexOfMinValue(ComplexImg.CHANNEL_REAL)%img.getWidth());
+		// test copying
+		ComplexImg copy = img.copy();
+		for(int y=0;y<img.getHeight();y++)
+			for(int x=0;x<img.getWidth();x++)
+				assertEquals(
+						img.getValue(ComplexImg.CHANNEL_POWER, x, y), 
+						copy.getValue(ComplexImg.CHANNEL_POWER, -(x+1), -(y+1), ColorImg.boundary_mode_mirror),
+						0
+				);
+		// reset copy's real and imaginary to zero
+		copy.fill(0, 0);
+		copy.fill(1, 0);
+		// enable synchronization
+		copy.enableSynchronizePowerSpectrum(true);
+		// set img power to zero
+		img.enableSynchronizePowerSpectrum(false);
+		img.fill(ComplexImg.CHANNEL_POWER, 0);
+		img.copyArea(0, 0, 10, 10, copy, 0, 0);
+		for(int y=0;y<img.getHeight();y++){
+			for(int x=0;x<img.getWidth();x++){
+				if(x<10&&y<10){
+					assertEquals(
+						img.computePower(x, y), 
+						copy.getValue(ComplexImg.CHANNEL_POWER, x, y),
+						0
+					);
+				} else {
+					assertEquals(0, copy.getValue(ComplexImg.CHANNEL_POWER, x, y),0);
+				}
+			}
+		}
 	}
 	
 }
