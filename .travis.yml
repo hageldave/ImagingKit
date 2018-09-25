@@ -7,15 +7,16 @@ jdk:
   
 before_script:
   - "export DISPLAY=:99.0"
+  - "export _JAVA_OPTIONS=\"-Xms2g -Xmx2g -verbose:gc\""
   - "sh -e /etc/init.d/xvfb start"
   - sleep 3 # give xvfb some time to start (x virtual frame buffer for gui testing)
 
-script: mvn -X -pl :imagingkit-core clean test
+script: mvn -P travis -X clean test jacoco:report
 
 env:
   global:
     - secure: "fy+WvtV6xOwvHjIt+qINm3Idqg8ItyHa5hIzkB6e7Dv9xOrtSLTiHO+lkyiKIZ/RePuJibd1G+iy+Kn3nF5G0FDcndEmG2xCeSxM69ijOGd463Zi2Ys9+rpqXGwtgUt7Nin/Rw3UAa52Tx7jii4YVF6WuSjDdwAovKT5U+cmBfgGxfTSaZVlbE1he2zh/WJ2lk3UfsUhQY0H+lSGOembIYOG+WiE7OpouczAIwn8mk9DzK/u3Y3IK/FsFuC0mQfuE6sz96JNMaU7HrpGwKDZr3AstZstV2BHgjV7R8nLO8WXr5zASu3YTdTu52moX2xe1rMJL+oVN4Hn0tNDJR41gKP2G5x/eRFLX57LHl/QaXubopjU7RJFT4ZvFjd4G0EqybB6TtKQW4gL+1dn4dhKmayLGC+tEHBJ6u9yPPJefAYJdEm0scetNmhk+YV+uJuOqaZArBf3rgikdhHUPgSNeq9LxVgq4em58Jb9PVQLyuuIxmnfFmYp44eX8u0sWxgEvoGwTgpshMwSMnTQLaI2IUZX/zrbUIWe+eiY1Fq6zbqHaX4mkigu3vIWaLZfx26e2lsHbJgGe5+aalafXPSuHcInxu54KQY7KD6/34Z31oum2ho+039OpaK7UVI1tOWrqK8xB/MhGthEFaPs5aCOcxWgflqvsT7HR8fB1xaD7Gk="
 
 after_success:
-  - mvn -P travis -pl :imagingkit-core -DrepoToken=$COVERALLSTOKEN clean test jacoco:report coveralls:report
+  - mvn -P coveralls -DrepoToken=$COVERALLSTOKEN coveralls:report -e -X
   - bash <(curl -s https://codecov.io/bash)
