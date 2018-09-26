@@ -10,12 +10,12 @@
 	<groupId>com.github.hageldave.imagingkit</groupId>
 	<version>2.0-SNAPSHOT</version>
 	<url>https://github.com/hageldave/ImagingKit</url>
-	<description>The ImagingKit-Fourier artifact provides classes for Fast Fourier Transformations (FFT) of the ImagingKit framework.</description>
+	<description>The ImagingKit-Fourier artifact provides classes for Fast Fourier Transformations (FFT) for the ImagingKit framework.</description>
 
 	<licenses>
 		<license>
-			<name>The MIT License (MIT)</name>
-			<url>https://opensource.org/licenses/MIT</url>
+			<name>GNU GENERAL PUBLIC LICENSE, VERSION 2 (GPLv2)</name>
+			<url>https://www.gnu.org/licenses/old-licenses/gpl-2.0.html</url>
 			<distribution>repo</distribution>
 		</license>
 	</licenses>
