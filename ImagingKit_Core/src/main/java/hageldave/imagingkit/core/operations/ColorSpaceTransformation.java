@@ -345,7 +345,7 @@ public enum ColorSpaceTransformation implements Consumer<PixelBase> {
 		default: px.setRGB_fromDouble_preserveAlpha(v,t,p);break;
 		}
 	}
-
+	
 	private static void rgb2ycbcr_continuous(PixelBase px)
 	{
 		double r = px.r_asDouble(), g = px.g_asDouble(), b = px.b_asDouble();
