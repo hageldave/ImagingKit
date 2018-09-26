@@ -453,7 +453,8 @@ public class ComplexImg implements ImgBase<ComplexPixel> {
 	 * update the corresponding power value.
 	 * @param x coordinate
 	 * @param y coordinate
-	 * @param value to be set
+	 * @param real part to be set
+	 * @param imag imaginary part to be set
 	 */
 	public void setComplex(int x, int y, double real, double imag){
 		int idx=y*width+x;
@@ -475,7 +476,7 @@ public class ComplexImg implements ImgBase<ComplexPixel> {
 
 	/**
 	 * Calculates, stores and returns the power at the specified index.
-	 * The power is the squared magnitude of the complex number ( c=a+bi -> power = a*a+b*b ).
+	 * The power is the squared magnitude of the complex number ( cmplx=a+bi  power=a*a+b*b ).
 	 * Subsequent calls to e.g. {@link #getValueP_atIndex(int)} will return the stored result.
 	 * @param idx index
 	 * @return power of pixel at index
@@ -489,7 +490,7 @@ public class ComplexImg implements ImgBase<ComplexPixel> {
 	
 	/**
 	 * Calculates, stores and returns the power at the specified position.
-	 * The power is the squared magnitude of the complex number ( c=a+bi -> power = a*a+b*b ).
+	 * The power is the squared magnitude of the complex number ( cmplx=a+bi  power=a*a+b*b ).
 	 * Subsequent calls to e.g. {@link #getValueP(int, int)} will return the stored result.
 	 * @param x coordinate
 	 * @param y coordinate
@@ -503,7 +504,7 @@ public class ComplexImg implements ImgBase<ComplexPixel> {
 	 * Calculates the phase of the pixel at the specified index.
 	 * The phase is the argument of the complex number, i.e. the angle of the complex vector
 	 * in the complex plane. 
-	 * @param idx
+	 * @param idx index
 	 * @return the phase in [0,2pi] of the complex number at index
 	 */
 	public double computePhase(int idx){
@@ -588,8 +589,8 @@ public class ComplexImg implements ImgBase<ComplexPixel> {
 
 	/**
 	 * Returns the delegate {@link ColorImg} backing this {@link ComplexImg}.
-	 * The delegate is used to implement functionality like {@link #getRemoteBufferedImage()}
-	 * or {@link #interpolate(int, double, double)}.
+	 * The delegate is used to implement functionality like {@link #getRemoteBufferedImage()}.
+	 * It can also be used to gain access to {@link ColorImg#interpolate(int, double, double)}.
 	 * @return {@link ColorImg} delegate of this complex image.
 	 */
 	public ColorImg getDelegate(){

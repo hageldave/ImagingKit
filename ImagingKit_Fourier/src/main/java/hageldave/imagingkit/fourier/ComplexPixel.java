@@ -229,7 +229,7 @@ public class ComplexPixel implements PixelBase {
 	
 	/**
 	 * Conjugates this complex pixel (negates imaginary part).
-	 * @return
+	 * @return this
 	 */
 	public ComplexPixel conjugate(){
 		return setImag(-imag());
@@ -240,7 +240,7 @@ public class ComplexPixel implements PixelBase {
 	 * and stores the result in this pixel.
 	 * @param r real part to multiply
 	 * @param i imaginary part to multiply
-	 * @return
+	 * @return this
 	 */
 	public ComplexPixel mult(double r, double i){
 		double thisr = real(), thisi = imag();
