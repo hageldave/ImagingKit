@@ -11,11 +11,17 @@
 
 A Java library for imaging tasks that integrates well with the commonly used java.awt.image environment (especially well with TYPE_INT BufferedImages). Its goal is to make image processing more convenient and to ease performance optimization. The library is intended for images using integer typed values like 24bit RGB or 32bit ARGB. 
 
-So far the *ImagingKit-Core* artifact of the library is available through the maven central repository:
+So far the *ImagingKit-Core* and *ImagingKit-Fourier* artifacts of the library are available through the maven central repository:
 ```xml
 <dependency>
   <groupId>com.github.hageldave.imagingkit</groupId>
   <artifactId>imagingkit-core</artifactId>
+  <version>2.0</version>
+</dependency>
+
+<dependency>
+  <groupId>com.github.hageldave.imagingkit</groupId>
+  <artifactId>imagingkit-fourier</artifactId>
   <version>2.0</version>
 </dependency>
 ```
@@ -104,52 +110,28 @@ ImageFrame.display(img);
 ![baboon image](ImagingKit_Core/src/test/resources/baboon.128.png)
 ![hue shifted baboom image](ImagingKit_Core/src/test/resources/exampleimages/hueshift.png)
 
-Normal Map from Height Map (using pixel to vector mapping):
+Fourier Filtering
 ```java
-PixelConverter<Pixel, Map.Entry<java.awt.Point, javax.vecmath.Vector3f>> converter
-	= new PixelConverter<Pixel, Map.Entry<Point,Vector3f>>()
-{
-	Vector3f offset = new Vector3f(.5f, .5f, .5f);
-	@Override
-	public Map.Entry<Point,Vector3f> allocateElement() {
-		return new AbstractMap.SimpleEntry<Point,Vector3f>(new Point(), new Vector3f());
-	}
-	@Override
-	public void convertPixelToElement(Pixel px, Map.Entry<Point,Vector3f> el) {
-		el.getKey().setLocation(px.getX(), px.getY());
-		el.getValue().set(
-				(float)px.r_asDouble(), 
-				(float)px.g_asDouble(), 
-				(float)px.b_asDouble());
-	}
-	@Override
-	public void convertElementToPixel(Map.Entry<Point,Vector3f> el, Pixel px) {
-		Vector3f vec = el.getValue();
-		vec.scaleAdd(.5f, offset);
-		px.setRGB_fromDouble(vec.x, vec.y, vec.z);
-	}
-};
-
-Img heightmap = ImageLoader.loadImgFromURL("https://upload.wikimedia.org/wikipedia/commons/5/57/Heightmap.png");
-Img normalmap = new Img(heightmap.getDimension());
-final boolean parallel = true;
-normalmap.forEach(converter, parallel, pair -> {
-	Point pos = pair.getKey();
-	Vector3f vec = pair.getValue();
-	// get heights of surrounding poiunts
-	float hx0 = heightmap.getValue(pos.x-1, pos.y, Img.boundary_mode_repeat_edge);
-	float hx1 = heightmap.getValue(pos.x+1, pos.y, Img.boundary_mode_repeat_edge);
-	float hy0 = heightmap.getValue(pos.x, pos.y-1, Img.boundary_mode_repeat_edge);
-	float hy1 = heightmap.getValue(pos.x, pos.y+1, Img.boundary_mode_repeat_edge);
-	// cross product of central difference vectors is normal
-	float zH = (hx1-hx0)/2; // yH=0  xH=1
-	float zV = (hy1-hy0)/2; // yV=1  xV=0
-	vec.set(
-		zH*1-zV*0, 
-		zH*0-zV*1, 
-		1*0- 0*1);
-	if(vec.lengthSquared() > 0) vec.normalize();
+ColorImg img = new ColorImg(128,128,false);
+img.paint(g2d->g2d.fillRect(64-16, 64-8, 32, 16));
+ImageFrame.display(img.getRemoteBufferedImage()).setTitle("original");
+ComplexImg fourier = Fourier.transform(img, ColorImg.channel_r);
+fourier.shiftCornerToCenter();
+ImageFrame.display(fourier.getPowerSpectrumImg().toImg()).setTitle("fft");
+fourier.forEach(px->{
+	int xfreq = px.getXFrequency();
+	int yfreq = px.getYFrequency();
+	double freqRadius = Math.sqrt(xfreq*xfreq+yfreq*yfreq);
+	double gaussian = Math.exp(-freqRadius/(0.05*128));
+	px.mult(gaussian, 0);
 });
-ImageFrame.display(normalmap);
-ImageFrame.display(heightmap);
+ImageFrame.display(fourier.getPowerSpectrumImg().toImg()).setTitle("filtered fft");
+ColorImg restored = Fourier.inverseTransform(null, fourier, ColorImg.channel_r);
+ColorImg redChannel = restored.getChannelImage(ColorImg.channel_r);
+ImageFrame.display(redChannel.toImg()).setTitle("filterd original");
 ```
+![original](ImagingKit_Fourier/src/test/resources/exampleimages/whitebox.png)
+![fft](ImagingKit_Fourier/src/test/resources/exampleimages/fft.png)
+![filtered fft](ImagingKit_Fourier/src/test/resources/exampleimages/filtered_fft.png)
+![filtered original](ImagingKit_Fourier/src/test/resources/exampleimages/blurred_whitebox.png)
+
