@@ -83,7 +83,7 @@ public class CodeSnippets {
 			double b = Math.max(0, angle <= 120 ? 
 					1-Math.abs((angle)/120.0):1-Math.abs((angle-360)/120.0));
 			
-			px.setRGB_fromDouble(r*(1-len), g*(1-len), b*(1-len));
+			px.setOpaqueValues(r*(1-len), g*(1-len), b*(1-len));
 		});
 		ImageFrame.display(img);
 	}
@@ -95,7 +95,7 @@ public class CodeSnippets {
 		double hueShift = (360-90)/360.0;
 		img.forEach(pixel -> {
 			// R channel corresponds to hue (modulo 1.0 for cyclic behaviour)
-			pixel.setR_fromDouble((pixel.r_asDouble()+hueShift) % 1.0);
+			pixel.setValueCh0((pixel.getValueCh0()+hueShift) % 1.0);
 		});
 		img.forEach(ColorSpaceTransformation.HSV_2_RGB);
 

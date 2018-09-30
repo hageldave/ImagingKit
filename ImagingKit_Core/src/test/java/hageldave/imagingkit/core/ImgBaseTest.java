@@ -16,8 +16,8 @@ public class ImgBaseTest {
 		JunitUtils.testException(()->{img.getRemoteBufferedImage();}, UnsupportedOperationException.class);
 		assertFalse(img.supportsRemoteBufferedImage());
 		assertEquals(1024, img.getSpliteratorMinimumSplitSize());
-		img.forEach(px->px.setRGB_fromDouble(px.getIndex()%220,px.getIndex()%221,px.getIndex()%222).setA_fromDouble(255));
-		img.forEach(px->assertEquals((double)px.getIndex()%220, px.r_asDouble(), 0));
+		img.forEach(px->px.setValues(px.getIndex()%220,px.getIndex()%221,px.getIndex()%222).setValueCh3(255));
+		img.forEach(px->assertEquals((double)px.getIndex()%220, px.getValueCh0(), 0));
 	}
 
 	
@@ -52,7 +52,7 @@ public class ImgBaseTest {
 
 		@Override
 		public BufferedImage toBufferedImage(BufferedImage bimg) {
-			this.forEach(px->bimg.setRGB(px.x, px.y, Pixel.argb_bounded((int)px.a_asDouble(),(int)px.r_asDouble(),(int)px.g_asDouble(),(int)px.b_asDouble())));
+			this.forEach(px->bimg.setRGB(px.x, px.y, Pixel.argb_bounded((int)px.getValueCh3(),(int)px.getValueCh0(),(int)px.getValueCh1(),(int)px.getValueCh2())));
 			return bimg;
 		}
 
@@ -68,13 +68,28 @@ public class ImgBaseTest {
 		
 	}
 	
-	private static class TestPixel implements PixelBase {
+	private static class TestPixel implements Pixel3<TestPixel>, Pixel4<TestPixel> {
 
 		int x,y;
 		TestImg source;
 		
 		public TestPixel(TestImg source) {
 			this.source = source;
+		}
+		
+		@Override
+		public int numChannels() {
+			return 4;
+		}
+		
+		@Override
+		public double getValue(int ch) {
+			return channelAsDouble(ch);
+		}
+		
+		@Override
+		public TestPixel setValue(int ch, double v) {
+			return setChannel(ch, v);
 		}
 		
 		private double channelAsDouble(int c){
@@ -87,42 +102,42 @@ public class ImgBaseTest {
 		}
 		
 		@Override
-		public double a_asDouble() {
+		public double getValueCh3() {
 			return channelAsDouble(0);
 		}
 
 		@Override
-		public double r_asDouble() {
+		public double getValueCh0() {
 			return channelAsDouble(1);
 		}
 
 		@Override
-		public double g_asDouble() {
+		public double getValueCh1() {
 			return channelAsDouble(2);
 		}
 
 		@Override
-		public double b_asDouble() {
+		public double getValueCh2() {
 			return channelAsDouble(3);
 		}
 
 		@Override
-		public PixelBase setA_fromDouble(double a) {
+		public TestPixel setValueCh3(double a) {
 			return setChannel(0, a);
 		}
 
 		@Override
-		public PixelBase setR_fromDouble(double r) {
+		public TestPixel setValueCh0(double r) {
 			return setChannel(1, r);
 		}
 
 		@Override
-		public PixelBase setG_fromDouble(double g) {
+		public TestPixel setValueCh1(double g) {
 			return setChannel(2, g); 
 		}
 
 		@Override
-		public PixelBase setB_fromDouble(double b) {
+		public TestPixel setValueCh2(double b) {
 			return setChannel(3, b);
 		}
 

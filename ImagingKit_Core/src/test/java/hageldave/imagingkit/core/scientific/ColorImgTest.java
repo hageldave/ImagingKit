@@ -104,8 +104,8 @@ public class ColorImgTest {
 			img.getChannelImage(channel_a);
 		}, ArrayIndexOutOfBoundsException.class);
 		// things that are not supposed to throw even though no alpha
-		img.getPixel().a_asDouble();
-		img.getPixel().setA_fromDouble(0);
+		img.getPixel().getValueCh3();
+		img.getPixel().setValueCh3(0);
 		
 		// other
 		testException(()->
@@ -128,7 +128,7 @@ public class ColorImgTest {
 			theimg.forEach(px->px.setA(255));
 			ColorImg img1 = new ColorImg(theimg, true);
 			ColorImg img2 = new ColorImg(theimg.getRemoteBufferedImage());
-			assertEquals(theimg.getPixel(2,2).b_asDouble(), img1.getPixel(2, 2).b_asDouble(), 0);
+			assertEquals(theimg.getPixel(2,2).getValueCh2(), img1.getPixel(2, 2).getValueCh2(), 0);
 			assertArrayEquals(img1.getDataB(), img2.getDataB(), 0);
 			ColorImg img3 = new ColorImg(img2.getDimension(), true);
 			img2.copyArea(0, 0, 3, 3, img3, 0, 0);
@@ -404,9 +404,6 @@ public class ColorImgTest {
 				assertEquals(img.getData()[c], channelImage.getDataR());
 				assertEquals(img.getData()[c], channelImage.getDataG());
 				assertEquals(img.getData()[c], channelImage.getDataB());
-				
-				channelImage.getPixel(0, 0).setRGB_fromDouble(-1, -2, -3);
-				assertEquals(img.getValue(c, 0, 0), -3, 0);
 			}
 		}
 		
@@ -478,14 +475,14 @@ public class ColorImgTest {
 				assertEquals(0, img.getData()[c][i],0);
 			}
 		}
-		img.forEach(px->px.setA_fromDouble(px.getIndex()));
+		img.forEach(px->px.setValueCh3(px.getIndex()));
 		for(int i = 0; i < img.numValues(); i++){
 			assertEquals(i, img.getDataA()[i],0);
 			assertEquals(0, img.getDataR()[i],0);
 			assertEquals(0, img.getDataG()[i],0);
 			assertEquals(0, img.getDataB()[i],0);
 		}
-		img.forEach(px->px.setARGB_fromDouble(3, 4, 6, 7));
+		img.forEach(px->px.setValues(4, 6, 7, 3));
 		for(int i = 0; i < img.numValues(); i++){
 			assertEquals(3, img.getDataA()[i],0);
 			assertEquals(4, img.getDataR()[i],0);
@@ -499,21 +496,21 @@ public class ColorImgTest {
 			assertEquals(6, img.getDataG()[i],0);
 			assertEquals(7, img.getDataB()[i],0);
 		}
-		img.forEach(px->px.setRGB_fromDouble(2,2,2));
-		for(int i = 0; i < img.numValues(); i++){
-			assertEquals(1, img.getDataA()[i],0);
-			assertEquals(2, img.getDataR()[i],0);
-			assertEquals(2, img.getDataG()[i],0);
-			assertEquals(2, img.getDataB()[i],0);
-		}
-		img.forEach(px->px.setA_fromDouble(77).setRGB_fromDouble_preserveAlpha(0, 0, 0));
+//		img.forEach(px->px.setOpaqueValues(2,2,2));
+//		for(int i = 0; i < img.numValues(); i++){
+//			assertEquals(1, img.getDataA()[i],0);
+//			assertEquals(2, img.getDataR()[i],0);
+//			assertEquals(2, img.getDataG()[i],0);
+//			assertEquals(2, img.getDataB()[i],0);
+//		}
+		img.forEach(px->px.setValueCh3(77).setValues(0, 0, 0));
 		for(int i = 0; i < img.numValues(); i++){
 			assertEquals(77, img.getDataA()[i],0);
 			assertEquals(0, img.getDataR()[i],0);
 			assertEquals(0, img.getDataG()[i],0);
 			assertEquals(0, img.getDataB()[i],0);
 		}
-		img.stream().filter(px->px.getX() == 0).filter(px->px.getY()==0).forEach(px->px.setA_fromDouble(1).setR_fromDouble(1).setG_fromDouble(1).setB_fromDouble(1));
+		img.stream().filter(px->px.getX() == 0).filter(px->px.getY()==0).forEach(px->px.setValueCh3(1).setValueCh0(1).setValueCh1(1).setValueCh2(1));
 		for(int i = 0; i < img.numValues(); i++){
 			if(i == 0){
 				assertEquals(1, img.getDataA()[i],0);
@@ -527,63 +524,63 @@ public class ColorImgTest {
 				assertEquals(0, img.getDataB()[i],0);
 			}
 		}
-		img.forEach(px->{int i = px.getIndex();px.setARGB_fromDouble(i,i+1, i+2, i+3);});
+		img.forEach(px->{int i = px.getIndex();px.setValues(i+1, i+2, i+3, i);});
 		img.forEach(px->{
 			int i = px.getIndex();
-			assertEquals(i, px.a_asDouble(),0);
-			assertEquals(i+1, px.r_asDouble(),0);
-			assertEquals(i+2, px.g_asDouble(),0);
-			assertEquals(i+3, px.b_asDouble(),0);
+			assertEquals(i, px.getValueCh3(),0);
+			assertEquals(i+1, px.getValueCh0(),0);
+			assertEquals(i+2, px.getValueCh1(),0);
+			assertEquals(i+3, px.getValueCh2(),0);
 			assertEquals(i, px.getValue(channel_a),0);
 			assertEquals(i+1, px.getValue(channel_r),0);
 			assertEquals(i+2, px.getValue(channel_g),0);
 			assertEquals(i+3, px.getValue(channel_b),0);
 		});
 		
-		img.getPixel().setPosition(0, 0).setRGB_fromDouble_preserveAlpha(4, 2, 1);
+		img.getPixel().setPosition(0, 0).setValues(4, 2, 1);
 		assertEquals(4, img.getPixel().setPosition(0, 0).getGrey(1, 0, 0), 0);
 		assertEquals(7, img.getPixel().setPosition(0, 0).getGrey(1, 1, 1), 0);
 		assertNotEquals(img.getPixel().setPosition(0, 0).getLuminance(), img.getPixel().setPosition(1, 0).getLuminance(), 0);
 		assertFalse(img.getPixel().toString().isEmpty());
 		
-		img.getPixel().setARGB_fromDouble(0, 1, 2, 3);
+		img.getPixel().setValues(1, 2, 3, 0);
 		img.getPixel().convertRange(1,3, 0,1);
-		assertEquals(0, img.getPixel().a_asDouble(),0);
-		assertEquals(0, img.getPixel().r_asDouble(),0);
-		assertEquals(0.5, img.getPixel().g_asDouble(),0);
-		assertEquals(1, img.getPixel().b_asDouble(),0);
+		assertEquals(0, img.getPixel().getValueCh3(),0);
+		assertEquals(0, img.getPixel().getValueCh0(),0);
+		assertEquals(0.5, img.getPixel().getValueCh1(),0);
+		assertEquals(1, img.getPixel().getValueCh2(),0);
 		
 		img.getPixel().scale(2);
-		assertEquals(0, img.getPixel().a_asDouble(),0);
-		assertEquals(0, img.getPixel().r_asDouble(),0);
-		assertEquals(1, img.getPixel().g_asDouble(),0);
-		assertEquals(2, img.getPixel().b_asDouble(),0);
+		assertEquals(0, img.getPixel().getValueCh3(),0);
+		assertEquals(0, img.getPixel().getValueCh0(),0);
+		assertEquals(1, img.getPixel().getValueCh1(),0);
+		assertEquals(2, img.getPixel().getValueCh2(),0);
 		
 		img.getPixel().add(1, 1, 1);
-		assertEquals(0, img.getPixel().a_asDouble(),0);
-		assertEquals(1, img.getPixel().r_asDouble(),0);
-		assertEquals(2, img.getPixel().g_asDouble(),0);
-		assertEquals(3, img.getPixel().b_asDouble(),0);
+		assertEquals(0, img.getPixel().getValueCh3(),0);
+		assertEquals(1, img.getPixel().getValueCh0(),0);
+		assertEquals(2, img.getPixel().getValueCh1(),0);
+		assertEquals(3, img.getPixel().getValueCh2(),0);
 		
 		img.getPixel().subtract(1, 2, 3);
-		assertEquals(0, img.getPixel().a_asDouble(),0);
-		assertEquals(0, img.getPixel().r_asDouble(),0);
-		assertEquals(0, img.getPixel().g_asDouble(),0);
-		assertEquals(0, img.getPixel().b_asDouble(),0);
+		assertEquals(0, img.getPixel().getValueCh3(),0);
+		assertEquals(0, img.getPixel().getValueCh0(),0);
+		assertEquals(0, img.getPixel().getValueCh1(),0);
+		assertEquals(0, img.getPixel().getValueCh2(),0);
 		
-		img.getPixel().setARGB_fromDouble(1, 1, 0, 0);
+		img.getPixel().setValues(1, 0, 0, 1);
 		img.getPixel().cross(0, 1, 0);
-		assertEquals(1, img.getPixel().a_asDouble(),0);
-		assertEquals(0, img.getPixel().r_asDouble(),0);
-		assertEquals(0, img.getPixel().g_asDouble(),0);
-		assertEquals(1, img.getPixel().b_asDouble(),0);
+		assertEquals(1, img.getPixel().getValueCh3(),0);
+		assertEquals(0, img.getPixel().getValueCh0(),0);
+		assertEquals(0, img.getPixel().getValueCh1(),0);
+		assertEquals(1, img.getPixel().getValueCh2(),0);
 		
-		img.getPixel().setARGB_fromDouble(1, 1, 0, 0);
+		img.getPixel().setValues(1, 0, 0, 1);
 		img.getPixel().cross_(0, 1, 0);
-		assertEquals(1, img.getPixel().a_asDouble(),0);
-		assertEquals(0, img.getPixel().r_asDouble(),0);
-		assertEquals(0, img.getPixel().g_asDouble(),0);
-		assertEquals(-1, img.getPixel().b_asDouble(),0);
+		assertEquals(1, img.getPixel().getValueCh3(),0);
+		assertEquals(0, img.getPixel().getValueCh0(),0);
+		assertEquals(0, img.getPixel().getValueCh1(),0);
+		assertEquals(-1, img.getPixel().getValueCh2(),0);
 		assertEquals(Math.cos(Math.PI/4)*Math.sqrt(2), img.getPixel().dot(0, 1, -1), eps);
 		
 		double sin90 = Math.sin(Math.PI/2);
@@ -594,42 +591,42 @@ public class ColorImgTest {
 			{-sin90, 0, cos90},
 		};
 		img.getPixel().transform(rotG90);
-		assertEquals(1, img.getPixel().a_asDouble(),0);
-		assertEquals(-1, img.getPixel().r_asDouble(),eps);
-		assertEquals(0, img.getPixel().g_asDouble(),eps);
-		assertEquals(0, img.getPixel().b_asDouble(),eps);
+		assertEquals(1, img.getPixel().getValueCh3(),0);
+		assertEquals(-1, img.getPixel().getValueCh0(),eps);
+		assertEquals(0, img.getPixel().getValueCh1(),eps);
+		assertEquals(0, img.getPixel().getValueCh2(),eps);
 		
 		assertEquals(1, img.getPixel().getLen(), eps);
 		
-		img.getPixel().setRGB_fromDouble(1, 1, 0);
+		img.getPixel().setValues(1, 1, 0);
 		assertEquals(Math.sqrt(2), img.getPixel().getLen(), eps);
 		
 		img.getPixel().normalize();
 		assertEquals(1, img.getPixel().getLen(), eps);
-		assertEquals(0, img.getPixel().b_asDouble(), 0);
+		assertEquals(0, img.getPixel().getValueCh2(), 0);
 		
 		img.getPixel().scale(0);
-		assertEquals(0, img.getPixel().r_asDouble(),0);
-		assertEquals(0, img.getPixel().g_asDouble(),0);
-		assertEquals(0, img.getPixel().b_asDouble(),0);
+		assertEquals(0, img.getPixel().getValueCh0(),0);
+		assertEquals(0, img.getPixel().getValueCh1(),0);
+		assertEquals(0, img.getPixel().getValueCh2(),0);
 		assertEquals(0, img.getPixel().getLen(), 0);
 		
 		img.getPixel().normalize();
-		assertEquals(0, img.getPixel().r_asDouble(),0);
-		assertEquals(0, img.getPixel().g_asDouble(),0);
-		assertEquals(0, img.getPixel().b_asDouble(),0);
+		assertEquals(0, img.getPixel().getValueCh0(),0);
+		assertEquals(0, img.getPixel().getValueCh1(),0);
+		assertEquals(0, img.getPixel().getValueCh2(),0);
 		assertEquals(0, img.getPixel().getLen(), 0);
 		
-		img.getPixel().setRGB_fromDouble(2, 1, 3);
+		img.getPixel().setValues(2, 1, 3);
 		assertEquals(1, img.getPixel().minValue(),0);
 		assertEquals(3, img.getPixel().maxValue(),0);
 		assertEquals(channel_g, img.getPixel().minChannel());
 		assertEquals(channel_b, img.getPixel().maxChannel());
 		
-		img.getPixel().setRGB_fromDouble(1, 2, 3);
+		img.getPixel().setValues(1, 2, 3);
 		assertEquals(channel_r, img.getPixel().minChannel());
 		assertEquals(channel_b, img.getPixel().maxChannel());
-		img.getPixel().setRGB_fromDouble(3, 2, 1);
+		img.getPixel().setValues(3, 2, 1);
 		assertEquals(channel_b, img.getPixel().minChannel());
 		assertEquals(channel_r, img.getPixel().maxChannel());
 	}

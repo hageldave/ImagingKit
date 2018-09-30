@@ -163,8 +163,8 @@ public enum Blending {
 	 * @see #getBlendingWith(ImgBase, int, int)
 	 * @see #getBlendingWith(ImgBase)
 	 */
-	public PixelManipulator<PixelBase,PixelBasePair> getAlphaBlendingWith(ImgBase<? extends PixelBase> topImg, int xTopOffset, int yTopOffset, double opacity){
-		return alphaBlendingWith(topImg, xTopOffset, yTopOffset, opacity, blendFunction);
+	public PixelManipulator<PixelBase<?>,PixelBasePair> getAlphaBlendingWithOffset(ImgBase<? extends PixelBase<?>> topImg, int xTopOffset, int yTopOffset, double opacity, int alphaCh, int...channels){
+		return alphaBlendingWith(topImg, xTopOffset, yTopOffset, opacity, blendFunction, alphaCh, channels);
 	}
 
 	/**
@@ -191,8 +191,8 @@ public enum Blending {
 	 * @see #getAlphaBlendingWith(ImgBase, int, int, double)
 	 * @see #getAlphaBlendingWith(ImgBase, double)
 	 */
-	public PixelManipulator<PixelBase, PixelBasePair> getBlendingWith(ImgBase<? extends PixelBase> topImg, int xTopOffset, int yTopOffset){
-		return blendingWith(topImg, xTopOffset, yTopOffset, blendFunction);
+	public PixelManipulator<PixelBase<?>, PixelBasePair> getBlendingWithOffset(ImgBase<? extends PixelBase<?>> topImg, int xTopOffset, int yTopOffset, int...channels){
+		return blendingWith(topImg, xTopOffset, yTopOffset, blendFunction, channels);
 	}
 
 	/**
@@ -216,8 +216,8 @@ public enum Blending {
 	 * @return Consumer to apply to bottom Img that will perform the specified
 	 * blending. {@code bottomImg.forEach(blendingConsumer);}
 	 */
-	public PixelManipulator<PixelBase, PixelBasePair> getAlphaBlendingWith(ImgBase<? extends PixelBase> topImg, double opacity){
-		return getAlphaBlendingWith(topImg,0,0, opacity);
+	public PixelManipulator<PixelBase<?>, PixelBasePair> getAlphaBlendingWith(ImgBase<? extends PixelBase<?>> topImg, double opacity, int alphaCh, int...channels){
+		return getAlphaBlendingWithOffset(topImg,0,0, opacity, alphaCh, channels);
 	}
 
 	/** Returns the {@code Consumer<Pixel>} for blending with the specified top
@@ -241,8 +241,8 @@ public enum Blending {
 	 * @see #getAlphaBlendingWith(ImgBase, int, int, double)
 	 * @see #getAlphaBlendingWith(ImgBase, double)
 	 */
-	public PixelManipulator<PixelBase, PixelBasePair> getBlendingWith(ImgBase<? extends PixelBase> topImg){
-		return getBlendingWith(topImg, 0, 0);
+	public PixelManipulator<PixelBase<?>, PixelBasePair> getBlendingWith(ImgBase<? extends PixelBase<?>> topImg, int...channels){
+		return getBlendingWithOffset(topImg, 0, 0, channels);
 	}
 
 
@@ -276,11 +276,12 @@ public enum Blending {
 	 * @see #alphaBlend(PixelBase, PixelBase, double, Blending)
 	 * @see #alphaBlend(PixelBase, PixelBase, double, BlendFunction)
 	 */
-	public static <P extends PixelBase> P blend(P bottom, PixelBase top, BlendFunction func){
-		bottom.setRGB_fromDouble_preserveAlpha(
-				func.blend(bottom.r_asDouble(), top.r_asDouble()),
-				func.blend(bottom.g_asDouble(), top.g_asDouble()),
-				func.blend(bottom.b_asDouble(), top.b_asDouble()));
+	public static <P extends PixelBase<?>> P blend(P bottom, PixelBase<?> top, BlendFunction func, int... channels){
+		if(channels.length == 0)
+			throw new IllegalArgumentException("need to at least specify one channel to blend but specified none");
+		for(int ch:channels){
+			bottom.setValue(ch, func.blend(bottom.getValue(ch), top.getValue(ch)));
+		}
 		return bottom;
 	}
 
@@ -300,8 +301,8 @@ public enum Blending {
 	 * @see #alphaBlend(PixelBase, PixelBase, double, Blending)
 	 * @see #alphaBlend(PixelBase, PixelBase, double, BlendFunction)
 	 */
-	public static <P extends PixelBase> P blend(P bottom, PixelBase top, Blending blending){
-		return blend(bottom, top, blending.blendFunction);
+	public static <P extends PixelBase<?>> P blend(P bottom, PixelBase<?> top, Blending blending, int... channels){
+		return blend(bottom, top, blending.blendFunction, channels);
 	}
 
 	/**
@@ -325,22 +326,29 @@ public enum Blending {
 	 * @see #blend(PixelBase, PixelBase, BlendFunction)
 	 * @see #blend(PixelBase, PixelBase, Blending)
 	 */
-	public static <P extends PixelBase> P alphaBlend(P bottom, PixelBase top, double opacity, BlendFunction func){
-//		int temp = 0;
-//		double a = Math.min(opacity*(temp=a(topARGB)) + a(bottomARGB),0xff);
-//		opacity *= (temp/255.0f);
-
-		double temp = 0;
-		double a = clamp_0_1(opacity*(temp=top.a_asDouble()) + bottom.a_asDouble());
-		opacity *= temp;
-
+	public static 
+	<P extends PixelBase<?>> 
+	P alphaBlend(
+			P bottom, 
+			PixelBase<?> top, 
+			double opacity, 
+			BlendFunction func, 
+			int alphaCh, 
+			int...channels
+	){
+		if(channels.length == 0)
+			throw new IllegalArgumentException("need to at least specify one channel to blend but specified none");
+		double temp;
+		if(alphaCh >= 0) {
+			temp = top.getValue(alphaCh);
+			double a = clamp_0_1(opacity*temp+bottom.getValue(alphaCh));
+			bottom.setValue(alphaCh, a);
+			opacity *= temp;
+		}
 		double transparency = 1-opacity;
-
-		double r = opacity*func.blend(temp=bottom.r_asDouble(), top.r_asDouble()) + temp*transparency;
-		double g = opacity*func.blend(temp=bottom.g_asDouble(), top.g_asDouble()) + temp*transparency;
-		double b = opacity*func.blend(temp=bottom.b_asDouble(), top.b_asDouble()) + temp*transparency;
-
-		bottom.setARGB_fromDouble(a, r, g, b);
+		for(int ch:channels){
+			bottom.setValue(ch, opacity*func.blend(temp=bottom.getValue(ch), top.getValue(ch)) + temp*transparency);
+		}
 		return bottom;
 	}
 
@@ -365,8 +373,8 @@ public enum Blending {
 	 * @see #blend(PixelBase, PixelBase, Blending)
 	 * @see #blend(PixelBase, PixelBase, BlendFunction)
 	 */
-	public static <P extends PixelBase> P alphaBlend(P bottom, PixelBase top, double opacity, Blending blending){
-		return alphaBlend(bottom, top, opacity, blending.blendFunction);
+	public static <P extends PixelBase<?>> P alphaBlend(P bottom, PixelBase<?> top, double opacity, Blending blending, int alphaCh, int...channels){
+		return alphaBlend(bottom, top, opacity, blending.blendFunction,alphaCh,channels);
 	}
 
 	/**
@@ -399,9 +407,12 @@ public enum Blending {
 	 * @see #getAlphaBlendingWith(ImgBase, int, int, double)
 	 * @see #getAlphaBlendingWith(ImgBase, double)
 	 */
-	public static PixelManipulator<PixelBase, PixelBasePair> alphaBlendingWith(ImgBase<? extends PixelBase> topImg, int xTopOffset, int yTopOffset, double opacity, BlendFunction func){
+	public static PixelManipulator<PixelBase<?>, PixelBasePair> alphaBlendingWith(ImgBase<? extends PixelBase<?>> topImg, int xTopOffset, int yTopOffset, double opacity, BlendFunction func, int alphaCh, int...channels){
+		if(channels.length ==  0)
+			throw new IllegalArgumentException("need to at least specify one channel to blend but specified none");
+		PixelConverter<PixelBase<?>, PixelBasePair> pixelBasePairConverter = getPixelBasePairConverter(topImg);
 		return PixelManipulator.fromConverterAndConsumer(
-				getPixelBasePairConverter(topImg),
+				pixelBasePairConverter,
 				(pair)->
 		{
 			int x = pair.px0.getX()-xTopOffset;
@@ -409,7 +420,7 @@ public enum Blending {
 
 			if(x >= 0 && y >= 0 && x < topImg.getWidth() && y < topImg.getHeight()){
 				pair.px1.setPosition(x, y);
-				alphaBlend(pair.px0, pair.px1, opacity, func);
+				alphaBlend(pair.px0, pair.px1, opacity, func, alphaCh, channels);
 			}
 		});
 	}
@@ -440,7 +451,9 @@ public enum Blending {
 	 * @see #getBlendingWith(ImgBase, int, int)
 	 * @see #getBlendingWith(ImgBase)
 	 */
-	public static PixelManipulator<PixelBase, PixelBasePair> blendingWith(ImgBase<? extends PixelBase> topImg, int xTopOffset, int yTopOffset, BlendFunction func){
+	public static PixelManipulator<PixelBase<?>, PixelBasePair> blendingWith(ImgBase<? extends PixelBase<?>> topImg, int xTopOffset, int yTopOffset, BlendFunction func, int...channels){
+		if(channels.length ==  0)
+			throw new IllegalArgumentException("need to at least specify one channel to blend but specified none");
 		return PixelManipulator.fromConverterAndConsumer(
 				getPixelBasePairConverter(topImg),
 				(pair)->
@@ -450,7 +463,7 @@ public enum Blending {
 
 			if(x >= 0 && y >= 0 && x < topImg.getWidth() && y < topImg.getHeight()){
 				pair.px1.setPosition(x, y);
-				blend(pair.px0, pair.px1, func);
+				blend(pair.px0, pair.px1, func, channels);
 			}
 		});
 	}
@@ -458,13 +471,13 @@ public enum Blending {
 
 	public static final class PixelBasePair {
 		/** the pixel to manipulate in consumer */
-		private PixelBase px0;
+		public PixelBase<?> px0;
 		/** the pixel of the other image */
-		private PixelBase px1;
+		public PixelBase<?> px1;
 	}
 
-	private static PixelConverter<PixelBase, PixelBasePair> getPixelBasePairConverter(final ImgBase<? extends PixelBase> secondImg) {
-		return new PixelConverter<PixelBase, Blending.PixelBasePair>() {
+	private static PixelConverter<PixelBase<?>, PixelBasePair> getPixelBasePairConverter(final ImgBase<? extends PixelBase<?>> secondImg) {
+		return new PixelConverter<PixelBase<?>, Blending.PixelBasePair>() {
 			@Override
 			public PixelBasePair allocateElement() {
 				PixelBasePair toReturn = new PixelBasePair();
@@ -473,13 +486,13 @@ public enum Blending {
 			}
 
 			@Override
-			public void convertPixelToElement(PixelBase px, PixelBasePair element) {
+			public void convertPixelToElement(PixelBase<?> px, PixelBasePair element) {
 				element.px0 = px;
 				element.px1.setPosition(px.getX(), px.getY());
 			}
 
 			@Override
-			public void convertElementToPixel(PixelBasePair element, PixelBase px) {
+			public void convertElementToPixel(PixelBasePair element, PixelBase<?> px) {
 				// nothing to do as element.px0 is px
 			}
 		};

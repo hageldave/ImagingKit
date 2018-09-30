@@ -38,7 +38,7 @@ import static hageldave.imagingkit.core.util.ImagingKitUtils.*;
  * @author hageldave
  * @since 1.0
  */
-public class Pixel implements PixelBase {
+public class Pixel implements Pixel3<Pixel>, Pixel4<Pixel> {
 	/** Img this pixel belongs to
 	 * @since 1.0 */
 	private final Img img;
@@ -88,7 +88,33 @@ public class Pixel implements PixelBase {
 	public Img getSource() {
 		return img;
 	}
+	
+	@Override
+	public int numChannels() {
+		return 4;
+	}
+	
+	@Override
+	public double getValue(int ch) {
+		switch (ch) {
+		case 0: return getValueCh0();
+		case 1: return getValueCh1();
+		case 2: return getValueCh2();
+		case 3: return getValueCh3();
+		default: throw new IllegalArgumentException("cannot get value for channel " + ch + " only {0,1,2,3}.");
+		}
+	}
 
+	public Pixel setValue(int ch, double v){
+		switch (ch) {
+		case 0: return setValueCh0(v);
+		case 1: return setValueCh1(v);
+		case 2: return setValueCh2(v);
+		case 3: return setValueCh3(v);
+		default: throw new IllegalArgumentException("cannot set value for channel " + ch + " only {0,1,2,3}.");
+		}
+	}
+	
 	/**
 	 * Sets the index of the Img value this Pixel references.
 	 * No bounds checks are performed.
@@ -159,11 +185,11 @@ public class Pixel implements PixelBase {
 	 * range of the Img's data array.
 	 * @see #setARGB(int, int, int, int)
 	 * @see #setRGB(int, int, int)
-	 * @see #getValue()
+	 * @see #getPackedARGB()
 	 * @see Img#setValue(int, int, int)
 	 * @since 1.0
 	 */
-	public Pixel setValue(int pixelValue){
+	public Pixel setPackedARGB(int pixelValue){
 		this.img.getData()[index] = pixelValue;
 		return this;
 	}
@@ -182,11 +208,11 @@ public class Pixel implements PixelBase {
 	 * @see #r()
 	 * @see #g()
 	 * @see #b()
-	 * @see #setValue(int)
+	 * @see #setPackedARGB(int)
 	 * @see Img#getValue(int, int)
 	 * @since 1.0
 	 */
-	public int getValue(){
+	public int getPackedARGB(){
 		return this.img.getData()[index];
 	}
 
@@ -201,11 +227,11 @@ public class Pixel implements PixelBase {
 	 * @see #b()
 	 * @see #setRGB(int, int, int)
 	 * @see #setARGB(int, int, int, int)
-	 * @see #getValue()
+	 * @see #getPackedARGB()
 	 * @since 1.0
 	 */
 	public int a(){
-		return Pixel.a(getValue());
+		return Pixel.a(getPackedARGB());
 	}
 
 	/**
@@ -219,11 +245,11 @@ public class Pixel implements PixelBase {
 	 * @see #b()
 	 * @see #setRGB(int, int, int)
 	 * @see #setARGB(int, int, int, int)
-	 * @see #getValue()
+	 * @see #getPackedARGB()
 	 * @since 1.0
 	 */
 	public int r(){
-		return Pixel.r(getValue());
+		return Pixel.r(getPackedARGB());
 	}
 
 	/**
@@ -237,11 +263,11 @@ public class Pixel implements PixelBase {
 	 * @see #b()
 	 * @see #setRGB(int, int, int)
 	 * @see #setARGB(int, int, int, int)
-	 * @see #getValue()
+	 * @see #getPackedARGB()
 	 * @since 1.0
 	 */
 	public int g(){
-		return Pixel.g(getValue());
+		return Pixel.g(getPackedARGB());
 	}
 
 	/**
@@ -255,11 +281,11 @@ public class Pixel implements PixelBase {
 	 * @see #g()
 	 * @see #setRGB(int, int, int)
 	 * @see #setARGB(int, int, int, int)
-	 * @see #getValue()
+	 * @see #getPackedARGB()
 	 * @since 1.0
 	 */
 	public int b(){
-		return Pixel.b(getValue());
+		return Pixel.b(getPackedARGB());
 	}
 
 	/**
@@ -269,13 +295,13 @@ public class Pixel implements PixelBase {
 	 * range of the Img's data array.
 	 *
 	 * @see #a()
-	 * @see #r_asDouble()
-	 * @see #g_asDouble()
-	 * @see #b_asDouble()
+	 * @see #getValueCh0()
+	 * @see #getValueCh1()
+	 * @see #getValueCh2()
 	 * @since 1.2
 	 */
-	public double a_asDouble(){
-		return Pixel.a_normalized(getValue());
+	public double getValueCh3(){
+		return Pixel.a_normalized(getPackedARGB());
 	}
 
 	/**
@@ -285,13 +311,13 @@ public class Pixel implements PixelBase {
 	 * range of the Img's data array.
 	 *
 	 * @see #r()
-	 * @see #a_asDouble()
-	 * @see #g_asDouble()
-	 * @see #b_asDouble()
+	 * @see #getValueCh3()
+	 * @see #getValueCh1()
+	 * @see #getValueCh2()
 	 * @since 1.2
 	 */
-	public double r_asDouble(){
-		return Pixel.r_normalized(getValue());
+	public double getValueCh0(){
+		return Pixel.r_normalized(getPackedARGB());
 	}
 
 	/**
@@ -301,13 +327,13 @@ public class Pixel implements PixelBase {
 	 * range of the Img's data array.
 	 *
 	 * @see #g()
-	 * @see #a_asDouble()
-	 * @see #r_asDouble()
-	 * @see #b_asDouble()
+	 * @see #getValueCh3()
+	 * @see #getValueCh0()
+	 * @see #getValueCh2()
 	 * @since 1.2
 	 */
-	public double g_asDouble(){
-		return Pixel.g_normalized(getValue());
+	public double getValueCh1(){
+		return Pixel.g_normalized(getPackedARGB());
 	}
 
 	/**
@@ -317,13 +343,13 @@ public class Pixel implements PixelBase {
 	 * range of the Img's data array.
 	 *
 	 * @see #b()
-	 * @see #a_asDouble()
-	 * @see #r_asDouble()
-	 * @see #g_asDouble()
+	 * @see #getValueCh3()
+	 * @see #getValueCh0()
+	 * @see #getValueCh1()
 	 * @since 1.2
 	 */
-	public double b_asDouble(){
-		return Pixel.b_normalized(getValue());
+	public double getValueCh2(){
+		return Pixel.b_normalized(getPackedARGB());
 	}
 
 	/**
@@ -340,11 +366,11 @@ public class Pixel implements PixelBase {
 	 * @see #argb(int, int, int, int)
 	 * @see #argb_bounded(int, int, int, int)
 	 * @see #argb_fast(int, int, int, int)
-	 * @see #setValue(int)
+	 * @see #setPackedARGB(int)
 	 * @since 1.0
 	 */
 	public void setARGB(int a, int r, int g, int b){
-		setValue(Pixel.argb(a, r, g, b));
+		setPackedARGB(Pixel.argb(a, r, g, b));
 	}
 
 	/**
@@ -360,11 +386,11 @@ public class Pixel implements PixelBase {
 	 * @see #argb(int, int, int, int)
 	 * @see #argb_bounded(int, int, int, int)
 	 * @see #argb_fast(int, int, int, int)
-	 * @see #setValue(int)
+	 * @see #setPackedARGB(int)
 	 * @since 1.0
 	 */
 	public void setRGB(int r, int g, int b){
-		setValue(Pixel.rgb(r, g, b));
+		setPackedARGB(Pixel.rgb(r, g, b));
 	}
 
 	/**
@@ -376,11 +402,11 @@ public class Pixel implements PixelBase {
 	 * @param b blue
 	 * @throws ArrayIndexOutOfBoundsException if this Pixel's index is not in
 	 * range of the Img's data array.
-	 * @see #setRGB_fromDouble_preserveAlpha(double, double, double)
+	 * @see #setValues(double, double, double)
 	 * @since 1.2
 	 */
 	public void setRGB_preserveAlpha(int r, int g, int b){
-		setValue((getValue() & 0xff000000 ) | Pixel.argb(0, r, g, b));
+		setPackedARGB((getPackedARGB() & 0xff000000 ) | Pixel.argb(0, r, g, b));
 	}
 
 	/**
@@ -394,17 +420,17 @@ public class Pixel implements PixelBase {
 	 * @throws ArrayIndexOutOfBoundsException if this Pixel's index is not in
 	 * range of the Img's data array.
 	 *
-	 * @see #setRGB_fromDouble(double, double, double)
-	 * @see #setRGB_fromDouble_preserveAlpha(double, double, double)
+	 * @see #setOpaqueValues(double, double, double)
+	 * @see #setValues(double, double, double)
 	 * @see #setARGB(int, int, int, int)
-	 * @see #a_asDouble()
-	 * @see #r_asDouble()
-	 * @see #g_asDouble()
-	 * @see #b_asDouble()
+	 * @see #getValueCh3()
+	 * @see #getValueCh0()
+	 * @see #getValueCh1()
+	 * @see #getValueCh2()
 	 * @since 1.2
 	 */
-	public Pixel setARGB_fromDouble(double a, double r, double g, double b){
-		return setValue(Pixel.argb_fromNormalized(a, r, g, b));
+	public Pixel setValues(double r, double g, double b, double a){
+		return setPackedARGB(Pixel.argb_fromNormalized(a, r, g, b));
 	}
 
 	/**
@@ -417,17 +443,17 @@ public class Pixel implements PixelBase {
 	 * @throws ArrayIndexOutOfBoundsException if this Pixel's index is not in
 	 * range of the Img's data array.
 	 *
-	 * @see #setARGB_fromDouble(double, double, double, double)
-	 * @see #setRGB_fromDouble_preserveAlpha(double, double, double)
+	 * @see #setValues(double, double, double, double)
+	 * @see #setValues(double, double, double)
 	 * @see #setRGB(int, int, int)
-	 * @see #a_asDouble()
-	 * @see #r_asDouble()
-	 * @see #g_asDouble()
-	 * @see #b_asDouble()
+	 * @see #getValueCh3()
+	 * @see #getValueCh0()
+	 * @see #getValueCh1()
+	 * @see #getValueCh2()
 	 * @since 1.2
 	 */
-	public Pixel setRGB_fromDouble(double r, double g, double b){
-		return setValue(Pixel.rgb_fromNormalized(r, g, b));
+	public Pixel setOpaqueValues(double r, double g, double b){
+		return setPackedARGB(Pixel.rgb_fromNormalized(r, g, b));
 	}
 
 	/**
@@ -444,8 +470,8 @@ public class Pixel implements PixelBase {
 	 * @see #setRGB_preserveAlpha(int, int, int)
 	 * @since 1.2
 	 */
-	public Pixel setRGB_fromDouble_preserveAlpha(double r, double g, double b){
-		return setValue((getValue() & 0xff000000) | (0x00ffffff & Pixel.rgb_fromNormalized(r, g, b)));
+	public Pixel setValues(double r, double g, double b){
+		return setPackedARGB((getPackedARGB() & 0xff000000) | (0x00ffffff & Pixel.rgb_fromNormalized(r, g, b)));
 	}
 
 	/**
@@ -458,7 +484,7 @@ public class Pixel implements PixelBase {
 	 * @since 1.2
 	 */
 	public Pixel setA(int a){
-		return setValue((getValue() & 0x00ffffff) | ((a<<24) & 0xff000000));
+		return setPackedARGB((getPackedARGB() & 0x00ffffff) | ((a<<24) & 0xff000000));
 	}
 
 	/**
@@ -472,7 +498,7 @@ public class Pixel implements PixelBase {
 	 * @since 1.2
 	 */
 	public Pixel setR(int r){
-		return setValue((getValue() & 0xff00ffff) | ((r<<16) & 0x00ff0000));
+		return setPackedARGB((getPackedARGB() & 0xff00ffff) | ((r<<16) & 0x00ff0000));
 	}
 
 	/**
@@ -486,7 +512,7 @@ public class Pixel implements PixelBase {
 	 * @since 1.2
 	 */
 	public Pixel setG(int g){
-		return setValue((getValue() & 0xffff00ff) | ((g<<8) & 0x0000ff00));
+		return setPackedARGB((getPackedARGB() & 0xffff00ff) | ((g<<8) & 0x0000ff00));
 	}
 
 	/**
@@ -500,26 +526,26 @@ public class Pixel implements PixelBase {
 	 * @since 1.2
 	 */
 	public Pixel setB(int b){
-		return setValue((getValue() & 0xffffff00) | ((b) & 0x000000ff));
+		return setPackedARGB((getPackedARGB() & 0xffffff00) | ((b) & 0x000000ff));
 	}
 
 	@Override
-	public PixelBase setA_fromDouble(double a) {
+	public Pixel setValueCh3(double a) {
 		return setA(clamp_0_255((int)Math.round(a*0xff)));
 	}
 
 	@Override
-	public PixelBase setR_fromDouble(double r) {
+	public Pixel setValueCh0(double r) {
 		return setR(clamp_0_255((int)Math.round(r*0xff)));
 	}
 
 	@Override
-	public PixelBase setG_fromDouble(double g) {
+	public Pixel setValueCh1(double g) {
 		return setG(clamp_0_255((int)Math.round(g*0xff)));
 	}
 
 	@Override
-	public PixelBase setB_fromDouble(double b) {
+	public Pixel setValueCh2(double b) {
 		return setB(clamp_0_255((int)Math.round(b*0xff)));
 	}
 
@@ -533,7 +559,7 @@ public class Pixel implements PixelBase {
 	 * @since 1.2
 	 */
 	public int getLuminance(){
-		return Pixel.getLuminance(getValue());
+		return Pixel.getLuminance(getPackedARGB());
 	}
 
 	/**
@@ -550,7 +576,7 @@ public class Pixel implements PixelBase {
 	 * @since 1.2
 	 */
 	public int getGrey(final int redWeight, final int greenWeight, final int blueWeight){
-		return Pixel.getGrey(getValue(), redWeight, greenWeight, blueWeight);
+		return Pixel.getGrey(getPackedARGB(), redWeight, greenWeight, blueWeight);
 	}
 
 	@Override

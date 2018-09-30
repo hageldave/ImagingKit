@@ -28,7 +28,7 @@ public class PixelConvertingSpliteratorTest {
 
 		{
 			Spliterator<Pixel> delegate = img.spliterator();
-			Spliterator<double[]> split = PixelConvertingSpliterator.getDoubletArrayElementSpliterator(delegate);
+			Spliterator<double[]> split = PixelConvertingSpliterator.getDoubletArrayElementSpliterator(4,delegate);
 
 			assertTrue(split.hasCharacteristics(delegate.characteristics()));
 			assertEquals(img.numValues(), split.getExactSizeIfKnown());
@@ -58,7 +58,7 @@ public class PixelConvertingSpliteratorTest {
 
 		{
 			img.setSpliteratorMinimumSplitSize(77);
-			Spliterator<double[]> split = PixelConvertingSpliterator.getDoubletArrayElementSpliterator(img.colSpliterator());
+			Spliterator<double[]> split = PixelConvertingSpliterator.getDoubletArrayElementSpliterator(4,img.colSpliterator());
 			StreamSupport.stream(split, true).forEach(rotateChannels);
 
 			for(int i = 0; i < img.numValues(); i++){
@@ -70,10 +70,10 @@ public class PixelConvertingSpliteratorTest {
 		}
 
 
-		PixelConverter<PixelBase, double[]> converter = PixelConverter.fromFunctions(
+		PixelConverter<Pixel3<?>, double[]> converter = PixelConverter.fromFunctions(
 				()->new double[3],
-				(px,a)->{a[0]=px.r_asDouble();a[1]=px.g_asDouble();a[2]=px.b_asDouble();},
-				(a,px)->{px.setRGB_fromDouble_preserveAlpha(a[0], a[1], a[2]);});
+				(px,a)->{a[0]=px.getValueCh0();a[1]=px.getValueCh1();a[2]=px.getValueCh2();},
+				(a,px)->{px.setValues(a[0], a[1], a[2]);});
 
 
 		{
@@ -120,15 +120,15 @@ public class PixelConvertingSpliteratorTest {
 		}
 
 		{
-			double sumb1 = img.stream().mapToDouble(px->px.b_asDouble()).sum();
+			double sumb1 = img.stream().mapToDouble(px->px.getValueCh2()).sum();
 			double sumb2 = img.stream(converter, false).mapToDouble(a->a[2]).sum();
 			assertNotEquals(0, sumb1, eps);
 			assertEquals(sumb1, sumb2, eps);
-			double sumg1 = img.stream().mapToDouble(px->px.g_asDouble()).sum();
+			double sumg1 = img.stream().mapToDouble(px->px.getValueCh1()).sum();
 			double sumg2 = img.stream(converter, true).mapToDouble(a->a[1]).sum();
 			assertNotEquals(0, sumg1, eps);
 			assertEquals(sumg1, sumg2, eps);
-			double sumw1 = img.stream(0, 0, img.getWidth(), 1).mapToDouble(px->px.r_asDouble()+px.g_asDouble()+px.b_asDouble()).sum();
+			double sumw1 = img.stream(0, 0, img.getWidth(), 1).mapToDouble(px->px.getValueCh0()+px.getValueCh1()+px.getValueCh2()).sum();
 			double sumw2 = img.stream(converter, false, 0, 0, img.getWidth(), 1).mapToDouble(a->a[0]+a[1]+a[2]).sum();
 			assertNotEquals(0, sumw1, eps);
 			assertEquals(sumw1, sumw2, eps);
@@ -164,7 +164,7 @@ public class PixelConvertingSpliteratorTest {
 			long numNegativeSums = dimg.stream(
 					PixelConverter.fromFunctions(
 							()->new float[1],
-							(px,f)->f[0]=(float)(px.r_asDouble()+px.g_asDouble()+px.b_asDouble()),
+							(px,f)->f[0]=(float)(px.getValueCh0()+px.getValueCh1()+px.getValueCh2()),
 							null),
 					true)
 			.filter(f->f[0] < 0)

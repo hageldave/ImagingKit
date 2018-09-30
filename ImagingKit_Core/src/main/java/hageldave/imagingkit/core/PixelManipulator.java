@@ -45,7 +45,7 @@ import hageldave.imagingkit.core.PixelConvertingSpliterator.PixelConverter;
  * @param <T> the element type of the converter (the type a pixel is converted to before applying the action)
  * @since 2.0
  */
-public interface PixelManipulator<P extends PixelBase,T> {
+public interface PixelManipulator<P extends PixelBase<?>,T> {
 
 	/**
 	 * Returns the converter that converts a pixel to the element 
@@ -66,7 +66,7 @@ public interface PixelManipulator<P extends PixelBase,T> {
 	 * @param action of the Manipulator
 	 * @return a PixelManipulator consisting of the specified converter and action.
 	 */
-	public static <P extends PixelBase,T> PixelManipulator<P,T> fromConverterAndConsumer(PixelConverter<P, T> converter, Consumer<T> action){
+	public static <P extends PixelBase<?>,T> PixelManipulator<P,T> fromConverterAndConsumer(PixelConverter<P, T> converter, Consumer<T> action){
 		return new PixelManipulator<P,T>() {
 			@Override
 			public PixelConverter<P, T> getConverter() {

@@ -22,7 +22,8 @@
 
 package hageldave.imagingkit.core.scientific;
 
-import hageldave.imagingkit.core.PixelBase;
+import hageldave.imagingkit.core.Pixel3;
+import hageldave.imagingkit.core.Pixel4;
 
 /**
  * Pixel class for retrieving a value from an {@link ColorImg}.
@@ -37,7 +38,7 @@ import hageldave.imagingkit.core.PixelBase;
  * @author hageldave
  * @since 2.0
  */
-public class ColorPixel implements PixelBase {
+public class ColorPixel implements Pixel3<ColorPixel>, Pixel4<ColorPixel> {
 
 	/** red channel index */
 	public static final int R = ColorImg.channel_r;
@@ -90,6 +91,11 @@ public class ColorPixel implements PixelBase {
 	public ColorImg getSource() {
 		return img;
 	}
+	
+	@Override
+	public int numChannels() {
+		return img.hasAlpha() ? 4:3;
+	}
 
 	@Override
 	public ColorPixel setIndex(int index) {
@@ -129,8 +135,8 @@ public class ColorPixel implements PixelBase {
 	 * or if the specified channel is alpha but the image has no alpha (you may check 
 	 * this with {@code getSource().hasAlpha()})
 	 * 
-	 * @see #setARGB_fromDouble(double, double, double, double)
-	 * @see #setRGB_fromDouble(double, double, double)
+	 * @see #setValues(double, double, double, double)
+	 * @see #setOpaqueValues(double, double, double)
 	 * @see #getValue(int channel)
 	 * @see ColorImg#setValue(int channel, int x, int y, double value)
 	 */
@@ -150,10 +156,10 @@ public class ColorPixel implements PixelBase {
 	 * or if the specified channel is alpha (3) but the image has no alpha (you may check 
 	 * this with {@code getSource().hasAlpha()})
 	 * 
-	 * @see #a_asDouble()
-	 * @see #r_asDouble()
-	 * @see #g_asDouble()
-	 * @see #b_asDouble()
+	 * @see #getValueCh3()
+	 * @see #getValueCh0()
+	 * @see #getValueCh1()
+	 * @see #getValueCh2()
 	 * @see #setValue(int channel, double value)
 	 * @see ColorImg#getValue(int channel, int x, int y)
 	 */
@@ -162,65 +168,47 @@ public class ColorPixel implements PixelBase {
 	}
 
 	@Override
-	public double a_asDouble(){
+	public double getValueCh3(){
 		return img.hasAlpha() ? this.img.getDataA()[index]:1;
 	}
 
 	@Override
-	public double r_asDouble(){
+	public double getValueCh0(){
 		return this.img.getDataR()[index];
 	}
 	
 	@Override
-	public double g_asDouble(){
+	public double getValueCh1(){
 		return this.img.getDataG()[index];
 	}
 
 	@Override
-	public double b_asDouble(){
+	public double getValueCh2(){
 		return this.img.getDataB()[index];
 	}
 
 	@Override
-	public ColorPixel setA_fromDouble(double a){
+	public ColorPixel setValueCh3(double a){
 		if(img.hasAlpha())
 			this.img.getDataA()[index] = a;
 		return this;
 	}
 
 	@Override
-	public ColorPixel setR_fromDouble(double r){
+	public ColorPixel setValueCh0(double r){
 		this.img.getDataR()[index] = r;
 		return this;
 	}
 
 	@Override
-	public ColorPixel setG_fromDouble(double g){
+	public ColorPixel setValueCh1(double g){
 		this.img.getDataG()[index] = g;
 		return this;
 	}
 
 	@Override
-	public ColorPixel setB_fromDouble(double b){
+	public ColorPixel setValueCh2(double b){
 		this.img.getDataB()[index] = b;
-		return this;
-	}
-	
-	@Override
-	public ColorPixel setARGB_fromDouble(double a, double r, double g, double b) {
-		PixelBase.super.setARGB_fromDouble(a, r, g, b);
-		return this;
-	}
-	
-	@Override
-	public ColorPixel setRGB_fromDouble(double r, double g, double b) {
-		PixelBase.super.setRGB_fromDouble(r, g, b);
-		return this;
-	}
-	
-	@Override
-	public ColorPixel setRGB_fromDouble_preserveAlpha(double r, double g, double b) {
-		PixelBase.super.setRGB_fromDouble_preserveAlpha(r, g, b);
 		return this;
 	}
 
@@ -233,7 +221,7 @@ public class ColorPixel implements PixelBase {
 	 * @see #getLuminance(double r, double g, double b)
 	 */
 	public double getLuminance(){
-		return ColorPixel.getLuminance(r_asDouble(),g_asDouble(),b_asDouble());
+		return ColorPixel.getLuminance(getValueCh0(),getValueCh1(),getValueCh2());
 	}
 
 	/**
@@ -248,7 +236,7 @@ public class ColorPixel implements PixelBase {
 	 * @see #getGrey(double r, double g, double b, double rW, double gW, double bW)
 	 */
 	public double getGrey(final double redWeight, final double greenWeight, final double blueWeight){
-		return ColorPixel.getGrey(r_asDouble(),g_asDouble(),b_asDouble(), redWeight, greenWeight, blueWeight);
+		return ColorPixel.getGrey(getValueCh0(),getValueCh1(),getValueCh2(), redWeight, greenWeight, blueWeight);
 	}
 
 	@Override
@@ -279,10 +267,10 @@ public class ColorPixel implements PixelBase {
 		//		double newRange = upperLimitAfter-lowerLimitAfter;
 		//		double scaling = newRange/currentRange;
 		double scaling = (upperLimitAfter-lowerLimitAfter)/(upperLimitNow-lowerLimitNow);
-		setRGB_fromDouble_preserveAlpha(
-				lowerLimitAfter+(r_asDouble()-lowerLimitNow)*scaling,
-				lowerLimitAfter+(g_asDouble()-lowerLimitNow)*scaling,
-				lowerLimitAfter+(b_asDouble()-lowerLimitNow)*scaling);
+		setValues(
+				lowerLimitAfter+(getValueCh0()-lowerLimitNow)*scaling,
+				lowerLimitAfter+(getValueCh1()-lowerLimitNow)*scaling,
+				lowerLimitAfter+(getValueCh2()-lowerLimitNow)*scaling);
 		return this;
 	}
 
@@ -303,7 +291,7 @@ public class ColorPixel implements PixelBase {
 	 * @see #transform(double[][] mat)
 	 */
 	public ColorPixel scale(double factor){
-		return setRGB_fromDouble_preserveAlpha(r_asDouble()*factor, g_asDouble()*factor, b_asDouble()*factor);
+		return setValues(getValueCh0()*factor, getValueCh1()*factor, getValueCh2()*factor);
 	}
 
 	/**
@@ -315,7 +303,7 @@ public class ColorPixel implements PixelBase {
 	 * @return this pixel for chaining
 	 */
 	public ColorPixel add(double r, double g, double b){
-		return setRGB_fromDouble_preserveAlpha(r+r_asDouble(), g+g_asDouble(), b+b_asDouble());
+		return setValues(r+getValueCh0(), g+getValueCh1(), b+getValueCh2());
 	}
 
 	/**
@@ -353,10 +341,10 @@ public class ColorPixel implements PixelBase {
 	 * @return this pixel for chaining
 	 */
 	public ColorPixel cross(double r, double g, double b){
-		return setRGB_fromDouble_preserveAlpha(
-				(g_asDouble()*b)-(g*b_asDouble()),
-				(b_asDouble()*r)-(b*r_asDouble()),
-				(r_asDouble()*g)-(r*g_asDouble()));
+		return setValues(
+				(getValueCh1()*b)-(g*getValueCh2()),
+				(getValueCh2()*r)-(b*getValueCh0()),
+				(getValueCh0()*g)-(r*getValueCh1()));
 	}
 
 	/**
@@ -384,10 +372,10 @@ public class ColorPixel implements PixelBase {
 	 * @return this pixel for chaining
 	 */
 	public ColorPixel cross_(double r, double g, double b){
-		return setRGB_fromDouble_preserveAlpha(
-				(g*b_asDouble())-(g_asDouble()*b),
-				(b*r_asDouble())-(b_asDouble()*r),
-				(r*g_asDouble())-(r_asDouble()*g));
+		return setValues(
+				(g*getValueCh2())-(getValueCh1()*b),
+				(b*getValueCh0())-(getValueCh2()*r),
+				(r*getValueCh1())-(getValueCh0()*g));
 	}
 
 	/**
@@ -424,7 +412,7 @@ public class ColorPixel implements PixelBase {
 			double m10, double m11, double m12,
 			double m20, double m21, double m22)
 	{
-		return setRGB_fromDouble_preserveAlpha(
+		return setValues(
 				dot(m00,m01,m02),
 				dot(m10,m11,m12),
 				dot(m20,m21,m22));
@@ -455,7 +443,7 @@ public class ColorPixel implements PixelBase {
 	 * @return the squared length of this RGB vector.
 	 */
 	public double getLenSquared(){
-		return r_asDouble()*r_asDouble() + g_asDouble()*g_asDouble() + b_asDouble()*b_asDouble();
+		return getValueCh0()*getValueCh0() + getValueCh1()*getValueCh1() + getValueCh2()*getValueCh2();
 	}
 
 	/**

@@ -89,8 +89,8 @@ public class ColorSpaceTest {
 			blackandwhite.forEach(backward);
 			assertEquals(black, blackandwhite.getData()[0]);
 			assertEquals(Integer.toHexString(blackandwhite.getData()[1]),white, blackandwhite.getData()[1]);
-			assertNotEquals(0xff123456, forward.transform(blackandwhite.getPixel().setValue(0xff123456)).getValue());
-			assertEquals(white, backward.transform(forward.transform(blackandwhite.getPixel(1,0))).getValue());
+			assertNotEquals(0xff123456, forward.transform(blackandwhite.getPixel().setPackedARGB(0xff123456)).getPackedARGB());
+			assertEquals(white, backward.transform(forward.transform(blackandwhite.getPixel(1,0))).getPackedARGB());
 		}
 
 	}
@@ -126,7 +126,7 @@ public class ColorSpaceTest {
 		// img with all colors (2^24)
 		Img img = new Img(4096,4096);
 		img.forEach(px->{
-			px.setValue(alphaTestImg | (px.getIndex()&0xffffff));
+			px.setPackedARGB(alphaTestImg | (px.getIndex()&0xffffff));
 		});
 		return img;
 	}
@@ -166,11 +166,11 @@ public class ColorSpaceTest {
 			testimg.stream(true)
 			.forEach(cst);
 			// test alpha preservation
-			testimg.forEach(px->assertEquals(img.getDataA()[px.getIndex()], px.a_asDouble(), 0));
+			testimg.forEach(px->assertEquals(img.getDataA()[px.getIndex()], px.getValueCh3(), 0));
 			testimg.stream(true)
 			.forEach(cst.inverse());
 			// test alpha preservation
-			testimg.forEach(px->assertEquals(img.getDataA()[px.getIndex()], px.a_asDouble(), 0));
+			testimg.forEach(px->assertEquals(img.getDataA()[px.getIndex()], px.getValueCh3(), 0));
 			// test if forward transform and backwards transform preserves lumanance to a high degree (max 0.001 error tolerance)
 			testimg.forEach(px->{
 				double lum1 = px.getLuminance();
@@ -185,7 +185,7 @@ public class ColorSpaceTest {
 		ColorImg img = new ColorImg(4096,4096, true);
 		img.forEach(px->{
 			int col = alphaTestImg | (px.getIndex()&0xffffff);
-			px.setARGB_fromDouble(
+			px.setValues(
 					Pixel.a_normalized(col),
 					Pixel.r_normalized(col),
 					Pixel.g_normalized(col),

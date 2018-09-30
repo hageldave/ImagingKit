@@ -57,40 +57,40 @@ public class ImgTest {
 		Img img = new Img(11,11);
 		Pixel p = new Pixel(img, 0);
 		assertEquals(img, p.getSource());
-		assertEquals(0, p.getValue());
+		assertEquals(0, p.getPackedARGB());
 		p.setR(0xff);
-		assertEquals(0x00ff0000, p.getValue());
+		assertEquals(0x00ff0000, p.getPackedARGB());
 		p.setG(0xaa);
-		assertEquals(0x00ffaa00, p.getValue());
+		assertEquals(0x00ffaa00, p.getPackedARGB());
 		p.setB(0xcdef);
-		assertEquals(0x00ffaaef, p.getValue());
+		assertEquals(0x00ffaaef, p.getPackedARGB());
 		p.setA(p.r());
-		assertEquals(0xffffaaef, p.getValue());
+		assertEquals(0xffffaaef, p.getPackedARGB());
 
 		p.setA(0x44);
 		p.setRGB_preserveAlpha(0x88, 0x77, 0x66);
-		assertEquals(0x44887766, p.getValue());
-		p.setRGB_fromDouble_preserveAlpha(0, 0, 0);
-		assertEquals(0x44000000, p.getValue());
-		p.setRGB_fromDouble_preserveAlpha(0.4f, 0.7f, 0.3f);
-		assertEquals(p.getValue(), Pixel.argb_fromNormalized(p.a_asDouble(), p.r_asDouble(), p.g_asDouble(), p.b_asDouble()));
+		assertEquals(0x44887766, p.getPackedARGB());
+		p.setValues(0, 0, 0);
+		assertEquals(0x44000000, p.getPackedARGB());
+		p.setValues(0.4f, 0.7f, 0.3f);
+		assertEquals(p.getPackedARGB(), Pixel.argb_fromNormalized(p.getValueCh3(), p.getValueCh0(), p.getValueCh1(), p.getValueCh2()));
 		{
-			int temp = p.getValue();
-			p.setARGB_fromDouble(p.a_asDouble(), p.r_asDouble(), p.g_asDouble(), p.b_asDouble());
-			assertEquals(temp, p.getValue());
+			int temp = p.getPackedARGB();
+			p.setValues(p.getValueCh0(), p.getValueCh1(), p.getValueCh2(), p.getValueCh3());
+			assertEquals(temp, p.getPackedARGB());
 		}
-		assertEquals(0x44/255f, p.a_asDouble(), eps);
-		assertEquals(0.4f, p.r_asDouble(), 0.01);
-		assertEquals(0.7f, p.g_asDouble(), 0.01);
-		assertEquals(0.3f, p.b_asDouble(), 0.01);
+		assertEquals(0x44/255f, p.getValueCh3(), eps);
+		assertEquals(0.4f, p.getValueCh0(), 0.01);
+		assertEquals(0.7f, p.getValueCh1(), 0.01);
+		assertEquals(0.3f, p.getValueCh2(), 0.01);
 		p.setARGB(0x22, 0x11, 0x44, 0x33);
-		assertEquals(0x22114433, p.getValue());
-		p.setARGB_fromDouble(1, 0x33/255.0, 0x70/255.0, 0);
-		assertEquals(0xff337000, p.getValue());
+		assertEquals(0x22114433, p.getPackedARGB());
+		p.setValues(0x33/255.0, 0x70/255.0, 0, 1);
+		assertEquals(0xff337000, p.getPackedARGB());
 		p.setRGB(0x22, 0x33, 0x44);
-		assertEquals(0xff223344, p.getValue());
-		p.setRGB_fromDouble(0x88/255d, 0xee/255d, 0xcc/255f);
-		assertEquals(0xff88eecc, p.getValue());
+		assertEquals(0xff223344, p.getPackedARGB());
+		p.setOpaqueValues(0x88/255d, 0xee/255d, 0xcc/255f);
+		assertEquals(0xff88eecc, p.getPackedARGB());
 		p.setA(0x44);
 		assertEquals(0x44, p.a());
 		assertEquals(0x88, p.r());
@@ -119,15 +119,15 @@ public class ImgTest {
 		assertEquals(1, p.getYnormalized(), 0);
 
 		color = 0x88997744;
-		p.setValue(color);
-		assertEquals(color, p.getValue());
+		p.setPackedARGB(color);
+		assertEquals(color, p.getPackedARGB());
 		assertEquals(Pixel.getGrey(color, 4, 2, 1), p.getGrey(4, 2, 1));
 		assertEquals(Pixel.getLuminance(color), p.getLuminance());
 		
-		img.getPixel(0, 0).setA_fromDouble(1).setR_fromDouble(0).setG_fromDouble(1).setB_fromDouble(0);
-		assertEquals(0xff00ff00, img.getPixel(0,0).getValue());
-		img.getPixel(1, 1).setA_fromDouble(100).setR_fromDouble(-1).setG_fromDouble(2).setB_fromDouble(-0.1);
-		assertEquals(0xff00ff00, img.getPixel(1,1).getValue());
+		img.getPixel(0, 0).setValueCh3(1).setValueCh0(0).setValueCh1(1).setValueCh2(0);
+		assertEquals(0xff00ff00, img.getPixel(0,0).getPackedARGB());
+		img.getPixel(1, 1).setValueCh3(100).setValueCh0(-1).setValueCh1(2).setValueCh2(-0.1);
+		assertEquals(0xff00ff00, img.getPixel(1,1).getPackedARGB());
 	}
 
 	@Test
@@ -495,7 +495,7 @@ public class ImgTest {
 			Img img = imgAlloc.apply(16,9);
 			int idx = 0;
 			for(Pixel p: img){
-				p.setValue(p.getValue()+idx);
+				p.setPackedARGB(p.getPackedARGB()+idx);
 				idx++;
 			}
 			assertEquals(img.numValues(), idx);
@@ -504,13 +504,13 @@ public class ImgTest {
 			}
 
 			img.forEach_defaultimpl(px->{
-				assertEquals(px.getIndex(), px.getValue());
+				assertEquals(px.getIndex(), px.getPackedARGB());
 			});
 		}
 
 		{
 			Img img = imgAlloc.apply(16,9);
-			img.iterator().forEachRemaining((px)->{px.setValue(px.getValue()+px.getIndex());});
+			img.iterator().forEachRemaining((px)->{px.setPackedARGB(px.getPackedARGB()+px.getIndex());});
 			for(int i = 0; i < img.numValues(); i++){
 				assertEquals(i, img.getData()[i]);
 			}
@@ -521,7 +521,7 @@ public class ImgTest {
 			Iterator<Pixel> it = img.iterator();
 			while(it.hasNext()){
 				Pixel px = it.next();
-				px.setValue(px.getValue()+px.getIndex());
+				px.setPackedARGB(px.getPackedARGB()+px.getIndex());
 			}
 			for(int i = 0; i < img.numValues(); i++){
 				assertEquals(i, img.getData()[i]);
@@ -530,7 +530,7 @@ public class ImgTest {
 
 		{
 			Img img = imgAlloc.apply(16,9);
-			img.forEach((px)->{px.setValue(px.getIndex());});
+			img.forEach((px)->{px.setPackedARGB(px.getIndex());});
 			for(int i = 0; i < img.numValues(); i++){
 				assertEquals(i, img.getData()[i]);
 			}
@@ -542,7 +542,7 @@ public class ImgTest {
 			Iterator<Pixel> iter = img.iterator(2, 3, 10, 5);
 			while(iter.hasNext()){
 				Pixel px = iter.next();
-				px.setValue(1+px.getX()+px.getY());
+				px.setPackedARGB(1+px.getX()+px.getY());
 			}
 			for(int y = 0; y < 9; y++){
 				for(int x = 0; x < 16; x++){
@@ -557,9 +557,9 @@ public class ImgTest {
 			iter = img.iterator(2, 3, 10, 5);
 			for(int i = 0; i < 10; i++){
 				Pixel px = iter.next();
-				px.setValue(1+px.getX()+px.getY());
+				px.setPackedARGB(1+px.getX()+px.getY());
 			}
-			iter.forEachRemaining(px->{px.setValue(1+px.getX()+px.getY());});
+			iter.forEachRemaining(px->{px.setPackedARGB(1+px.getX()+px.getY());});
 			for(int y = 0; y < 9; y++){
 				for(int x = 0; x < 16; x++){
 					if(x < 2 || x >=10+2 || y < 3 || y >= 5+3){
@@ -592,8 +592,8 @@ public class ImgTest {
 				}
 			}
 			for(Spliterator<Pixel> iter: all){
-				iter.tryAdvance((px) -> {px.setValue(px.getValue()+px.getIndex());});
-				iter.forEachRemaining((px) -> {px.setValue(px.getValue()+px.getIndex());});
+				iter.tryAdvance((px) -> {px.setPackedARGB(px.getPackedARGB()+px.getIndex());});
+				iter.forEachRemaining((px) -> {px.setPackedARGB(px.getPackedARGB()+px.getIndex());});
 			}
 			for(int i = 0; i < img.numValues(); i++){
 				assertEquals(i, img.getData()[i]);
@@ -615,7 +615,7 @@ public class ImgTest {
 				}
 			}
 			for(Spliterator<Pixel> iter: all){
-				while(iter.tryAdvance((px) -> {px.setValue(px.getValue()+px.getIndex());}));
+				while(iter.tryAdvance((px) -> {px.setPackedARGB(px.getPackedARGB()+px.getIndex());}));
 			}
 			for(int i = 0; i < img.numValues(); i++){
 				assertEquals(i, img.getData()[i]);
@@ -625,7 +625,7 @@ public class ImgTest {
 		{
 			Img img = imgAlloc.apply(100, 100);
 			Spliterator<Pixel> split = img.spliterator();
-			while(split.tryAdvance(px->px.setValue(px.getIndex())));
+			while(split.tryAdvance(px->px.setPackedARGB(px.getIndex())));
 			for(int i = 0; i < img.numValues(); i++){
 				assertEquals(i, img.getData()[i]);
 			}
@@ -650,14 +650,14 @@ public class ImgTest {
 				}
 			}
 			for(Spliterator<Pixel> iter: all){
-				iter.tryAdvance((px) -> {px.setValue(px.getValue()+px.getIndex());});
-				iter.forEachRemaining((px) -> {px.setValue(px.getValue()+px.getIndex());});
+				iter.tryAdvance((px) -> {px.setPackedARGB(px.getPackedARGB()+px.getIndex());});
+				iter.forEachRemaining((px) -> {px.setPackedARGB(px.getPackedARGB()+px.getIndex());});
 			}
 			for(Pixel px: img){
 				if(px.getX() < 40 || px.getX() >= 40+500 || px.getY() < 10 || px.getY() >= 10+300){
-					assertEquals(0, px.getValue());
+					assertEquals(0, px.getPackedARGB());
 				} else {
-					assertEquals(px.getIndex(), px.getValue());
+					assertEquals(px.getIndex(), px.getPackedARGB());
 				}
 			}
 		}
@@ -678,14 +678,14 @@ public class ImgTest {
 			}
 			for(Spliterator<Pixel> iter: all){
 				while(iter.tryAdvance((px) -> {
-					px.setValue(px.getValue()+px.getIndex());
+					px.setPackedARGB(px.getPackedARGB()+px.getIndex());
 				}));
 			}
 			for(Pixel px: img){
 				if(px.getX() < 40 || px.getX() >= 40+500 || px.getY() < 10 || px.getY() >= 10+300){
-					assertEquals(0, px.getValue());
+					assertEquals(0, px.getPackedARGB());
 				} else {
-					assertEquals(px.getIndex(), px.getValue());
+					assertEquals(px.getIndex(), px.getPackedARGB());
 				}
 			}
 		}
@@ -708,16 +708,16 @@ public class ImgTest {
 			}
 			for(Spliterator<Pixel> iter: all){
 				Consumer<Pixel> consumer = (px) -> {
-					px.setValue(px.getValue()+px.getIndex());
+					px.setPackedARGB(px.getPackedARGB()+px.getIndex());
 				};
 				iter.tryAdvance(consumer);
 				iter.forEachRemaining(consumer);
 			}
 			for(Pixel px: img){
 				if(px.getX() < 2 || px.getX() >= 2+50 || px.getY() < 2 || px.getY() >= 2+50){
-					assertEquals(0, px.getValue());
+					assertEquals(0, px.getPackedARGB());
 				} else {
-					assertEquals(px.getIndex(), px.getValue());
+					assertEquals(px.getIndex(), px.getPackedARGB());
 				}
 			}
 
@@ -726,7 +726,7 @@ public class ImgTest {
 		// parallel foreach
 		{
 			Img img = imgAlloc.apply(3000, 2000);
-			img.forEach(true, (px)->{px.setValue(px.getIndex());} );
+			img.forEach(true, (px)->{px.setPackedARGB(px.getIndex());} );
 			for(int i = 0; i < img.numValues(); i++){
 				assertEquals(i, img.getData()[i]);
 			}
@@ -735,7 +735,7 @@ public class ImgTest {
 		// foreach area
 		{
 			Img img = imgAlloc.apply(2000,400);
-			img.forEach(40, 80, 500, 100, (px)->{px.setValue(px.getValue()+px.getIndex());});
+			img.forEach(40, 80, 500, 100, (px)->{px.setPackedARGB(px.getPackedARGB()+px.getIndex());});
 			for(int i = 0; i < img.numValues(); i++){
 				int x = i % img.getWidth(); x-=40;
 				int y = i / img.getWidth(); y-=80;
@@ -750,7 +750,7 @@ public class ImgTest {
 		// parallel foreach area
 		{
 			Img img = imgAlloc.apply(3000,2000);
-			img.forEach(true, 40, 80, 1000, 500, (px)->{px.setValue(px.getValue()+px.getIndex());});
+			img.forEach(true, 40, 80, 1000, 500, (px)->{px.setPackedARGB(px.getPackedARGB()+px.getIndex());});
 			for(int i = 0; i < img.numValues(); i++){
 				int x = i % img.getWidth(); x-=40;
 				int y = i / img.getWidth(); y-=80;
@@ -769,19 +769,19 @@ public class ImgTest {
 		// streams
 		{
 			Img img = imgAlloc.apply(3000, 2000);
-			img.stream().filter(px->{return px.getX() % 2 == 0;}).forEach(px->{px.setValue(1);});
+			img.stream().filter(px->{return px.getX() % 2 == 0;}).forEach(px->{px.setPackedARGB(1);});
 			for(int y = 0; y < 2000; y++)
 			for(int x = 0; x < 3000; x++){
 				assertEquals((x+1)%2, img.getValue(x, y));
 			}
 			img.fill(0);
-			img.stream(true).filter(px->{return px.getX() % 2 == 0;}).forEach(px->{px.setValue(1);});
+			img.stream(true).filter(px->{return px.getX() % 2 == 0;}).forEach(px->{px.setPackedARGB(1);});
 			for(int y = 0; y < 2000; y++)
 			for(int x = 0; x < 3000; x++){
 				assertEquals((x+1)%2, img.getValue(x, y));
 			}
 			img.fill(0);
-			img.stream(100,200,1000,1000).filter(px->{return px.getX() % 2 == 0;}).forEach(px->{px.setValue(1);});
+			img.stream(100,200,1000,1000).filter(px->{return px.getX() % 2 == 0;}).forEach(px->{px.setPackedARGB(1);});
 			for(int y = 0; y < 2000; y++)
 			for(int x = 0; x < 3000; x++){
 				if(x < 100 || y < 200 || x >=100+1000 || y >= 200+1000){
@@ -791,7 +791,7 @@ public class ImgTest {
 				}
 			}
 			img.fill(0);
-			img.stream(true, 100,200,1000,1000).filter(px->{return px.getX() % 2 == 0;}).forEach(px->{px.setValue(1);});
+			img.stream(true, 100,200,1000,1000).filter(px->{return px.getX() % 2 == 0;}).forEach(px->{px.setPackedARGB(1);});
 			for(int y = 0; y < 2000; y++)
 			for(int x = 0; x < 3000; x++){
 				if(x < 100 || y < 200 || x >=100+1000 || y >= 200+1000){
@@ -806,24 +806,24 @@ public class ImgTest {
 		
 		// forEach/stream with manipulator/converter
 		{
-			PixelManipulator<PixelBase,Color[]> colorManip = new PixelManipulator<PixelBase,Color[]>() {
+			PixelManipulator<Pixel4<?>,Color[]> colorManip = new PixelManipulator<Pixel4<?>,Color[]>() {
 				@Override
-				public PixelConverter<PixelBase, Color[]> getConverter() {
+				public PixelConverter<Pixel4<?>, Color[]> getConverter() {
 					return PixelConverter.fromFunctions(
 							()->new Color[1], 
 							(px,c)->{
 								c[0] = new Color(
-										(float)px.r_asDouble(), 
-										(float)px.g_asDouble(), 
-										(float)px.b_asDouble(), 
-										(float)px.a_asDouble());
+										(float)px.getValueCh0(), 
+										(float)px.getValueCh1(), 
+										(float)px.getValueCh2(), 
+										(float)px.getValueCh3());
 							},
 							(c,px)->{
-								px.setARGB_fromDouble(
-										c[0].getAlpha()/255.0, 
+								px.setValues( 
 										c[0].getRed()/255.0, 
 										c[0].getGreen()/255.0, 
-										c[0].getBlue()/255.0);
+										c[0].getBlue()/255.0,
+										c[0].getAlpha()/255.0);
 							});
 				}
 
@@ -876,9 +876,9 @@ public class ImgTest {
 		});
 		img.forEach(px->{
 			if(px.getX() == px.getY()){
-				assertEquals(0xffff0000, px.getValue());
+				assertEquals(0xffff0000, px.getPackedARGB());
 			} else {
-				assertEquals(0, px.getValue());
+				assertEquals(0, px.getPackedARGB());
 			}
 		});
 	}

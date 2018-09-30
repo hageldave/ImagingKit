@@ -330,7 +330,7 @@ public class ColorImg implements ImgBase<ColorPixel> {
 	 * assert(channelImg.getDataG() == channelImg.getDataB());
 	 * }</pre>
 	 * When using one of the setter methods for all channels of a pixel object of a
-	 * channel image, (e.g. {@link ColorPixel#setRGB_fromDouble(double, double, double)})
+	 * channel image, (e.g. {@link ColorPixel#setOpaqueValues(double, double, double)})
 	 * then the value specified for the blue channel will be used because it is set last.<br>
 	 * The assertions in the following code snippet are true for a channel image:<br>
 	 * <pre>
@@ -1087,13 +1087,13 @@ public class ColorImg implements ImgBase<ColorPixel> {
 	public Img toImg(TransferFunction transferFunc){
 		Img img = new Img(getDimension());
 		if(hasAlpha()){
-			img.forEach(px->px.setValue(transferFunc.toARGB(
+			img.forEach(px->px.setPackedARGB(transferFunc.toARGB(
 					getDataA()[px.getIndex()],
 					getDataR()[px.getIndex()],
 					getDataG()[px.getIndex()],
 					getDataB()[px.getIndex()])));
 		} else {
-			img.forEach(px->px.setValue(transferFunc.toRGB(
+			img.forEach(px->px.setPackedARGB(transferFunc.toRGB(
 					getDataR()[px.getIndex()],
 					getDataG()[px.getIndex()],
 					getDataB()[px.getIndex()])));

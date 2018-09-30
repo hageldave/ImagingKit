@@ -15,16 +15,16 @@ public class PerformanceNonlinear {
 		double contrastLum = contrastLuminance/255.0;
 		float contrastIntensity = 0.21f;
 
-		Consumer<PixelBase> action = px -> {
-			double r = px.r_asDouble();
-			double g = px.g_asDouble();
-			double b = px.b_asDouble();
+		Consumer<Pixel3<?>> action = px -> {
+			double r = px.getValueCh0();
+			double g = px.getValueCh1();
+			double b = px.getValueCh2();
 			double luminance = r*0.2126 + g*0.7152 + b*0.0722;
 			double lumDif = luminance-contrastLum;
 			r += lumDif*contrastIntensity;
 			g += lumDif*contrastIntensity;
 			b += lumDif*contrastIntensity;
-			px.setRGB_fromDouble_preserveAlpha(r, g, b);
+			px.setValues(r, g, b);
 		};
 
 		for(int[] probsize:problemsizes){
@@ -121,7 +121,7 @@ public class PerformanceNonlinear {
 //				System.out.println(methods[6]);
 				time = System.currentTimeMillis();
 				{
-					img.forEach(PixelConvertingSpliterator.getDoubleArrayConverter(), true, arr-> {
+					img.forEach(PixelConvertingSpliterator.getDoubleArrayConverter(3), true, arr-> {
 						double luminance = arr[0]*0.2126 + arr[1]*0.7152 + arr[2]*0.0722;
 						double lumDif = luminance-contrastLum;
 						arr[0] += lumDif*contrastIntensity;

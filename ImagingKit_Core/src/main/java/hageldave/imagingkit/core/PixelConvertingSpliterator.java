@@ -22,8 +22,6 @@
 
 package hageldave.imagingkit.core;
 
-import static hageldave.imagingkit.core.util.ImagingKitUtils.clamp_0_1;
-
 import java.util.Objects;
 import java.util.Spliterator;
 import java.util.function.BiConsumer;
@@ -80,7 +78,7 @@ import java.util.stream.Stream;
  * @param <T> the type of elements returned by the PixelConvertingSpliterator
  * @since 1.4
  */
-public class PixelConvertingSpliterator<P extends PixelBase, T> implements Spliterator<T> {
+public class PixelConvertingSpliterator<P extends PixelBase<?>, T> implements Spliterator<T> {
 
 	/** {@code Spliterator<Pixel>} acting as delegate of this spliterator
 	 * @since 1.4 */
@@ -197,45 +195,43 @@ public class PixelConvertingSpliterator<P extends PixelBase, T> implements Split
 	 *
 	 * @since 1.4
 	 */
-	public static PixelConvertingSpliterator<PixelBase, double[]> getDoubletArrayElementSpliterator(
-			Spliterator<? extends PixelBase> pixelSpliterator){
-		PixelConvertingSpliterator<PixelBase, double[]> arraySpliterator = new PixelConvertingSpliterator<>(
-				pixelSpliterator, getDoubleArrayConverter());
+	public static <P extends PixelBase<P>> PixelConvertingSpliterator<P, double[]> getDoubletArrayElementSpliterator(int n,
+			Spliterator<P> pixelSpliterator){
+		PixelConvertingSpliterator<P, double[]> arraySpliterator = new PixelConvertingSpliterator<>(
+				pixelSpliterator, getDoubleArrayConverter(n));
 		return arraySpliterator;
 	}
 
 	/**
 	 * @return Exemplary PixelConverter that converts to double[].
 	 */
-	public static PixelConverter<PixelBase, double[]> getDoubleArrayConverter(){
-		return new PixelConverter<PixelBase, double[]>() {
+	public static <P extends PixelBase<P>> PixelConverter<P, double[]> getDoubleArrayConverter(int n){
+		return new PixelConverter<P, double[]>() {
 
 			@Override
-			public void convertPixelToElement(PixelBase px, double[] array) {
-				array[0]=px.r_asDouble();
-				array[1]=px.g_asDouble();
-				array[2]=px.b_asDouble();
+			public void convertPixelToElement(P px, double[] array) {
+				for(int ch=0; ch<Math.min(n, px.numChannels());ch++){
+					array[ch] = px.getValue(ch);
+				}
 			}
 
 			@Override
-			public void convertElementToPixel(double[] array, PixelBase px) {
-				px.setRGB_fromDouble_preserveAlpha(
-						// clamp values between zero and one
-						clamp_0_1(array[0]),
-						clamp_0_1(array[1]),
-						clamp_0_1(array[2]));
+			public void convertElementToPixel(double[] array, P px) {
+				for(int ch=0; ch<Math.min(n, px.numChannels());ch++){
+					 px.setValue(ch,array[ch]);
+				}
 			}
 
 			@Override
 			public double[] allocateElement() {
-				return new double[3];
+				return new double[n];
 			}
 		};
 	}
 
 
 
-	public static interface PixelConverter<P extends PixelBase, T> {
+	public static interface PixelConverter<P extends PixelBase<?>, T> {
 		/**
 		 * Allocates a new element for the PixelConvertingSpliterator
 		 * (will be called once per split)
@@ -268,7 +264,7 @@ public class PixelConvertingSpliterator<P extends PixelBase, T> implements Split
 		 * @param elementToPixel a consumer that sets the content of a pixel according to the element (see {@link #convertElementToPixel(Object, PixelBase)})
 		 * @return a new PixelConverter
 		 */
-		public static <P extends PixelBase, T> PixelConverter<P,T> fromFunctions(
+		public static <P extends PixelBase<?>, T> PixelConverter<P,T> fromFunctions(
 				Supplier<T> allocator,
 				BiConsumer<P,T> pixelToElement,
 				BiConsumer<T,P> elementToPixel)

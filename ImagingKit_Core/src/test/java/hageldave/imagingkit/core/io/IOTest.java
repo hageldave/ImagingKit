@@ -79,7 +79,7 @@ public class IOTest {
 			
 			assertEquals(img.getDimension(), loaded.getDimension());
 			for(Pixel p: loaded){
-				assertEquals(0xff000000 | p.getIndex(), p.getValue());
+				assertEquals(0xff000000 | p.getIndex(), p.getPackedARGB());
 			}
 		}
 		
@@ -91,13 +91,13 @@ public class IOTest {
 			
 			assertEquals(img.getDimension(), loaded.getDimension());
 			for(Pixel p: loaded){
-				assertEquals(0xff000000 | p.getIndex(), p.getValue());
+				assertEquals(0xff000000 | p.getIndex(), p.getPackedARGB());
 			}
 			String url = filePath2URL(filepath);
 			loaded = ImageLoader.loadImgFromURL(url);
 			assertEquals(img.getDimension(), loaded.getDimension());
 			for(Pixel p: loaded){
-				assertEquals(0xff000000 | p.getIndex(), p.getValue());
+				assertEquals(0xff000000 | p.getIndex(), p.getPackedARGB());
 			}
 		}
 		
@@ -111,7 +111,7 @@ public class IOTest {
 			
 			assertEquals(img.getDimension(), loaded.getDimension());
 			for(Pixel p: loaded){
-				assertEquals(p.toString(), img.getValue(p.getX(), p.getY()), p.getValue());
+				assertEquals(p.toString(), img.getValue(p.getX(), p.getY()), p.getPackedARGB());
 			}
 		}
 		
@@ -127,12 +127,12 @@ public class IOTest {
 			
 			assertEquals(img.getDimension(), loaded.getDimension());
 			for(Pixel p: loaded){
-				assertEquals(p.toString(), img.getValue(p.getX(), p.getY()), p.getValue());
+				assertEquals(p.toString(), img.getValue(p.getX(), p.getY()), p.getPackedARGB());
 			}
 			loaded = ImageLoader.loadImg(new ByteArrayInputStream(out.toByteArray()));
 			assertEquals(img.getDimension(), loaded.getDimension());
 			for(Pixel p: loaded){
-				assertEquals(p.toString(), img.getValue(p.getX(), p.getY()), p.getValue());
+				assertEquals(p.toString(), img.getValue(p.getX(), p.getY()), p.getPackedARGB());
 			}
 		}
 		
@@ -213,7 +213,7 @@ public class IOTest {
 	static Img getTestImg(int w, int h) {
 		Img img = new Img(w, h);
 		for(Pixel p: img){
-			p.setValue(0xff000000 | p.getIndex());
+			p.setPackedARGB(0xff000000 | p.getIndex());
 		}
 		return img;
 	}

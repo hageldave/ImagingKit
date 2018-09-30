@@ -25,6 +25,7 @@ package hageldave.imagingkit.core.operations;
 import java.util.function.Consumer;
 
 import hageldave.imagingkit.core.Pixel;
+import hageldave.imagingkit.core.Pixel3;
 import hageldave.imagingkit.core.PixelBase;
 
 /**
@@ -37,7 +38,7 @@ import hageldave.imagingkit.core.PixelBase;
  * @author hageldave
  * @since 1.2 (relocated from core package)
  */
-public enum ColorSpaceTransformation implements Consumer<PixelBase> {
+public enum ColorSpaceTransformation implements Consumer<Pixel3<?>> {
 
 	/**
 	 * Transforms colors from the RGB domain to the CIE L*a*b* domain.
@@ -134,10 +135,10 @@ public enum ColorSpaceTransformation implements Consumer<PixelBase> {
 	}
 
 	////// ATTRIBUTES / METHODS //////
-	private final Consumer<PixelBase> continousTransform;
+	private final Consumer<Pixel3<?>> continousTransform;
 	private ColorSpaceTransformation inverse;
 
-	private ColorSpaceTransformation(Consumer<PixelBase> continousTransform) {
+	private ColorSpaceTransformation(Consumer<Pixel3<?>> continousTransform) {
 		this.continousTransform = continousTransform;
 	}
 
@@ -148,7 +149,7 @@ public enum ColorSpaceTransformation implements Consumer<PixelBase> {
 	 * @since 1.4
 	 */
 	@Override
-	public void accept(PixelBase px) {
+	public void accept(Pixel3<?> px) {
 		continousTransform.accept(px);
 	}
 
@@ -158,7 +159,7 @@ public enum ColorSpaceTransformation implements Consumer<PixelBase> {
 	 * @return the pixel for chaining
 	 * @since 2.0
 	 */
-	public <P extends PixelBase> P transform(P px){
+	public <P extends Pixel3<?>> P transform(P px){
 		accept(px);
 		return px;
 	}
@@ -200,12 +201,12 @@ public enum ColorSpaceTransformation implements Consumer<PixelBase> {
 
 
 	////// TRANSFORMS //////
-	private static void rgb2lab_continuous(PixelBase px)
+	private static void rgb2lab_continuous(Pixel3<?> px)
 	{
 
 		double x,y,z; x=y=z=0;
 		{// first convert to CIEXYZ (assuming sRGB color space with D65 white)
-			double r = px.r_asDouble(); double g = px.g_asDouble(); double b = px.b_asDouble();
+			double r = px.getValueCh0(); double g = px.getValueCh1(); double b = px.getValueCh2();
 			x = r*0.4124564f + g*0.3575761f + b*0.1804375f;
 			y = r*0.2126729f + g*0.7151522f + b*0.0721750f;
 			z = r*0.0193339f + g*0.1191920f + b*0.9503041f;
@@ -256,10 +257,10 @@ public enum ColorSpaceTransformation implements Consumer<PixelBase> {
 			}
 
 		}
-		px.setRGB_fromDouble_preserveAlpha(L, a, b);
+		px.setValues(L, a, b);
 	}
 
-	private static void lab2rgb_continuous(PixelBase px)
+	private static void lab2rgb_continuous(Pixel3<?> px)
 	{
 		double L,A,B;
 		if(px instanceof Pixel){
@@ -275,13 +276,13 @@ public enum ColorSpaceTransformation implements Consumer<PixelBase> {
 			 * We thus mapped negative values of a and b to [0,126] 0 to [127] and positive values to [128,254],
 			 * leaving out the last value (255).
 			 */
-			L = (px.r_asDouble()        )*100.0;
-			A = (px.g_asDouble()*255-127)*(200.0/254);
-			B = (px.b_asDouble()*255-127)*(200.0/254);
+			L = (px.getValueCh0()        )*100.0;
+			A = (px.getValueCh1()*255-127)*(200.0/254);
+			B = (px.getValueCh2()*255-127)*(200.0/254);
 		} else {
-			L = (px.r_asDouble()    )*100.0;
-			A = (px.g_asDouble()-0.5)*200.0;
-			B = (px.b_asDouble()-0.5)*200.0;
+			L = (px.getValueCh0()    )*100.0;
+			A = (px.getValueCh1()-0.5)*200.0;
+			B = (px.getValueCh2()-0.5)*200.0;
 		}
 
 		// L in range [0,100] a,b in range [-100,100]
@@ -293,18 +294,18 @@ public enum ColorSpaceTransformation implements Consumer<PixelBase> {
 		double y =  LAB.Yn*LAB.funcInv(temp);
 		double z =  LAB.Zn*LAB.funcInv(temp - (B/200));
 
-		px.setRGB_fromDouble_preserveAlpha(
+		px.setValues(
 				//                           X             Y             Z
 				( 3.2404542f*x -1.5371385f*y -0.4985314f*z),  // R
 				(-0.9692660f*x +1.8760108f*y +0.0415560f*z),  // G
 				( 0.0556434f*x -0.2040259f*y +1.0572252f*z)); // B
 	}
 
-	private static void rgb2hsv_continuous(PixelBase px)
+	private static void rgb2hsv_continuous(Pixel3<?> px)
 	{
-		double r = px.r_asDouble();
-		double g = px.g_asDouble();
-		double b = px.b_asDouble();
+		double r = px.getValueCh0();
+		double g = px.getValueCh1();
+		double b = px.getValueCh2();
 
 		double max,p,q,o; max=p=q=o=0;
 		if(r > max){ max=r; p=g; q=b; o=0; }
@@ -313,52 +314,52 @@ public enum ColorSpaceTransformation implements Consumer<PixelBase> {
 
 		double min = Math.min(Math.min(r,g),b);
 		if(max==min){
-			px.setRGB_fromDouble_preserveAlpha(0, 0, max);
+			px.setValues(0, 0, max);
 		} else {
 			double h,s,v;
 			h = (1.0/6.0) * (o + (p-q)/(max-min));
 			h -= Math.floor(h);
 			s = (max-min)/max;
 			v = max;
-			px.setRGB_fromDouble_preserveAlpha(h, s, v);
+			px.setValues(h, s, v);
 		}
 	}
 
-	private static void hsv2rgb_continuous(PixelBase px)
+	private static void hsv2rgb_continuous(Pixel3<?> px)
 	{
-		double h = px.r_asDouble();
+		double h = px.getValueCh0();
 		h -= Math.floor(h);
 		h *= 360;
-		double s = px.g_asDouble();
-		double v = px.b_asDouble();
+		double s = px.getValueCh1();
+		double v = px.getValueCh2();
 		double hi = h/60;
 		double f = hi - (hi=(int)hi);
 		double p = v*(1-s);
 		double q = v*(1-s*f);
 		double t = v*(1-s*(1-f));
 		switch((int)hi){
-		case 1:  px.setRGB_fromDouble_preserveAlpha(q,v,p);break;
-		case 2:  px.setRGB_fromDouble_preserveAlpha(p,v,t);break;
-		case 3:  px.setRGB_fromDouble_preserveAlpha(p,q,v);break;
-		case 4:  px.setRGB_fromDouble_preserveAlpha(t,p,v);break;
-		case 5:  px.setRGB_fromDouble_preserveAlpha(v,p,q);break;
-		default: px.setRGB_fromDouble_preserveAlpha(v,t,p);break;
+		case 1:  px.setValues(q,v,p);break;
+		case 2:  px.setValues(p,v,t);break;
+		case 3:  px.setValues(p,q,v);break;
+		case 4:  px.setValues(t,p,v);break;
+		case 5:  px.setValues(v,p,q);break;
+		default: px.setValues(v,t,p);break;
 		}
 	}
 	
-	private static void rgb2ycbcr_continuous(PixelBase px)
+	private static void rgb2ycbcr_continuous(Pixel3<?> px)
 	{
-		double r = px.r_asDouble(), g = px.g_asDouble(), b = px.b_asDouble();
-		px.setRGB_fromDouble_preserveAlpha(
+		double r = px.getValueCh0(), g = px.getValueCh1(), b = px.getValueCh2();
+		px.setValues(
 				(0.2990f*r +0.5870f*g +0.1140f*b),
 				(-0.1687f*r -0.3313f*g +0.5000f*b +0.5),
 				( 0.5000f*r -0.4187f*g +0.0813f*b +0.5));
 	}
 
-	private static void ycbcr2rgb_continuous(PixelBase px)
+	private static void ycbcr2rgb_continuous(Pixel3<?> px)
 	{
-		double y = px.r_asDouble(), cb = px.g_asDouble()-0.5, cr = px.b_asDouble()-0.5;
-		px.setRGB_fromDouble_preserveAlpha(
+		double y = px.getValueCh0(), cb = px.getValueCh1()-0.5, cr = px.getValueCh2()-0.5;
+		px.setValues(
 				(0.7720f*y -0.4030f*cb +1.4020f*cr),
 				(1.1161f*y -0.1384f*cb -0.7141f*cr),
 				(1.0000f*y +1.7720f*cb -0.0001f*cr));
