@@ -53,11 +53,11 @@ public class ColorImgTest {
 		ColorImg img = new ColorImg(3, 3, false);
 		testException(()->
 		{
-			img.getValue(channel_a, 0, 0);
+			img.getValueAt(channel_a, 0, 0);
 		}, ArrayIndexOutOfBoundsException.class);
 		testException(()->
 		{
-			img.setValue(channel_a, 0, 0, 2.5);
+			img.setValueAt(channel_a, 0, 0, 2.5);
 		}, ArrayIndexOutOfBoundsException.class);
 		testException(()->
 		{
@@ -153,10 +153,10 @@ public class ColorImgTest {
 											-3,-4};
 			
 			ColorImg img = new ColorImg(2, 2, rBuffer, gBuffer, bBuffer, aBuffer);
-			assertEquals(img.getValue(channel_r, 0, 0), rBuffer[0], 0);
-			assertEquals(img.getValue(channel_g, 1, 0), gBuffer[1], 0);
-			assertEquals(img.getValue(channel_b, 0, 1), bBuffer[2], 0);
-			assertEquals(img.getValue(channel_a, 1, 1), aBuffer[3], 0);
+			assertEquals(img.getValueAt(channel_r, 0, 0), rBuffer[0], 0);
+			assertEquals(img.getValueAt(channel_g, 1, 0), gBuffer[1], 0);
+			assertEquals(img.getValueAt(channel_b, 0, 1), bBuffer[2], 0);
+			assertEquals(img.getValueAt(channel_a, 1, 1), aBuffer[3], 0);
 			
 			int i = 0;
 			for(int y = 0; y < img.getHeight(); y++){
@@ -265,13 +265,13 @@ public class ColorImgTest {
 			img1.copyArea(0, 0, 100, 100, img3, -2, -4);
 			for(int y = 0; y < 100; y++){
 				for(int x = 0; x < 100; x++){
-					assertEquals(-2, img3.getValue(channel_g, x, y),0);
-					assertEquals(0,  img3.getValue(channel_b, x, y),0);
-					assertEquals(33, img3.getValue(channel_a, x, y),0);
+					assertEquals(-2, img3.getValueAt(channel_g, x, y),0);
+					assertEquals(0,  img3.getValueAt(channel_b, x, y),0);
+					assertEquals(33, img3.getValueAt(channel_a, x, y),0);
 					if(x < 100-2 && y < 100-4){
-						assertEquals(5, img3.getValue(channel_r, x, y),0);
+						assertEquals(5, img3.getValueAt(channel_r, x, y),0);
 					} else {
-						assertEquals(1, img3.getValue(channel_r, x, y),0);
+						assertEquals(1, img3.getValueAt(channel_r, x, y),0);
 					}
 				}
 			}
@@ -280,13 +280,13 @@ public class ColorImgTest {
 			img1.copyArea(0, 0, 100, 100, img3, 0, -3);
 			for(int y = 0; y < 100; y++){
 				for(int x = 0; x < 100; x++){
-					assertEquals(-2, img3.getValue(channel_g, x, y),0);
-					assertEquals(0,  img3.getValue(channel_b, x, y),0);
-					assertEquals(33, img3.getValue(channel_a, x, y),0);
+					assertEquals(-2, img3.getValueAt(channel_g, x, y),0);
+					assertEquals(0,  img3.getValueAt(channel_b, x, y),0);
+					assertEquals(33, img3.getValueAt(channel_a, x, y),0);
 					if(y < 100-3){
-						assertEquals(6, img3.getValue(channel_r, x, y),0);
+						assertEquals(6, img3.getValueAt(channel_r, x, y),0);
 					} else {
-						assertEquals(1, img3.getValue(channel_r, x, y),0);
+						assertEquals(1, img3.getValueAt(channel_r, x, y),0);
 					}
 				}
 			}
@@ -301,8 +301,8 @@ public class ColorImgTest {
 			assertArrayEquals(img1.getDataB(), img3.getDataB(), 0);
 			assertArrayEquals(img1.getDataA(), img3.getDataA(), 0);
 			
-			img1.setValue(channel_r, 1, 0, 44);
-			assertEquals(44, img1.getValue(channel_r, 1, 0),0);
+			img1.setValueAt(channel_r, 1, 0, 44);
+			assertEquals(44, img1.getValueAt(channel_r, 1, 0),0);
 			img1.fill(channel_a, 0);
 			img1.fill(channel_r, 0);
 			img1.fill(channel_g, 0);
@@ -316,15 +316,15 @@ public class ColorImgTest {
 			for(int y = 0; y < 100; y++){
 				for(int x = 0; x < 100; x++){
 					if(x==y){
-						assertEquals(81, img1.getValue(channel_a, x, y),0);
-						assertEquals(78, img1.getValue(channel_r, x, y),0);
-						assertEquals(79, img1.getValue(channel_g, x, y),0);
-						assertEquals(80, img1.getValue(channel_b, x, y),0);
+						assertEquals(81, img1.getValueAt(channel_a, x, y),0);
+						assertEquals(78, img1.getValueAt(channel_r, x, y),0);
+						assertEquals(79, img1.getValueAt(channel_g, x, y),0);
+						assertEquals(80, img1.getValueAt(channel_b, x, y),0);
 					} else{
-						assertEquals(0, img1.getValue(channel_a, x, y),0);
-						assertEquals(0, img1.getValue(channel_r, x, y),0);
-						assertEquals(0, img1.getValue(channel_g, x, y),0);
-						assertEquals(0, img1.getValue(channel_b, x, y),0);
+						assertEquals(0, img1.getValueAt(channel_a, x, y),0);
+						assertEquals(0, img1.getValueAt(channel_r, x, y),0);
+						assertEquals(0, img1.getValueAt(channel_g, x, y),0);
+						assertEquals(0, img1.getValueAt(channel_b, x, y),0);
 					}
 				}
 			}

@@ -11,7 +11,9 @@ import java.util.stream.StreamSupport;
 
 import org.junit.Test;
 
-import hageldave.imagingkit.core.PixelConvertingSpliterator.PixelConverter;
+import hageldave.imagingkit.core.img.PixelConvertingSpliterator;
+import hageldave.imagingkit.core.img.PixelConvertingSpliterator.PixelConverter;
+import hageldave.imagingkit.core.pixel.Pixel3;
 import hageldave.imagingkit.core.scientific.ColorImg;
 
 public class PixelConvertingSpliteratorTest {

@@ -20,12 +20,14 @@
  * IN THE SOFTWARE.
  */
 
-package hageldave.imagingkit.core;
+package hageldave.imagingkit.core.img;
 
 import java.util.Iterator;
 import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+
+import hageldave.imagingkit.core.pixel.PixelBase;
 
 
 /**
@@ -55,7 +57,7 @@ public final class Iterators {
 	 * @author hageldave
 	 * @param <P> the pixel type of this iterator
 	 */
-	public static class ImgIterator<P extends PixelBase> implements Iterator<P> {
+	public static class ImgIterator<P extends PixelBase<?>> implements Iterator<P> {
 		
 		private final P px;
 		private final int numValues;
@@ -100,7 +102,7 @@ public final class Iterators {
 	 * @author hageldave
 	 * @param <P> the pixel type of this iterator
 	 */
-	public static class ImgAreaIterator<P extends PixelBase> implements Iterator<P> {
+	public static class ImgAreaIterator<P extends PixelBase<?>> implements Iterator<P> {
 		private final P px;
 		private final int xStart;
 		private final int yStart;
@@ -167,7 +169,7 @@ public final class Iterators {
 	 * The standard {@link Spliterator} class for images.
 	 * @author hageldave
 	 */
-	public static final class ImgSpliterator<P extends PixelBase> implements Spliterator<P> {
+	public static final class ImgSpliterator<P extends PixelBase<?>> implements Spliterator<P> {
 	
 		private final Supplier<P> pixelSupplier;
 		private final P px;
@@ -248,7 +250,7 @@ public final class Iterators {
 	 * Spliterator class for images bound to a specific area
 	 * @author hageldave
 	 */
-	public static final class ImgAreaSpliterator<P extends PixelBase> implements Spliterator<P> {
+	public static final class ImgAreaSpliterator<P extends PixelBase<?>> implements Spliterator<P> {
 
 		private final Supplier<P> pixelSupplier;
 		private final P px;
@@ -397,7 +399,7 @@ public final class Iterators {
 	 * an entire row of the image.
 	 * @author hageldave
 	 */
-	public static final class RowSpliterator<P extends PixelBase> implements Spliterator<P> {
+	public static final class RowSpliterator<P extends PixelBase<?>> implements Spliterator<P> {
 
 		private final int startX;
 		private final int endXinclusive;
@@ -483,7 +485,7 @@ public final class Iterators {
 	 * an entire column of the image.
 	 * @author hageldave
 	 */
-	public static final class ColSpliterator<P extends PixelBase> implements Spliterator<P> {
+	public static final class ColSpliterator<P extends PixelBase<?>> implements Spliterator<P> {
 
 		private final int startY;
 		private int endXinclusive;

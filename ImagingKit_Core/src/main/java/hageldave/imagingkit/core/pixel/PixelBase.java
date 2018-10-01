@@ -20,9 +20,11 @@
  * IN THE SOFTWARE.
  */
 
-package hageldave.imagingkit.core;
+package hageldave.imagingkit.core.pixel;
 
 import java.util.Locale;
+
+import hageldave.imagingkit.core.img.ImgBase;
 
 /**
  * Basic interface for Pixel classes of {@link ImgBase} implementations.

@@ -4,7 +4,7 @@ import java.util.Spliterator;
 import java.util.concurrent.CountedCompleter;
 import java.util.function.Consumer;
 
-import hageldave.imagingkit.core.ImgBase;
+import hageldave.imagingkit.core.img.ImgBase;
 
 /**
  * CountedCompleter class for multithreaded execution of a Consumer on a

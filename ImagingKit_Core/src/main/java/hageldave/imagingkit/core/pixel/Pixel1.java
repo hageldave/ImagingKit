@@ -1,4 +1,4 @@
-package hageldave.imagingkit.core;
+package hageldave.imagingkit.core.pixel;
 
 public interface Pixel1<SELF> extends PixelBase<SELF> {
 	

@@ -4,6 +4,9 @@ import java.util.Arrays;
 import java.util.Random;
 import java.util.function.Consumer;
 
+import hageldave.imagingkit.core.img.PixelConvertingSpliterator;
+import hageldave.imagingkit.core.pixel.Pixel3;
+
 public class PerformanceNonlinear {
 	public static void main(String[] args) {
 

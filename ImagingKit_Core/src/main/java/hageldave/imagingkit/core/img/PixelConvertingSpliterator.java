@@ -20,7 +20,7 @@
  * IN THE SOFTWARE.
  */
 
-package hageldave.imagingkit.core;
+package hageldave.imagingkit.core.img;
 
 import java.util.Objects;
 import java.util.Spliterator;
@@ -28,6 +28,10 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
+
+import hageldave.imagingkit.core.Img;
+import hageldave.imagingkit.core.Pixel;
+import hageldave.imagingkit.core.pixel.PixelBase;
 
 /**
  * The PixelConvertingSpliterator enables iterating an {@link Img} with a

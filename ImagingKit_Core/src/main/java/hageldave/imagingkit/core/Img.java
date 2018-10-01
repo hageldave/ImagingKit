@@ -22,6 +22,8 @@
 
 package hageldave.imagingkit.core;
 
+import static hageldave.imagingkit.core.util.ImagingKitUtils.clamp_0_255;
+
 import java.awt.Dimension;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBuffer;
@@ -33,6 +35,7 @@ import java.util.Arrays;
 import java.util.Spliterator;
 import java.util.function.Consumer;
 
+import hageldave.imagingkit.core.img.ImgBase;
 import hageldave.imagingkit.core.util.ImagingKitUtils;
 
 /**
@@ -219,6 +222,40 @@ public class Img implements ImgBase<Pixel> {
 	 */
 	public int numValues(){
 		return getWidth()*getHeight();
+	}
+	
+	@Override
+	public int numChannels() {
+		return 4;
+	}
+	
+	@Override
+	public double getValueAt(final int ch, final int x, final int y) {
+		switch (ch) {
+		case 0: return Pixel.r_normalized(getValue(x, y));
+		case 1: return Pixel.g_normalized(getValue(x, y));
+		case 2: return Pixel.b_normalized(getValue(x, y));
+		case 3: return Pixel.a_normalized(getValue(x, y));
+		default: throw new IllegalArgumentException("only channels in {0,1,2,3} allowed, but specified " + ch);
+		}
+	}
+	
+	@Override
+	public Img setValueAt(final int ch, final int x, final int y, double v) {
+		final int idx = y*this.width + x;
+		final int vdiscrete = clamp_0_255((int)Math.round(v*0xff));
+		switch (ch) {
+		case 0: getData()[idx]=Pixel.changeChannelR(getData()[idx],vdiscrete);
+			break;
+		case 1: getData()[idx]=Pixel.changeChannelG(getData()[idx],vdiscrete);
+			break;
+		case 2: getData()[idx]=Pixel.changeChannelB(getData()[idx],vdiscrete);
+			break;
+		case 3: getData()[idx]=Pixel.changeChannelA(getData()[idx],vdiscrete);
+			break;
+		default: throw new IllegalArgumentException("only channels in {0,1,2,3} allowed, but specified " + ch);
+		}
+		return this;
 	}
 
 	/**

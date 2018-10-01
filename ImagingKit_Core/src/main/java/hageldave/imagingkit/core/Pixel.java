@@ -24,6 +24,9 @@ package hageldave.imagingkit.core;
 
 import static hageldave.imagingkit.core.util.ImagingKitUtils.*;
 
+import hageldave.imagingkit.core.pixel.Pixel3;
+import hageldave.imagingkit.core.pixel.Pixel4;
+
 /**
  * Pixel class for retrieving a value from an {@link Img}.
  * A Pixel object stores a position and can be used to get and set values of
@@ -473,6 +476,22 @@ public class Pixel implements Pixel3<Pixel>, Pixel4<Pixel> {
 	public Pixel setValues(double r, double g, double b){
 		return setPackedARGB((getPackedARGB() & 0xff000000) | (0x00ffffff & Pixel.rgb_fromNormalized(r, g, b)));
 	}
+	
+	public static int changeChannelA(int packedARGB, int a){
+		return (packedARGB & 0x00ffffff) | ((a<<24) & 0xff000000);
+	}
+	
+	public static int changeChannelR(int packedARGB, int r){
+		return (packedARGB & 0xff00ffff) | ((r<<16) & 0x00ff0000);
+	}
+	
+	public static int changeChannelG(int packedARGB, int g){
+		return (packedARGB & 0xffff00ff) | ((g<< 8) & 0x0000ff00);
+	}
+	
+	public static int changeChannelB(int packedARGB, int b){
+		return (packedARGB & 0xffffff00) | ((b    ) & 0x000000ff);
+	}
 
 	/**
 	 * Sets alpha channel value of this Pixel. Value will be truncated to
@@ -484,7 +503,7 @@ public class Pixel implements Pixel3<Pixel>, Pixel4<Pixel> {
 	 * @since 1.2
 	 */
 	public Pixel setA(int a){
-		return setPackedARGB((getPackedARGB() & 0x00ffffff) | ((a<<24) & 0xff000000));
+		return setPackedARGB(changeChannelA(getPackedARGB(), a));
 	}
 
 	/**
@@ -498,7 +517,7 @@ public class Pixel implements Pixel3<Pixel>, Pixel4<Pixel> {
 	 * @since 1.2
 	 */
 	public Pixel setR(int r){
-		return setPackedARGB((getPackedARGB() & 0xff00ffff) | ((r<<16) & 0x00ff0000));
+		return setPackedARGB(changeChannelR(getPackedARGB(), r));
 	}
 
 	/**
@@ -512,7 +531,7 @@ public class Pixel implements Pixel3<Pixel>, Pixel4<Pixel> {
 	 * @since 1.2
 	 */
 	public Pixel setG(int g){
-		return setPackedARGB((getPackedARGB() & 0xffff00ff) | ((g<<8) & 0x0000ff00));
+		return setPackedARGB(changeChannelG(getPackedARGB(), g));
 	}
 
 	/**
@@ -526,7 +545,7 @@ public class Pixel implements Pixel3<Pixel>, Pixel4<Pixel> {
 	 * @since 1.2
 	 */
 	public Pixel setB(int b){
-		return setPackedARGB((getPackedARGB() & 0xffffff00) | ((b) & 0x000000ff));
+		return setPackedARGB(changeChannelB(getPackedARGB(), b));
 	}
 
 	@Override

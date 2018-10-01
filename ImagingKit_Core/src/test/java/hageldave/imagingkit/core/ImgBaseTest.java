@@ -7,6 +7,10 @@ import java.awt.image.BufferedImage;
 
 import org.junit.Test;
 
+import hageldave.imagingkit.core.img.ImgBase;
+import hageldave.imagingkit.core.pixel.Pixel3;
+import hageldave.imagingkit.core.pixel.Pixel4;
+
 public class ImgBaseTest {
 	
 	@Test
@@ -39,7 +43,23 @@ public class ImgBaseTest {
 		public int getHeight() {
 			return 1024;
 		}
+		
+		@Override
+		public int numChannels() {
+			return 4;
+		}
 
+		@Override
+		public double getValueAt(int ch, int x, int y) {
+			return values[y][x][ch];
+		}
+		
+		@Override
+		public TestImg setValueAt(int ch, int x, int y, double v) {
+			values[y][x][ch]=v;
+			return this;
+		}
+		
 		@Override
 		public TestPixel getPixel() {
 			return new TestPixel(this);

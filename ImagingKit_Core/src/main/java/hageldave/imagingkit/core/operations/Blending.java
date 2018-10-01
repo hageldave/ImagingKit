@@ -25,10 +25,10 @@ package hageldave.imagingkit.core.operations;
 import static hageldave.imagingkit.core.util.ImagingKitUtils.clamp_0_1;
 
 import hageldave.imagingkit.core.Img;
-import hageldave.imagingkit.core.ImgBase;
-import hageldave.imagingkit.core.PixelBase;
-import hageldave.imagingkit.core.PixelConvertingSpliterator.PixelConverter;
-import hageldave.imagingkit.core.PixelManipulator;
+import hageldave.imagingkit.core.img.ImgBase;
+import hageldave.imagingkit.core.img.PixelConvertingSpliterator.PixelConverter;
+import hageldave.imagingkit.core.pixel.PixelBase;
+import hageldave.imagingkit.core.pixel.PixelManipulator;
 
 /**
  * This Enum class provides a variation of different blend functions to

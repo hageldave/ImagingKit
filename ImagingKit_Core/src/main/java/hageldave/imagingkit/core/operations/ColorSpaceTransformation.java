@@ -25,8 +25,8 @@ package hageldave.imagingkit.core.operations;
 import java.util.function.Consumer;
 
 import hageldave.imagingkit.core.Pixel;
-import hageldave.imagingkit.core.Pixel3;
-import hageldave.imagingkit.core.PixelBase;
+import hageldave.imagingkit.core.pixel.Pixel3;
+import hageldave.imagingkit.core.pixel.PixelBase;
 
 /**
  * Enum providing multiple color space transformations.

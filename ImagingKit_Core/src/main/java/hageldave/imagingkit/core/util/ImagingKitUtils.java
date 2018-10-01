@@ -1,6 +1,6 @@
 package hageldave.imagingkit.core.util;
 
-import hageldave.imagingkit.core.ImgBase;
+import hageldave.imagingkit.core.img.ImgBase;
 
 /**
  * Utility methods used throughout ImagingKit.

@@ -20,11 +20,13 @@
  * IN THE SOFTWARE.
  */
 
-package hageldave.imagingkit.core;
+package hageldave.imagingkit.core.pixel;
 
 import java.util.function.Consumer;
 
-import hageldave.imagingkit.core.PixelConvertingSpliterator.PixelConverter;
+import hageldave.imagingkit.core.img.ImgBase;
+import hageldave.imagingkit.core.img.PixelConvertingSpliterator;
+import hageldave.imagingkit.core.img.PixelConvertingSpliterator.PixelConverter;
 
 /**
  * The PixelManipulator interface defines an action to be performed on a pixel.

@@ -5,6 +5,7 @@ import java.lang.reflect.InvocationTargetException;
 
 import org.junit.Test;
 
+import hageldave.imagingkit.core.img.Iterators;
 import hageldave.imagingkit.core.io.ImageLoader;
 import hageldave.imagingkit.core.io.ImageSaver;
 import hageldave.imagingkit.core.util.BufferedImageFactory;

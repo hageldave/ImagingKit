@@ -22,8 +22,8 @@
 
 package hageldave.imagingkit.core.scientific;
 
-import hageldave.imagingkit.core.Pixel3;
-import hageldave.imagingkit.core.Pixel4;
+import hageldave.imagingkit.core.pixel.Pixel3;
+import hageldave.imagingkit.core.pixel.Pixel4;
 
 /**
  * Pixel class for retrieving a value from an {@link ColorImg}.
@@ -138,7 +138,7 @@ public class ColorPixel implements Pixel3<ColorPixel>, Pixel4<ColorPixel> {
 	 * @see #setValues(double, double, double, double)
 	 * @see #setOpaqueValues(double, double, double)
 	 * @see #getValue(int channel)
-	 * @see ColorImg#setValue(int channel, int x, int y, double value)
+	 * @see ColorImg#setValueAt(int channel, int x, int y, double value)
 	 */
 	public ColorPixel setValue(int channel, double value){
 		this.img.getData()[channel][index] = value;
@@ -161,7 +161,7 @@ public class ColorPixel implements Pixel3<ColorPixel>, Pixel4<ColorPixel> {
 	 * @see #getValueCh1()
 	 * @see #getValueCh2()
 	 * @see #setValue(int channel, double value)
-	 * @see ColorImg#getValue(int channel, int x, int y)
+	 * @see ColorImg#getValueAt(int channel, int x, int y)
 	 */
 	public double getValue(int channel){
 		return this.img.getData()[channel][index];

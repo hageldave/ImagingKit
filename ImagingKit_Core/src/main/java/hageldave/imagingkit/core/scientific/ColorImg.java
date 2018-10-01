@@ -40,9 +40,9 @@ import java.util.function.Consumer;
 import java.util.function.DoubleToIntFunction;
 
 import hageldave.imagingkit.core.Img;
-import hageldave.imagingkit.core.ImgBase;
 import hageldave.imagingkit.core.Pixel;
-import hageldave.imagingkit.core.PixelBase;
+import hageldave.imagingkit.core.img.ImgBase;
+import hageldave.imagingkit.core.pixel.PixelBase;
 import hageldave.imagingkit.core.util.ImageFrame;
 import hageldave.imagingkit.core.util.ImagingKitUtils;
 
@@ -233,6 +233,11 @@ public class ColorImg implements ImgBase<ColorPixel> {
 	public int numValues(){
 		return getWidth()*getHeight();
 	}
+	
+	@Override
+	public int numChannels() {
+		return hasAlpha() ? 4:3;
+	}
 
 	/**
 	 * Returns the data arrays of this image in the following order:
@@ -371,9 +376,9 @@ public class ColorImg implements ImgBase<ColorPixel> {
 	 * @see #getValueB(int, int)
 	 * @see #getValueA(int, int)
 	 * @see #getPixel(int x, int y)
-	 * @see #setValue(int channel, int x, int y, double val)
+	 * @see #setValueAt(int channel, int x, int y, double val)
 	 */
-	public double getValue(final int channel, final int x, final int y){
+	public double getValueAt(final int channel, final int x, final int y){
 		return this.data[channel][y*this.width + x];
 	}
 
@@ -388,7 +393,7 @@ public class ColorImg implements ImgBase<ColorPixel> {
 	 * @throws ArrayIndexOutOfBoundsException if resulting index from x and y
 	 * is not within the data arrays bounds
 	 * 
-	 * @see #getValue(int channel , int x, int y)
+	 * @see #getValueAt(int channel , int x, int y)
 	 * @see #getValueR(int x, int y, int mode)
 	 */
 	public double getValueR(final int x, final int y){
@@ -406,7 +411,7 @@ public class ColorImg implements ImgBase<ColorPixel> {
 	 * @throws ArrayIndexOutOfBoundsException if resulting index from x and y
 	 * is not within the data arrays bounds
 	 * 
-	 * @see #getValue(int channel , int x, int y)
+	 * @see #getValueAt(int channel , int x, int y)
 	 * @see #getValueG(int x, int y, int mode)
 	 */
 	public double getValueG(final int x, final int y){
@@ -424,7 +429,7 @@ public class ColorImg implements ImgBase<ColorPixel> {
 	 * @throws ArrayIndexOutOfBoundsException if resulting index from x and y
 	 * is not within the data arrays bounds
 	 * 
-	 * @see #getValue(int channel , int x, int y)
+	 * @see #getValueAt(int channel , int x, int y)
 	 * @see #getValueB(int x, int y, int mode)
 	 */
 	public double getValueB(final int x, final int y){
@@ -443,7 +448,7 @@ public class ColorImg implements ImgBase<ColorPixel> {
 	 * is not within the data arrays bounds
 	 * @throws NullPointerException if this image has no alpha channel (check using {@link #hasAlpha()})
 	 * 
-	 * @see #getValue(int channel , int x, int y)
+	 * @see #getValueAt(int channel , int x, int y)
 	 * @see #getValueA(int x, int y, int mode)
 	 */
 	public double getValueA(final int x, final int y){
@@ -492,11 +497,11 @@ public class ColorImg implements ImgBase<ColorPixel> {
 			case boundary_mode_repeat_edge:
 				x = (x < 0 ? 0: (x >= this.width ? this.width-1:x));
 				y = (y < 0 ? 0: (y >= this.height ? this.height-1:y));
-				return getValue(channel, x, y);
+				return getValueAt(channel, x, y);
 			case boundary_mode_repeat_image:
 				x = (this.width + (x % this.width)) % this.width;
 				y = (this.height + (y % this.height)) % this.height;
-				return getValue(channel, x,y);
+				return getValueAt(channel, x,y);
 			case boundary_mode_mirror:
 				if(x < 0){ // mirror x to right side of image
 					x = -x - 1;
@@ -506,12 +511,12 @@ public class ColorImg implements ImgBase<ColorPixel> {
 				}
 				x = (x/this.width) % 2 == 0 ? (x%this.width) : (this.width-1)-(x%this.width);
 				y = (y/this.height) % 2 == 0 ? (y%this.height) : (this.height-1)-(y%this.height);
-				return getValue(channel, x, y);
+				return getValueAt(channel, x, y);
 			default:
 				return boundaryMode; // boundary mode can be default color
 			}
 		} else {
-			return getValue(channel, x, y);
+			return getValueAt(channel, x, y);
 		}
 	}
 
@@ -753,10 +758,10 @@ public class ColorImg implements ImgBase<ColorPixel> {
 		double yF = yNormalized * (getHeight()-1);
 		int x = (int)xF;
 		int y = (int)yF;
-		double c00 = getValue(channel, x, 							y);
-		double c01 = getValue(channel, x, 						   (y+1 < getHeight() ? y+1:y));
-		double c10 = getValue(channel, (x+1 < getWidth() ? x+1:x), 	y);
-		double c11 = getValue(channel, (x+1 < getWidth() ? x+1:x), (y+1 < getHeight() ? y+1:y));
+		double c00 = getValueAt(channel, x, 							y);
+		double c01 = getValueAt(channel, x, 						   (y+1 < getHeight() ? y+1:y));
+		double c10 = getValueAt(channel, (x+1 < getWidth() ? x+1:x), 	y);
+		double c11 = getValueAt(channel, (x+1 < getWidth() ? x+1:x), (y+1 < getHeight() ? y+1:y));
 		return interpolateBilinear(c00, c01, c10, c11, xF-x, yF-y);
 	}
 
@@ -941,10 +946,11 @@ public class ColorImg implements ImgBase<ColorPixel> {
 	 * is not within the data arrays bounds 
 	 * or if the specified channel is not in [0,3] 
 	 * or is 3 but the image has no alpha (check using {@link #hasAlpha()}).
-	 * @see #getValue(int channel, int x, int y)
+	 * @see #getValueAt(int channel, int x, int y)
 	 */
-	public void setValue(final int channel, final int x, final int y, final double value){
+	public ColorImg setValueAt(final int channel, final int x, final int y, final double value){
 		this.data[channel][y*this.width + x] = value;
+		return this;
 	}
 
 	/**

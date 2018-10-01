@@ -13,7 +13,9 @@ import java.util.function.Consumer;
 
 import org.junit.Test;
 
-import hageldave.imagingkit.core.PixelConvertingSpliterator.PixelConverter;
+import hageldave.imagingkit.core.img.PixelConvertingSpliterator.PixelConverter;
+import hageldave.imagingkit.core.pixel.Pixel4;
+import hageldave.imagingkit.core.pixel.PixelManipulator;
 
 public class ImgTest {
 

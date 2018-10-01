@@ -20,7 +20,7 @@
  * IN THE SOFTWARE.
  */
 
-package hageldave.imagingkit.core;
+package hageldave.imagingkit.core.img;
 
 import java.awt.Dimension;
 import java.awt.Graphics2D;
@@ -33,7 +33,10 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import hageldave.imagingkit.core.PixelConvertingSpliterator.PixelConverter;
+import hageldave.imagingkit.core.Img;
+import hageldave.imagingkit.core.img.PixelConvertingSpliterator.PixelConverter;
+import hageldave.imagingkit.core.pixel.PixelBase;
+import hageldave.imagingkit.core.pixel.PixelManipulator;
 import hageldave.imagingkit.core.util.BufferedImageFactory;
 import hageldave.imagingkit.core.util.ImagingKitUtils;
 import hageldave.imagingkit.core.util.ParallelForEachExecutor;
@@ -59,7 +62,7 @@ import hageldave.imagingkit.core.util.ParallelForEachExecutor;
  * @author hageldave
  * @since 2.0
  */
-public interface ImgBase<P extends PixelBase> extends Iterable<P> {
+public interface ImgBase<P extends PixelBase<P>> extends Iterable<P> {
 
 	/**
 	 * @return the dimension (width,height) of this image
@@ -96,6 +99,12 @@ public interface ImgBase<P extends PixelBase> extends Iterable<P> {
 	 * @see #getDimension()
 	 */
 	public default int numValues(){return getWidth()*getHeight();}
+	
+	public int numChannels();
+	
+	public double getValueAt(int ch, int x, int y);
+	
+	public ImgBase<P> setValueAt(int ch, int x, int y, double v);
 
 	/**
 	 * Creates a new pixel object (instance of {@link PixelBase}) for this Img 
@@ -733,7 +742,7 @@ public interface ImgBase<P extends PixelBase> extends Iterable<P> {
 	 *
 	 * @see #stream()
 	 */
-	public static <Px extends PixelBase> Stream<Px> stream(Spliterator<Px> spliterator, boolean parallel){
+	public static <P extends PixelBase<P>> Stream<P> stream(Spliterator<P> spliterator, boolean parallel){
 		return StreamSupport.stream(spliterator, parallel);
 	}
 
