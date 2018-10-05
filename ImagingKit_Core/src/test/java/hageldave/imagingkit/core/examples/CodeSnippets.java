@@ -58,7 +58,7 @@ public class CodeSnippets {
 	
 	static void ex4(){
 		Img img = new Img(400, 300);
-		img.fill(0xff000000);
+		img.fillARGB(0xff000000);
 		img.paint(g2d -> {
 			g2d.setColor(Color.white);
 			String helloWorld = "Hello World";

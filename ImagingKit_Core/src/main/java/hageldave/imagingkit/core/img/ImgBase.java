@@ -22,23 +22,22 @@
 
 package hageldave.imagingkit.core.img;
 
-import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
-import java.awt.image.ColorModel;
-import java.awt.image.Raster;
 import java.util.Iterator;
+import java.util.Objects;
 import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import hageldave.imagingkit.core.Dimensions;
 import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.img.PixelConvertingSpliterator.PixelConverter;
 import hageldave.imagingkit.core.pixel.PixelBase;
 import hageldave.imagingkit.core.pixel.PixelManipulator;
-import hageldave.imagingkit.core.util.BufferedImageFactory;
 import hageldave.imagingkit.core.util.ImagingKitUtils;
+import hageldave.imagingkit.core.util.Pair;
 import hageldave.imagingkit.core.util.ParallelForEachExecutor;
 
 /**
@@ -62,49 +61,70 @@ import hageldave.imagingkit.core.util.ParallelForEachExecutor;
  * @author hageldave
  * @since 2.0
  */
-public interface ImgBase<P extends PixelBase<P>> extends Iterable<P> {
+public interface ImgBase<P extends PixelBase<P>> extends Iterable<P>, Dimensions {
 
-	/**
-	 * @return the dimension (width,height) of this image
-	 * 
-	 * @see #getWidth()
-	 * @see #getHeight()
-	 * @see #numValues()
-	 */
-	public default Dimension getDimension(){ return new Dimension(getWidth(),getHeight());}
-
-	/**
-	 * @return the width of this image (number of pixels in horizontal direction)
-	 * 
-	 * @see #getHeight()
-	 * @see #getDimension()
-	 * @see #numValues()
-	 */
-	public int getWidth();
-
-	/**
-	 * @return the height of this image (number of pixels in vertical direction)
-	 * 
-	 * @see #getWidth()
-	 * @see #getDimension()
-	 * @see #numValues()
-	 */
-	public int getHeight();
-
-	/**
-	 * @return the number of pixels of this image
-	 * 
-	 * @see #getWidth()
-	 * @see #getHeight()
-	 * @see #getDimension()
-	 */
-	public default int numValues(){return getWidth()*getHeight();}
-	
 	public int numChannels();
 	
 	public double getValueAt(int ch, int x, int y);
 	
+	public double getValueAtIndex(int ch, int idx);
+	
 	public ImgBase<P> setValueAt(int ch, int x, int y, double v);
+	
+	public ImgBase<P> setValueAtIndex(int ch, int idx, double v);
+
+	/**
+	 * Returns a deep copy of this image. 
+	 * 'Deep' means that changes made to this image are NOT reflected in the copy.
+	 * @return a deep copy.
+	 */
+	public ImgBase<P> copy();
+	
+	/**
+	 * Copies specified area of this image to the specified destination image
+	 * at specified destination coordinates. If destination image is null a 
+	 * {@link NullPointerException} is thrown.
+	 * <p>
+	 * The specified area has to be within the bounds of this image or
+	 * otherwise an IllegalArgumentException will be thrown. Only the
+	 * intersecting part of the area and the destination image is copied which
+	 * allows for an out of bounds destination area origin.
+	 *
+	 * @param x area origin in this image (x-coordinate)
+	 * @param y area origin in this image (y-coordinate)
+	 * @param w width of area
+	 * @param h height of area
+	 * @param dest destination Img
+	 * @param destX area origin in destination Img (x-coordinate)
+	 * @param destY area origin in destination Img (y-coordinate)
+	 * @return the destination Img
+	 * @throws IllegalArgumentException if the specified area is not within
+	 * the bounds of this Img or if the size of the area is not positive.
+	 * @since 1.0
+	 */
+	public default <T extends ImgBase<P>> T copyArea(int x, int y, int w, int h, T destination, int destX, int destY){
+		Objects.requireNonNull(destination);
+		ImagingKitUtils.requireAreaInImageBounds(x, y, w, h, this);
+		// TODO: change copy area to not violate destination bounds
+		PixelConverter<P, Pair<P, P>> converter = PixelConverter.fromFunctions(
+				()->{
+					return new Pair<P,P>(null,destination.getPixel());
+				}, 
+				(P px, Pair<P,P> pair) -> {
+					pair.e1 = px;
+					pair.e2.setPosition(destX+px.getX()-x, destY+px.getY()-y);
+				},
+				(Pair<P,P> pair, P px)->{
+					/* nothing to do here */
+				}
+		);
+		this.forEach(converter, false, x, y, w, h, (Pair<P, P> pair) ->{
+			for(int ch = 0; ch < Math.min(pair.e1.numChannels(),pair.e2.numChannels()); ch++){
+				pair.e2.setValue(ch, pair.e1.getValue(ch));
+			}
+		});
+		return destination;
+	}
 
 	/**
 	 * Creates a new pixel object (instance of {@link PixelBase}) for this Img 
@@ -143,124 +163,6 @@ public interface ImgBase<P extends PixelBase<P>> extends Iterable<P> {
 	 * @see #getPixel()
 	 */
 	public P getPixel(int x, int y);
-
-	/**
-	 * Copies this image's data to the specified {@link BufferedImage}.
-	 * This method will preserve the {@link Raster} of the specified
-	 * BufferedImage and will only modify the contents of it.
-	 * 
-	 * @param bimg the BufferedImage
-	 * @return the specified BufferedImage
-	 * @throws IllegalArgumentException if the provided BufferedImage
-	 * has a different dimension as this image.
-	 * 
-	 * @see #toBufferedImage()
-	 * @see #getRemoteBufferedImage()
-	 */
-	public BufferedImage toBufferedImage(BufferedImage bimg);
-
-	/**
-	 * @return a BufferedImage of type INT_ARGB with this Img's data copied to it.
-	 * 
-	 * @see #toBufferedImage(BufferedImage)
-	 * @see #getRemoteBufferedImage()
-	 */
-	public default BufferedImage toBufferedImage(){
-		BufferedImage bimg = BufferedImageFactory.getINT_ARGB(getDimension());
-		return toBufferedImage(bimg);
-	}
-
-	/**
-	 * Creates a {@link BufferedImage} that shares the data of this image. Changes in
-	 * this image are reflected in the created BufferedImage and vice versa.
-	 * The {@link ColorModel} and {@link Raster} of the resulting BufferedImage
-	 * are implementation dependent.
-	 * <p>
-	 * This operation may not be supported by an implementation of {@link ImgBase}
-	 * and will then throw an {@link UnsupportedOperationException}. Use
-	 * {@link #supportsRemoteBufferedImage()} to check if this operation is
-	 * supported.
-	 * 
-	 * @return BufferedImage sharing this Img's data.
-	 * @throws UnsupportedOperationException if this implementation of {@link ImgBase}
-	 * does not support this method.
-	 * 
-	 * @see #supportsRemoteBufferedImage()
-	 * @see #toBufferedImage(BufferedImage)
-	 * @see #toBufferedImage()
-	 */
-	public default BufferedImage getRemoteBufferedImage(){
-		throw new UnsupportedOperationException("This method is not supported. You can check beforehand using supportsRemoteBufferedImage()");
-	}
-
-
-	/**
-	 * Returns true when this implementation of {@link ImgBase} supports the 
-	 * {@link #getRemoteBufferedImage()} method. This by default also indicates
-	 * the support for the following methods:
-	 * <ul>
-	 * <li>{@link #createGraphics()}</li>
-	 * <li>{@link #paint(Consumer)}</li>
-	 * </ul>
-	 * 
-	 * @return true when supported, false otherwise.
-	 */
-	public default boolean supportsRemoteBufferedImage(){
-		return false;
-	}
-
-	/**
-	 * Creates a {@link Graphics2D}, which can be used to draw into this image.
-	 * <br>
-	 * This operation may not be supported by an implementation of {@link ImgBase}
-	 * and will then throw an {@link UnsupportedOperationException}. Use
-	 * {@link #supportsRemoteBufferedImage()} to check if this operation is
-	 * supported.
-	 * 
-	 * @return Graphics2D object to draw into this image.
-	 * @throws UnsupportedOperationException if this implementation of {@link ImgBase}
-	 * does not support this method.
-	 * 
-	 * @see #supportsRemoteBufferedImage()
-	 * @see #paint(Consumer)
-	 */
-	public default Graphics2D createGraphics(){
-		return getRemoteBufferedImage().createGraphics();
-	}
-
-	/**
-	 * Uses the specified paintInstructions to draw into this image.
-	 * This method will pass a {@link Graphics2D} object of this image to the
-	 * specified {@link Consumer}. The {@link Consumer#accept(Object)} method
-	 * can then draw into this image. When the accept method returns, the
-	 * Graphics2D object is disposed.
-	 * <p>
-	 * This operation may not be supported by an implementation of {@link ImgBase}
-	 * and will then throw an {@link UnsupportedOperationException}. Use
-	 * {@link #supportsRemoteBufferedImage()} to check if this operation is
-	 * supported.
-	 * <p>
-	 * Example (using lambda expression for Consumers accept method):
-	 * <pre>
-	 * {@code
-	 * Img img = new Img(100, 100);
-	 * img.paint( g2d -> { g2d.drawLine(0, 0, 100, 100); } );
-	 * }
-	 * </pre>
-	 * 
-	 * @param paintInstructions to be executed on a Graphics2D object of this image
-	 * of this Img.
-	 * @throws UnsupportedOperationException if this implementation of {@link ImgBase}
-	 * does not support this method.
-	 * 
-	 * @see #createGraphics()
-	 * @since 1.3
-	 */
-	public default void paint(Consumer<Graphics2D> paintInstructions){
-		Graphics2D g2d = createGraphics();
-		paintInstructions.accept(g2d);
-		g2d.dispose();
-	}
 
 	/**
 	 * Returns an iterator over the pixels of this image. The iterator will
@@ -916,12 +818,5 @@ public interface ImgBase<P extends PixelBase<P>> extends Iterable<P> {
 				converter);
 		return StreamSupport.stream(spliterator, parallel);
 	}
-	
-	/**
-	 * Returns a deep copy of this image. 
-	 * 'Deep' means that changes made to this image are NOT reflected in the copy.
-	 * @return a deep copy.
-	 */
-	public ImgBase<P> copy();
 	
 }

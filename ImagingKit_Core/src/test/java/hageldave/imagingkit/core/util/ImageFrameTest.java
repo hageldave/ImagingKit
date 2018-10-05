@@ -17,7 +17,7 @@ public class ImageFrameTest {
 	@Test
 	public void imagePanelTest() {
 		Img img = new Img(100, 100);
-		img.fill(0xff223344);
+		img.fillARGB(0xff223344);
 		
 		ImagePanel panel = new ImagePanel();
 		panel.setSize(100, 100);

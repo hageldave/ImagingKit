@@ -189,7 +189,7 @@ public class Pixel implements Pixel3<Pixel>, Pixel4<Pixel> {
 	 * @see #setARGB(int, int, int, int)
 	 * @see #setRGB(int, int, int)
 	 * @see #getPackedARGB()
-	 * @see Img#setValue(int, int, int)
+	 * @see Img#setPackedARGB(int, int, int)
 	 * @since 1.0
 	 */
 	public Pixel setPackedARGB(int pixelValue){
@@ -212,7 +212,7 @@ public class Pixel implements Pixel3<Pixel>, Pixel4<Pixel> {
 	 * @see #g()
 	 * @see #b()
 	 * @see #setPackedARGB(int)
-	 * @see Img#getValue(int, int)
+	 * @see Img#getPackedARGB(int, int)
 	 * @since 1.0
 	 */
 	public int getPackedARGB(){

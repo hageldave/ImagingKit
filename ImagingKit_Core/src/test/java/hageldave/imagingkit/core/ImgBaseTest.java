@@ -1,12 +1,12 @@
 package hageldave.imagingkit.core;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 
 import java.awt.image.BufferedImage;
 
 import org.junit.Test;
 
+import hageldave.imagingkit.core.img.AWT_Displayable;
 import hageldave.imagingkit.core.img.ImgBase;
 import hageldave.imagingkit.core.pixel.Pixel3;
 import hageldave.imagingkit.core.pixel.Pixel4;
@@ -17,15 +17,13 @@ public class ImgBaseTest {
 	public void test() throws Exception {
 		TestImg img = new TestImg();
 		assertEquals(img.getWidth()*img.getHeight(), img.numValues());
-		JunitUtils.testException(()->{img.getRemoteBufferedImage();}, UnsupportedOperationException.class);
-		assertFalse(img.supportsRemoteBufferedImage());
 		assertEquals(1024, img.getSpliteratorMinimumSplitSize());
 		img.forEach(px->px.setValues(px.getIndex()%220,px.getIndex()%221,px.getIndex()%222).setValueCh3(255));
 		img.forEach(px->assertEquals((double)px.getIndex()%220, px.getValueCh0(), 0));
 	}
 
 	
-	private static class TestImg implements ImgBase<TestPixel> {
+	private static class TestImg implements ImgBase<TestPixel>, AWT_Displayable {
 		
 		final double[][][] values;
 		
@@ -55,9 +53,19 @@ public class ImgBaseTest {
 		}
 		
 		@Override
+		public double getValueAtIndex(int ch, int idx) {
+			return getValueAt(ch, idx%getWidth(), idx/getWidth());
+		}
+		
+		@Override
 		public TestImg setValueAt(int ch, int x, int y, double v) {
 			values[y][x][ch]=v;
 			return this;
+		}
+		
+		@Override
+		public TestImg setValueAtIndex(int ch, int idx, double v) {
+			return setValueAt(ch, idx%getWidth(), idx/getWidth(), v);
 		}
 		
 		@Override

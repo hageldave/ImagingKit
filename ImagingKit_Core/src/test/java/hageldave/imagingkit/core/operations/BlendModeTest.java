@@ -78,9 +78,9 @@ public class BlendModeTest {
 		int opaqueWhite = 0xffffffff;
 
 		Img imgB = new Img(10, 10);
-		imgB.fill(opaqueBlack);
+		imgB.fillARGB(opaqueBlack);
 		Img imgT = imgB.copy();
-		imgT.fill(opaqueWhite);
+		imgT.fillARGB(opaqueWhite);
 
 		// bottom is black top is white
 		imgB.forEach(Blending.NORMAL.getBlendingWith(imgT,RGB));
@@ -88,7 +88,7 @@ public class BlendModeTest {
 		for(int c: imgB.getData()){
 			assertEquals(opaqueWhite, c);
 		}
-		imgB.fill(opaqueBlack);
+		imgB.fillARGB(opaqueBlack);
 		// test offset
 		imgB.forEach(Blending.NORMAL.getBlendingWithOffset(imgT, 5, 5, RGB));
 		imgB.forEach(px->{
@@ -98,7 +98,7 @@ public class BlendModeTest {
 				assertEquals(opaqueBlack, px.getPackedARGB());
 			}
 		});
-		imgB.fill(opaqueBlack);
+		imgB.fillARGB(opaqueBlack);
 		// test negative offset
 		imgB.forEach(Blending.NORMAL.getBlendingWithOffset(imgT, -5, -5, RGB));
 		imgB.forEach(px->{
@@ -108,13 +108,13 @@ public class BlendModeTest {
 				assertEquals(opaqueBlack, px.getPackedARGB());
 			}
 		});
-		imgB.fill(opaqueBlack);
+		imgB.fillARGB(opaqueBlack);
 		// test visibility (transparency)
 		imgB.forEach(Blending.NORMAL.getAlphaBlendingWith(imgT, 0.5, A,RGB));
 		for(int c: imgB.getData()){
 			assertTrue(c != opaqueBlack && c != opaqueWhite);
 		}
-		imgB.fill(opaqueBlack);
+		imgB.fillARGB(opaqueBlack);
 		// test visibility and positive and negative offset
 		imgB.forEach(Blending.NORMAL.getAlphaBlendingWithOffset(imgT, -5, -5, 0.5, A,RGB));
 		imgB.forEach(Blending.NORMAL.getAlphaBlendingWithOffset(imgT,  5,  5, 0.5, A,RGB));

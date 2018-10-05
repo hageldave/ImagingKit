@@ -41,7 +41,12 @@ import java.util.function.DoubleToIntFunction;
 
 import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.Pixel;
+import hageldave.imagingkit.core.img.AWT_Displayable;
+import hageldave.imagingkit.core.img.BilinearInterpolation;
+import hageldave.imagingkit.core.img.BufferedImageWrapable;
 import hageldave.imagingkit.core.img.ImgBase;
+import hageldave.imagingkit.core.img.MinMax;
+import hageldave.imagingkit.core.img.OutOfBoundsValues;
 import hageldave.imagingkit.core.pixel.PixelBase;
 import hageldave.imagingkit.core.util.ImageFrame;
 import hageldave.imagingkit.core.util.ImagingKitUtils;
@@ -65,28 +70,15 @@ import hageldave.imagingkit.core.util.ImagingKitUtils;
  * @author hageldave
  * @since 2.0
  */
-public class ColorImg implements ImgBase<ColorPixel> {
-
-	/** boundary mode that will return 0 for out of bounds positions.
-	 * @see #getValue(int channel, int x, int y, int mode)
-	 */
-	public static final int boundary_mode_zero = Img.boundary_mode_zero;
-
-	/** boundary mode that will repeat the edge of of an image for out of
-	 * bounds positions.
-	 * @see #getValue(int channel, int x, int y, int mode)
-	 */
-	public static final int boundary_mode_repeat_edge = Img.boundary_mode_repeat_edge;
-
-	/** boundary mode that will repeat the image for out of bounds positions.
-	 * @see #getValue(int channel, int x, int y, int mode)
-	 */
-	public static final int boundary_mode_repeat_image = Img.boundary_mode_repeat_image;
-
-	/** boundary mode that will mirror the image for out of bounds positions
-	 * @see #getValue(int channel, int x, int y, int mode)
-	 */
-	public static final int boundary_mode_mirror = Img.boundary_mode_mirror;
+public class ColorImg 
+	implements 
+	ImgBase<ColorPixel>, 
+	BilinearInterpolation<ColorPixel>, 
+	OutOfBoundsValues<ColorPixel>, 
+	MinMax<ColorPixel>,
+	AWT_Displayable,
+	BufferedImageWrapable
+{
 
 	/** red channel index */
 	public static final int channel_r = 0;
@@ -370,7 +362,7 @@ public class ColorImg implements ImgBase<ColorPixel> {
 	 * is not within the data arrays bounds or if the specified channel is not in [0,3] 
 	 * or is 3 but the image has no alpha (check using {@link #hasAlpha()}).
 	 * 
-	 * @see #getValue(int channel, int x, int y, int mode)
+	 * @see #getValueAt(int channel, int x, int y, int mode)
 	 * @see #getValueR(int, int)
 	 * @see #getValueG(int, int)
 	 * @see #getValueB(int, int)
@@ -379,7 +371,12 @@ public class ColorImg implements ImgBase<ColorPixel> {
 	 * @see #setValueAt(int channel, int x, int y, double val)
 	 */
 	public double getValueAt(final int channel, final int x, final int y){
-		return this.data[channel][y*this.width + x];
+		return getValueAtIndex(channel,y*this.width + x);
+	}
+	
+	@Override
+	public double getValueAtIndex(int ch, int idx) {
+		return this.data[ch][idx];
 	}
 
 	/**
@@ -456,72 +453,7 @@ public class ColorImg implements ImgBase<ColorPixel> {
 	}
 
 	/**
-	 * Returns the value of this image at the specified position for the specified channel.
-	 * Bounds checks will be performed and positions outside of this image's
-	 * dimensions will be handled according to the specified boundary mode.
-	 * <p>
-	 * <b><u>Boundary Modes</u></b><br>
-	 * {@link #boundary_mode_zero} <br>
-	 * will return 0 for out of bounds positions.
-	 * <br>
-	 * -{@link #boundary_mode_repeat_edge} <br>
-	 * will return the same value as the nearest edge value.
-	 * <br>
-	 * -{@link #boundary_mode_repeat_image} <br>
-	 * will return a value of the image as if the if the image was repeated on
-	 * all sides.
-	 * <br>
-	 * -{@link #boundary_mode_mirror} <br>
-	 * will return a value of the image as if the image was mirrored on all
-	 * sides.
-	 * <br>
-	 * -<u>other values for boundary mode </u><br>
-	 * will be used as default color for out of bounds positions. It is safe
-	 * to use opaque colors (0xff000000 - 0xffffffff) and transparent colors
-	 * above 0x0000000f which will not collide with one of the boundary modes
-	 * (number of boundary modes is limited to 16 for the future).
-	 * @param channel one of {@link #channel_r},{@link #channel_g},{@link #channel_b},{@link #channel_a} (0,1,2,3)
-	 * @param x coordinate
-	 * @param y coordinate
-	 * @param boundaryMode one of the boundary modes e.g. boundary_mode_mirror
-	 * @return value at specified position or a value depending on the
-	 * boundary mode for out of bounds positions.
-	 * @throws ArrayIndexOutOfBoundsException if the specified channel is not in [0,3] 
-	 * or is 3 but the image has no alpha (check using {@link #hasAlpha()}).
-	 */
-	public double getValue(final int channel, int x, int y, final int boundaryMode){
-		if(x < 0 || y < 0 || x >= this.width || y >= this.height){
-			switch (boundaryMode) {
-			case boundary_mode_zero:
-				return 0;
-			case boundary_mode_repeat_edge:
-				x = (x < 0 ? 0: (x >= this.width ? this.width-1:x));
-				y = (y < 0 ? 0: (y >= this.height ? this.height-1:y));
-				return getValueAt(channel, x, y);
-			case boundary_mode_repeat_image:
-				x = (this.width + (x % this.width)) % this.width;
-				y = (this.height + (y % this.height)) % this.height;
-				return getValueAt(channel, x,y);
-			case boundary_mode_mirror:
-				if(x < 0){ // mirror x to right side of image
-					x = -x - 1;
-				}
-				if(y < 0 ){ // mirror y to bottom side of image
-					y = -y - 1;
-				}
-				x = (x/this.width) % 2 == 0 ? (x%this.width) : (this.width-1)-(x%this.width);
-				y = (y/this.height) % 2 == 0 ? (y%this.height) : (this.height-1)-(y%this.height);
-				return getValueAt(channel, x, y);
-			default:
-				return boundaryMode; // boundary mode can be default color
-			}
-		} else {
-			return getValueAt(channel, x, y);
-		}
-	}
-
-	/**
-	 * See {@link #getValue(int channel, int x, int y, int mode)} for details.
+	 * See {@link #getValueAt(int channel, int x, int y, int mode)} for details.
 	 * This is a shortcut for {@code getValue(channel_r, x, y, boundaryMode)}.
 	 * @param x coordinate
 	 * @param y coordinate
@@ -529,12 +461,12 @@ public class ColorImg implements ImgBase<ColorPixel> {
 	 * @return red value at specified position or a value depending on the
 	 * boundary mode for out of bounds positions.
 	 */
-	public double getValueR(int x, int y, final int boundaryMode){
-		return getValue(channel_r, x, y, boundaryMode);
+	public double getValueR(int x, int y, OutOfBoundsFunction boundaryMode){
+		return getValueAt(channel_r, x, y, boundaryMode);
 	}
 
 	/**
-	 * See {@link #getValue(int channel, int x, int y, int mode)} for details.
+	 * See {@link #getValueAt(int channel, int x, int y, int mode)} for details.
 	 * This is a shortcut for {@code getValue(channel_g, x, y, boundaryMode)}.
 	 * @param x coordinate
 	 * @param y coordinate
@@ -542,12 +474,12 @@ public class ColorImg implements ImgBase<ColorPixel> {
 	 * @return green value at specified position or a value depending on the
 	 * boundary mode for out of bounds positions.
 	 */
-	public double getValueG(int x, int y, final int boundaryMode){
-		return getValue(channel_g, x, y, boundaryMode);
+	public double getValueG(int x, int y, OutOfBoundsFunction boundaryMode){
+		return getValueAt(channel_g, x, y, boundaryMode);
 	}
 
 	/**
-	 * See {@link #getValue(int channel, int x, int y, int mode)} for details.
+	 * See {@link #getValueAt(int channel, int x, int y, int mode)} for details.
 	 * This is a shortcut for {@code getValue(channel_b, x, y, boundaryMode)}.
 	 * @param x coordinate
 	 * @param y coordinate
@@ -555,12 +487,12 @@ public class ColorImg implements ImgBase<ColorPixel> {
 	 * @return blue value at specified position or a value depending on the
 	 * boundary mode for out of bounds positions.
 	 */
-	public double getValueB(int x, int y, final int boundaryMode){
-		return getValue(channel_b, x, y, boundaryMode);
+	public double getValueB(int x, int y, OutOfBoundsFunction boundaryMode){
+		return getValueAt(channel_b, x, y, boundaryMode);
 	}
 
 	/**
-	 * See {@link #getValue(int channel, int x, int y, int mode)} for details.
+	 * See {@link #getValueAt(int channel, int x, int y, int mode)} for details.
 	 * This is a shortcut for {@code getValue(channel_a, x, y, boundaryMode)}.
 	 * @param x coordinate
 	 * @param y coordinate
@@ -569,86 +501,8 @@ public class ColorImg implements ImgBase<ColorPixel> {
 	 * boundary mode for out of bounds positions.
 	 * @throws ArrayIndexOutOfBoundsException the image has no alpha (check using {@link #hasAlpha()}).
 	 */
-	public double getValueA(int x, int y, final int boundaryMode){
-		return getValue(channel_a, x, y, boundaryMode);
-	}
-	
-	/**
-	 * Returns the index of the maximum value of the specified channel.
-	 * @param channel one of {@link #channel_r},{@link #channel_g},{@link #channel_b},{@link #channel_a} (0,1,2,3)
-	 * @return index of maximum value of specified channel
-	 * @throws ArrayIndexOutOfBoundsException if the specified channel is not in [0,3] 
-	 * or is 3 but the image has no alpha (check using {@link #hasAlpha()}).
-	 * @see #getIndexOfMaxValue(int)
-	 * @see #getIndexOfMinValue(int)
-	 * @see #getMaxValue(int)
-	 * @see #getMinValue(int)
-	 */
-	public int getIndexOfMaxValue(int channel){
-		double[] values = getData()[channel];
-		int index = 0;
-		double val = values[index];
-		for(int i = 1; i < numValues(); i++){
-			if(values[i] > val){
-				index = i;
-				val = values[index];
-			}
-		}
-		return index;
-	}
-	
-	/**
-	 * Returns the maximum value of the specified channel.
-	 * @param channel one of {@link #channel_r},{@link #channel_g},{@link #channel_b},{@link #channel_a} (0,1,2,3)
-	 * @return maximum value of the specified channel
-	 * @throws ArrayIndexOutOfBoundsException if the specified channel is not in [0,3] 
-	 * or is 3 but the image has no alpha (check using {@link #hasAlpha()}).
-	 * @see #getIndexOfMaxValue(int)
-	 * @see #getIndexOfMinValue(int)
-	 * @see #getMaxValue(int)
-	 * @see #getMinValue(int)
-	 */
-	public double getMaxValue(int channel){
-		return getData()[channel][getIndexOfMaxValue(channel)];
-	}
-	
-	/**
-	 * Returns the index of the minimum value of the specified channel.
-	 * @param channel one of {@link #channel_r},{@link #channel_g},{@link #channel_b},{@link #channel_a} (0,1,2,3)
-	 * @return index of minimum value of specified channel
-	 * @throws ArrayIndexOutOfBoundsException if the specified channel is not in [0,3] 
-	 * or is 3 but the image has no alpha (check using {@link #hasAlpha()}).
-	 * @see #getIndexOfMaxValue(int)
-	 * @see #getIndexOfMinValue(int)
-	 * @see #getMaxValue(int)
-	 * @see #getMinValue(int)
-	 */
-	public int getIndexOfMinValue(int channel){
-		double[] values = getData()[channel];
-		int index = 0;
-		double val = values[index];
-		for(int i = 1; i < numValues(); i++){
-			if(values[i] < val){
-				index = i;
-				val = values[index];
-			}
-		}
-		return index;
-	}
-	
-	/**
-	 * Returns the minimum value of the specified channel.
-	 * @param channel one of {@link #channel_r},{@link #channel_g},{@link #channel_b},{@link #channel_a} (0,1,2,3)
-	 * @return minimum value of the specified channel
-	 * @throws ArrayIndexOutOfBoundsException if the specified channel is not in [0,3] 
-	 * or is 3 but the image has no alpha (check using {@link #hasAlpha()}).
-	 * @see #getIndexOfMaxValue(int)
-	 * @see #getIndexOfMinValue(int)
-	 * @see #getMaxValue(int)
-	 * @see #getMinValue(int)
-	 */
-	public double getMinValue(int channel){
-		return getData()[channel][getIndexOfMinValue(channel)];
+	public double getValueA(int x, int y, OutOfBoundsFunction boundaryMode){
+		return getValueAt(channel_a, x, y, boundaryMode);
 	}
 	
 	/**
@@ -737,35 +591,6 @@ public class ColorImg implements ImgBase<ColorPixel> {
 	}
 
 	/**
-	 * Returns a bilinearly interpolated value of the image for the
-	 * specified channel at the
-	 * specified normalized position (x and y within [0,1]). Position {0,0}
-	 * denotes the image's origin (top left corner), position {1,1} denotes the
-	 * opposite corner (pixel at {width-1, height-1}).
-	 * <p>
-	 * An ArrayIndexOutOfBoundsException may be thrown for x and y greater than 1
-	 * or less than 0.
-	 * @param xNormalized coordinate within [0,1]
-	 * @param yNormalized coordinate within [0,1]
-	 * @return bilinearly interpolated value for specified channel.
-	 * @throws ArrayIndexOutOfBoundsException when a resulting index is out of
-	 * the data array's bounds, which can only happen for x and y values less
-	 * than 0 or greater than 1 
-	 * or if the specified channel is not in [0,3] or is 3 but the image has no alpha (check using {@link #hasAlpha()}).
-	 */
-	public double interpolate(final int channel, final double xNormalized, final double yNormalized){
-		double xF = xNormalized * (getWidth()-1);
-		double yF = yNormalized * (getHeight()-1);
-		int x = (int)xF;
-		int y = (int)yF;
-		double c00 = getValueAt(channel, x, 							y);
-		double c01 = getValueAt(channel, x, 						   (y+1 < getHeight() ? y+1:y));
-		double c10 = getValueAt(channel, (x+1 < getWidth() ? x+1:x), 	y);
-		double c11 = getValueAt(channel, (x+1 < getWidth() ? x+1:x), (y+1 < getHeight() ? y+1:y));
-		return interpolateBilinear(c00, c01, c10, c11, xF-x, yF-y);
-	}
-
-	/**
 	 * See {@link #interpolate(int, double, double)} for details.
 	 * This is a shorthand for {@code interpolate(channel_r, xNormalized, yNormalized)}.
 	 * @param xNormalized
@@ -820,11 +645,6 @@ public class ColorImg implements ImgBase<ColorPixel> {
 	 */
 	public double interpolateA(final double xNormalized, final double yNormalized){
 		return interpolate(channel_a, xNormalized, yNormalized);
-	}
-
-	/* bilinear interpolation between values c00 c01 c10 c11 at position mx my (in [0,1]) */
-	private static double interpolateBilinear(final double c00, final double c01, final double c10, final double c11, final double mx, final double my){
-		return (c00*(1.0-mx)+c10*(mx))*(1.0-my) + (c01*(1.0-mx)+c11*(mx))*(my);
 	}
 
 	@Override
@@ -949,7 +769,12 @@ public class ColorImg implements ImgBase<ColorPixel> {
 	 * @see #getValueAt(int channel, int x, int y)
 	 */
 	public ColorImg setValueAt(final int channel, final int x, final int y, final double value){
-		this.data[channel][y*this.width + x] = value;
+		return setValueAtIndex(channel, y*this.width + x, value);
+	}
+	
+	@Override
+	public ColorImg setValueAtIndex(int ch, int idx, double v) {
+		this.data[ch][idx] = v;
 		return this;
 	}
 
@@ -1079,6 +904,7 @@ public class ColorImg implements ImgBase<ColorPixel> {
 	 * has a different dimension as this image.
 	 */
 	public BufferedImage toBufferedImage(BufferedImage bimg, TransferFunction transferFunc){
+		AWT_Displayable.requireEqualDimensions(this, bimg);
 		return toImg(transferFunc).toBufferedImage(bimg);
 	}
 
@@ -1132,11 +958,6 @@ public class ColorImg implements ImgBase<ColorPixel> {
 		);
 		BufferedImage bimg = new BufferedImage(colormodel, raster, false, null);
 		return bimg;
-	}
-
-	@Override
-	public boolean supportsRemoteBufferedImage() {
-		return true;
 	}
 
 	/**

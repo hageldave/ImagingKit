@@ -1,15 +1,15 @@
 package hageldave.imagingkit.core.scientific;
 
 import static hageldave.imagingkit.core.JunitUtils.testException;
-import static hageldave.imagingkit.core.scientific.ColorImg.boundary_mode_mirror;
-import static hageldave.imagingkit.core.scientific.ColorImg.boundary_mode_repeat_edge;
-import static hageldave.imagingkit.core.scientific.ColorImg.boundary_mode_repeat_image;
-import static hageldave.imagingkit.core.scientific.ColorImg.boundary_mode_zero;
 import static hageldave.imagingkit.core.scientific.ColorImg.channel_a;
 import static hageldave.imagingkit.core.scientific.ColorImg.channel_b;
 import static hageldave.imagingkit.core.scientific.ColorImg.channel_g;
 import static hageldave.imagingkit.core.scientific.ColorImg.channel_r;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
@@ -19,6 +19,8 @@ import java.util.Spliterator;
 import org.junit.Test;
 
 import hageldave.imagingkit.core.Img;
+import hageldave.imagingkit.core.img.OutOfBoundsValues;
+import hageldave.imagingkit.core.img.OutOfBoundsValues.BoundaryMode;
 import hageldave.imagingkit.core.scientific.ColorImg.TransferFunction;
 
 public class ColorImgTest {
@@ -69,11 +71,11 @@ public class ColorImgTest {
 		}, NullPointerException.class);
 		testException(()->
 		{
-			img.getValue(channel_a, 0, 0, boundary_mode_mirror);
+			img.getValueAt(channel_a, 0, 0, BoundaryMode.MIRROR);
 		}, ArrayIndexOutOfBoundsException.class);
 		testException(()->
 		{
-			img.getValueA(0, 0, boundary_mode_mirror);
+			img.getValueA(0, 0, BoundaryMode.MIRROR);
 		}, ArrayIndexOutOfBoundsException.class);
 		testException(()->
 		{
@@ -169,36 +171,36 @@ public class ColorImgTest {
 				}
 			}
 			
-			assertEquals(4,  img.getValueR(-2,-2, boundary_mode_mirror), 0);
-			assertEquals(40, img.getValueG(-2, 1, boundary_mode_mirror), 0);
-			assertEquals(400,img.getValueB( 1,-2, boundary_mode_mirror), 0);
-			assertEquals(-4, img.getValueA( 1, 1, boundary_mode_mirror), 0);
-			assertEquals(1,  img.getValueR( 4, 4, boundary_mode_mirror), 0);
-			assertEquals(1,  img.getValueR(-5,-5, boundary_mode_mirror), 0);
-			assertEquals(1,  img.getValueR( 3, 3, boundary_mode_mirror), 0);
+			assertEquals(4,  img.getValueR(-2,-2, BoundaryMode.MIRROR), 0);
+			assertEquals(40, img.getValueG(-2, 1, BoundaryMode.MIRROR), 0);
+			assertEquals(400,img.getValueB( 1,-2, BoundaryMode.MIRROR), 0);
+			assertEquals(-4, img.getValueA( 1, 1, BoundaryMode.MIRROR), 0);
+			assertEquals(1,  img.getValueR( 4, 4, BoundaryMode.MIRROR), 0);
+			assertEquals(1,  img.getValueR(-5,-5, BoundaryMode.MIRROR), 0);
+			assertEquals(1,  img.getValueR( 3, 3, BoundaryMode.MIRROR), 0);
 			
-			assertEquals(1,  img.getValueR( 0,-2, boundary_mode_repeat_edge), 0);
-			assertEquals(20, img.getValueG( 3, 0, boundary_mode_repeat_edge), 0);
-			assertEquals(400,img.getValueB( 1, 4, boundary_mode_repeat_edge), 0);
-			assertEquals(-3, img.getValueA(-2, 1, boundary_mode_repeat_edge), 0);
+			assertEquals(1,  img.getValueR( 0,-2, BoundaryMode.REPEAT_EDGE), 0);
+			assertEquals(20, img.getValueG( 3, 0, BoundaryMode.REPEAT_EDGE), 0);
+			assertEquals(400,img.getValueB( 1, 4, BoundaryMode.REPEAT_EDGE), 0);
+			assertEquals(-3, img.getValueA(-2, 1, BoundaryMode.REPEAT_EDGE), 0);
 			
-			assertEquals(1,   img.getValueR(2, 0, boundary_mode_repeat_image), 0);
-			assertEquals(20,  img.getValueG(1, 2, boundary_mode_repeat_image), 0);
-			assertEquals(400, img.getValueB(-1, 1,boundary_mode_repeat_image), 0);
-			assertEquals(-3,  img.getValueA(0, 3, boundary_mode_repeat_image), 0);
-			assertEquals(1,   img.getValueR(4, 2, boundary_mode_repeat_image), 0);
-			assertEquals(20,  img.getValueG(5, 4, boundary_mode_repeat_image), 0);
-			assertEquals(400, img.getValueB(-3, 3,boundary_mode_repeat_image), 0);
-			assertEquals(-3,  img.getValueA(2, 5, boundary_mode_repeat_image), 0);
+			assertEquals(1,   img.getValueR(2, 0, BoundaryMode.REPEAT_IMAGE), 0);
+			assertEquals(20,  img.getValueG(1, 2, BoundaryMode.REPEAT_IMAGE), 0);
+			assertEquals(400, img.getValueB(-1, 1,BoundaryMode.REPEAT_IMAGE), 0);
+			assertEquals(-3,  img.getValueA(0, 3, BoundaryMode.REPEAT_IMAGE), 0);
+			assertEquals(1,   img.getValueR(4, 2, BoundaryMode.REPEAT_IMAGE), 0);
+			assertEquals(20,  img.getValueG(5, 4, BoundaryMode.REPEAT_IMAGE), 0);
+			assertEquals(400, img.getValueB(-3, 3,BoundaryMode.REPEAT_IMAGE), 0);
+			assertEquals(-3,  img.getValueA(2, 5, BoundaryMode.REPEAT_IMAGE), 0);
 			
-			assertEquals(0,   img.getValueR(2, 0, boundary_mode_zero), 0);
-			assertEquals(0,  img.getValueG(1, 2,  boundary_mode_zero), 0);
-			assertEquals(0, img.getValueB(-1, 1,  boundary_mode_zero), 0);
-			assertEquals(0,  img.getValueA(0, 3,  boundary_mode_zero), 0);
-			assertEquals(0,   img.getValueR(4, 2, boundary_mode_zero), 0);
-			assertEquals(0,  img.getValueG(5, 4,  boundary_mode_zero), 0);
-			assertEquals(0xff000000, img.getValueB(-3, 3,  0xff000000), 0);
-			assertEquals(0xff2f5647,  img.getValueA(2, 5,  0xff2f5647), 0);
+			assertEquals(0,   img.getValueR(2, 0, BoundaryMode.ZERO), 0);
+			assertEquals(0,  img.getValueG(1, 2,  BoundaryMode.ZERO), 0);
+			assertEquals(0, img.getValueB(-1, 1,  BoundaryMode.ZERO), 0);
+			assertEquals(0,  img.getValueA(0, 3,  BoundaryMode.ZERO), 0);
+			assertEquals(0,   img.getValueR(4, 2, BoundaryMode.ZERO), 0);
+			assertEquals(0,  img.getValueG(5, 4,  BoundaryMode.ZERO), 0);
+			assertEquals(0xff000000, img.getValueB(-3, 3,  OutOfBoundsValues.fixedOutOfBoundsValue(0xff000000)), 0);
+			assertEquals(0xff2f5647,  img.getValueA(2, 5,  OutOfBoundsValues.fixedOutOfBoundsValue(0xff2f5647)), 0);
 			
 			
 			
@@ -374,8 +376,6 @@ public class ColorImgTest {
 				assertTrue(split.estimateSize() >= minsplitSize);
 			}
 			assertEquals(img.numValues(), splits.stream().mapToLong(Spliterator::estimateSize).sum());
-			
-			assertTrue(img.supportsRemoteBufferedImage());
 		}
 		
 		

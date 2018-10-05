@@ -35,7 +35,12 @@ import java.util.Arrays;
 import java.util.Spliterator;
 import java.util.function.Consumer;
 
+import hageldave.imagingkit.core.img.AWT_Displayable;
+import hageldave.imagingkit.core.img.BilinearInterpolation;
+import hageldave.imagingkit.core.img.BufferedImageWrapable;
 import hageldave.imagingkit.core.img.ImgBase;
+import hageldave.imagingkit.core.img.MinMax;
+import hageldave.imagingkit.core.img.OutOfBoundsValues;
 import hageldave.imagingkit.core.util.ImagingKitUtils;
 
 /**
@@ -91,7 +96,15 @@ import hageldave.imagingkit.core.util.ImagingKitUtils;
  * @author hageldave
  * @since 1.0
  */
-public class Img implements ImgBase<Pixel> {
+public class Img 
+	implements 
+	ImgBase<Pixel>,
+	BilinearInterpolation<Pixel>,
+	OutOfBoundsValues<Pixel>,
+	MinMax<Pixel>,
+	AWT_Displayable,
+	BufferedImageWrapable
+{
 
 	/** boundary mode that will return 0 for out of bounds positions.
 	 * @see #getValue(int, int, int)
@@ -231,18 +244,28 @@ public class Img implements ImgBase<Pixel> {
 	
 	@Override
 	public double getValueAt(final int ch, final int x, final int y) {
+		return getValueAtIndex(ch, y*this.width+x);
+	}
+	
+	@Override
+	public double getValueAtIndex(int ch, int idx) {
 		switch (ch) {
-		case 0: return Pixel.r_normalized(getValue(x, y));
-		case 1: return Pixel.g_normalized(getValue(x, y));
-		case 2: return Pixel.b_normalized(getValue(x, y));
-		case 3: return Pixel.a_normalized(getValue(x, y));
+		case 0: return Pixel.r_normalized(getData()[idx]);
+		case 1: return Pixel.g_normalized(getData()[idx]);
+		case 2: return Pixel.b_normalized(getData()[idx]);
+		case 3: return Pixel.a_normalized(getData()[idx]);
 		default: throw new IllegalArgumentException("only channels in {0,1,2,3} allowed, but specified " + ch);
 		}
 	}
 	
 	@Override
 	public Img setValueAt(final int ch, final int x, final int y, double v) {
-		final int idx = y*this.width + x;
+		return setValueAtIndex(ch, y*this.width+x, v);
+		
+	}
+	
+	@Override
+	public Img setValueAtIndex(int ch, int idx, double v) {
 		final int vdiscrete = clamp_0_255((int)Math.round(v*0xff));
 		switch (ch) {
 		case 0: getData()[idx]=Pixel.changeChannelR(getData()[idx],vdiscrete);
@@ -278,10 +301,10 @@ public class Img implements ImgBase<Pixel> {
 	 * is not within the data arrays bounds.
 	 * @see #getValue(int, int, int)
 	 * @see #getPixel(int, int)
-	 * @see #setValue(int, int, int)
+	 * @see #setPackedARGB(int, int, int)
 	 * @since 1.0
 	 */
-	public int getValue(final int x, final int y){
+	public int getPackedARGB(final int x, final int y){
 		return this.data[y*this.width + x];
 	}
 
@@ -325,11 +348,11 @@ public class Img implements ImgBase<Pixel> {
 			case boundary_mode_repeat_edge:
 				x = (x < 0 ? 0: (x >= this.width ? this.width-1:x));
 				y = (y < 0 ? 0: (y >= this.height ? this.height-1:y));
-				return getValue(x, y);
+				return getPackedARGB(x, y);
 			case boundary_mode_repeat_image:
 				x = (this.width + (x % this.width)) % this.width;
 				y = (this.height + (y % this.height)) % this.height;
-				return getValue(x,y);
+				return getPackedARGB(x,y);
 			case boundary_mode_mirror:
 				if(x < 0){ // mirror x to right side of image
 					x = -x - 1;
@@ -339,12 +362,12 @@ public class Img implements ImgBase<Pixel> {
 				}
 				x = (x/this.width) % 2 == 0 ? (x%this.width) : (this.width-1)-(x%this.width);
 				y = (y/this.height) % 2 == 0 ? (y%this.height) : (this.height-1)-(y%this.height);
-				return getValue(x, y);
+				return getPackedARGB(x, y);
 			default:
 				return boundaryMode; // boundary mode can be default color
 			}
 		} else {
-			return getValue(x, y);
+			return getPackedARGB(x, y);
 		}
 	}
 
@@ -369,10 +392,10 @@ public class Img implements ImgBase<Pixel> {
 		double yF = yNormalized * (getHeight()-1);
 		int x = (int)xF;
 		int y = (int)yF;
-		int c00 = getValue(x, 							y);
-		int c01 = getValue(x, 						   (y+1 < getHeight() ? y+1:y));
-		int c10 = getValue((x+1 < getWidth() ? x+1:x), 	y);
-		int c11 = getValue((x+1 < getWidth() ? x+1:x), (y+1 < getHeight() ? y+1:y));
+		int c00 = getPackedARGB(x, 							y);
+		int c01 = getPackedARGB(x, 						   (y+1 < getHeight() ? y+1:y));
+		int c10 = getPackedARGB((x+1 < getWidth() ? x+1:x), 	y);
+		int c11 = getPackedARGB((x+1 < getWidth() ? x+1:x), (y+1 < getHeight() ? y+1:y));
 		return interpolateColors(c00, c01, c10, c11, xF-x, yF-y);
 	}
 
@@ -411,7 +434,7 @@ public class Img implements ImgBase<Pixel> {
 	 * @param x coordinate
 	 * @param y coordinate
 	 * @return a Pixel object for this Img at {x,y}.
-	 * @see #getValue(int, int)
+	 * @see #getPackedARGB(int, int)
 	 * @since 1.0
 	 */
 	public Pixel getPixel(int x, int y){
@@ -496,24 +519,24 @@ public class Img implements ImgBase<Pixel> {
 	 * or an ArrayIndexOutOfBoundsException.
 	 * @param x coordinate
 	 * @param y coordinate
-	 * @param value to be set at specified position. e.g. 0xff0000ff for blue color
+	 * @param argb to be set at specified position. e.g. 0xff0000ff for blue color
 	 * @throws ArrayIndexOutOfBoundsException if resulting index from x and y
 	 * is not within the data arrays bounds.
-	 * @see #getValue(int, int)
+	 * @see #getPackedARGB(int, int)
 	 * @since 1.0
 	 */
-	public void setValue(final int x, final int y, final int value){
-		this.data[y*this.width + x] = value;
+	public void setPackedARGB(final int x, final int y, final int argb){
+		this.data[y*this.width + x] = argb;
 	}
 
 	/**
 	 * Fills the whole image with the specified value.
-	 * @param value for filling image
+	 * @param argb value for filling image
 	 * @return this for chaining
 	 * @since 1.0
 	 */
-	public Img fill(final int value){
-		Arrays.fill(getData(), value);
+	public Img fillARGB(final int argb){
+		Arrays.fill(getData(), argb);
 		return this;
 	}
 
@@ -528,11 +551,7 @@ public class Img implements ImgBase<Pixel> {
 
 	@Override
 	public BufferedImage toBufferedImage(BufferedImage bimg){
-		if(bimg.getWidth() != this.getWidth() || bimg.getHeight() != this.getHeight()){
-			throw new IllegalArgumentException(String.format(
-					"Specified BufferedImage has a different dimension as this image. BufferedImage dimension: [%dx%d], this: [%dx%d]", 
-					bimg.getWidth(),bimg.getHeight(), this.getWidth(),this.getHeight()));
-		}
+		AWT_Displayable.requireEqualDimensions(this, bimg);
 		bimg.setRGB(0, 0, getWidth(), getHeight(), getData(), 0, getWidth());
 		return bimg;
 	}
@@ -559,11 +578,6 @@ public class Img implements ImgBase<Pixel> {
 		WritableRaster raster = Raster.createPackedRaster(buffer, getWidth(), getHeight(), getWidth(), cm.getMasks(), null);
 		BufferedImage bimg = new BufferedImage(cm, raster, false, null);
 		return bimg;
-	}
-
-	@Override
-	public boolean supportsRemoteBufferedImage() {
-		return true;
 	}
 
 	/**

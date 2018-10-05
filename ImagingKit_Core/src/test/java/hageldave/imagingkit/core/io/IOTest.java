@@ -111,14 +111,14 @@ public class IOTest {
 			
 			assertEquals(img.getDimension(), loaded.getDimension());
 			for(Pixel p: loaded){
-				assertEquals(p.toString(), img.getValue(p.getX(), p.getY()), p.getPackedARGB());
+				assertEquals(p.toString(), img.getPackedARGB(p.getX(), p.getY()), p.getPackedARGB());
 			}
 		}
 		
 		{// save Stream load Stream
 			Img img = new Img(100, 100);
 			// need uniform grey so jpeg compression will not alter the color
-			img.fill(0xff888888);
+			img.fillARGB(0xff888888);
 			ByteArrayOutputStream out = new ByteArrayOutputStream();
 			ImageSaver.saveImage(img.getRemoteBufferedImage(), out, "jpg");
 			BufferedImage bimg = ImageLoader.loadImage(
@@ -127,12 +127,12 @@ public class IOTest {
 			
 			assertEquals(img.getDimension(), loaded.getDimension());
 			for(Pixel p: loaded){
-				assertEquals(p.toString(), img.getValue(p.getX(), p.getY()), p.getPackedARGB());
+				assertEquals(p.toString(), img.getPackedARGB(p.getX(), p.getY()), p.getPackedARGB());
 			}
 			loaded = ImageLoader.loadImg(new ByteArrayInputStream(out.toByteArray()));
 			assertEquals(img.getDimension(), loaded.getDimension());
 			for(Pixel p: loaded){
-				assertEquals(p.toString(), img.getValue(p.getX(), p.getY()), p.getPackedARGB());
+				assertEquals(p.toString(), img.getPackedARGB(p.getX(), p.getY()), p.getPackedARGB());
 			}
 		}
 		
