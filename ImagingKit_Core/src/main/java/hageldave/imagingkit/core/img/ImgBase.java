@@ -106,18 +106,21 @@ public interface ImgBase<P extends PixelBase<P>> extends Iterable<P>, Dimensions
 		Objects.requireNonNull(destination);
 		ImagingKitUtils.requireAreaInImageBounds(x, y, w, h, this);
 		// TODO: change copy area to not violate destination bounds
-		PixelConverter<P, Pair<P, P>> converter = PixelConverter.fromFunctions(
-				()->{
-					return new Pair<P,P>(null,destination.getPixel());
-				}, 
-				(P px, Pair<P,P> pair) -> {
-					pair.e1 = px;
-					pair.e2.setPosition(destX+px.getX()-x, destY+px.getY()-y);
-				},
-				(Pair<P,P> pair, P px)->{
-					/* nothing to do here */
-				}
-		);
+		PixelConverter<P, Pair<P, P>> converter = new PixelConverter<P, Pair<P, P>>(){
+			@Override
+			public Pair<P, P> allocateElement() {
+				return new Pair<P,P>(null,destination.getPixel());
+			}
+			@Override
+			public void convertPixelToElement(P px, Pair<P, P> pair) {
+				pair.e1 = px;
+				pair.e2.setPosition(destX+px.getX()-x, destY+px.getY()-y);
+			}
+			@Override
+			public void convertElementToPixel(Pair<P, P> element, P px) {
+				/* nothing to do here */
+			}
+		};
 		this.forEach(converter, false, x, y, w, h, (Pair<P, P> pair) ->{
 			for(int ch = 0; ch < Math.min(pair.e1.numChannels(),pair.e2.numChannels()); ch++){
 				pair.e2.setValue(ch, pair.e1.getValue(ch));

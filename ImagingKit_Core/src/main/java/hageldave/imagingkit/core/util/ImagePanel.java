@@ -30,15 +30,21 @@ import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.Point;
 import java.awt.Stroke;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.image.BufferedImage;
 import java.awt.image.ImageObserver;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
 
 import hageldave.imagingkit.core.Img;
+import hageldave.imagingkit.core.img.AWT_Displayable;
 
 /**
  * Panel for displaying Images.
@@ -65,6 +71,8 @@ public class ImagePanel extends JPanel{
 	 * @since 1.4 */
 	public static final Color CHECKERBOARD_COLOR_2 = new Color(0x666666);
 	
+	public static final Supplier<Image> NULL_SUPPLIER = ()->null;
+	
 
 	
 	
@@ -77,6 +85,8 @@ public class ImagePanel extends JPanel{
 	/** whether to draw a checkerboard background or not 
 	 * @since 1.4 */
 	protected boolean useCheckerboardBackground = false;
+	
+	protected Supplier<Image> imgSupplier = NULL_SUPPLIER;
 	
 
 	/** 8 by default */
@@ -116,6 +126,15 @@ public class ImagePanel extends JPanel{
 				}
 			}
 		});
+		this.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyPressed(KeyEvent e) {
+				if(e.getKeyCode() == KeyEvent.VK_F5){
+					refreshImage();
+				}
+			}
+		});
+		this.setFocusable(true);
 		this.setBackground(CHECKERBOARD_COLOR_2);
 		this.setForeground(CHECKERBOARD_COLOR_1);
 		this.checkerSize = 8;
@@ -192,8 +211,7 @@ public class ImagePanel extends JPanel{
 	 * @since 1.4
 	 */
 	public ImagePanel setImage(Image img) {
-		this.img = img;
-		this.repaint();
+		setImageSupplier(()->img);
 		return this;
 	}
 	
@@ -206,7 +224,66 @@ public class ImagePanel extends JPanel{
 	 * @since 1.4
 	 */
 	public ImagePanel setImg(Img img) {
-		return this.setImage(img.getRemoteBufferedImage());
+		return setImageSupplier(img::getRemoteBufferedImage);
+	}
+	
+	
+	public ImagePanel setRefreshableImage(AWT_Displayable displayable){
+		return setImageSupplier(new Supplier<Image>() {
+			BufferedImage bimg = BufferedImageFactory.getINT_ARGB(displayable.getDimension());
+			@Override
+			public Image get() {
+				return displayable.toBufferedImage(bimg);
+			}
+		});
+	}
+	
+	protected SwingWorker<Void, Void> refreshWorker = null;
+	protected Object refreshLock = new Object();
+	
+	public ImagePanel refreshImage(boolean cancelIfAlreadyRunning){
+		synchronized(refreshLock){
+			if(refreshWorker != null){
+				if(!refreshWorker.isDone()){
+					if(cancelIfAlreadyRunning){
+						refreshWorker.cancel(false);
+					} else {
+						return this;
+					}
+				}
+			}
+			refreshWorker = new SwingWorker<Void, Void>() {
+				@Override
+				protected Void doInBackground() throws Exception {
+					Image image = ImagePanel.this.getImgSupplier().get();
+					if(this.isCancelled())
+						return null;
+					ImagePanel.this.img = image;
+					SwingUtilities.invokeLater(ImagePanel.this::repaint);
+					return null;
+				}
+			};
+			refreshWorker.execute();
+		}
+		return this;
+	}
+	
+	public ImagePanel refreshImage(){
+		return refreshImage(false);
+	}
+	
+	public ImagePanel setImageSupplier(Supplier<Image> imageSupplier){
+		if(imageSupplier == null){
+			this.imgSupplier = NULL_SUPPLIER;
+		} else {
+			this.imgSupplier = imageSupplier;
+		}
+		refreshImage(true);
+		return this;
+	}
+	
+	public Supplier<Image> getImgSupplier() {
+		return imgSupplier;
 	}
 	
 	@Override

@@ -24,11 +24,13 @@ package hageldave.imagingkit.core.util;
 
 import java.awt.Dimension;
 import java.awt.Image;
+import java.lang.reflect.InvocationTargetException;
 
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
 import hageldave.imagingkit.core.Img;
+import hageldave.imagingkit.core.img.AWT_Displayable;
 
 /**
  * {@link JFrame} for displaying an image utilizing an {@link ImagePanel}.
@@ -94,7 +96,7 @@ public class ImageFrame extends JFrame {
 	 * @since 1.4
 	 */
 	public ImageFrame setImage(final Image img){
-		panel.setImage(img);
+		this.getPanel().setImage(img);
 		return this;
 	}
 	
@@ -102,12 +104,22 @@ public class ImageFrame extends JFrame {
 	 * Sets the image to be displayed by this frame.
 	 * This will update the panel (calls repaint()).
 	 * @param img to be displayed
+	 * @return this
 	 * 
 	 * @see #setImage(Image)
 	 * @since 1.4
 	 */
-	public void setImg(final Img img){
-		this.setImage(img.getRemoteBufferedImage());
+	public ImageFrame setImg(final Img img){
+		this.getPanel().setImg(img);
+		return this;
+	}
+	
+	public static ImageFrame createAndShowNew(){
+		ImageFrame frame = new ImageFrame().useDefaultSettings();
+		SwingUtilities.invokeLater(() -> {
+			frame.setVisible(true);
+		});
+		return frame;
 	}
 	
 	/**
@@ -122,12 +134,7 @@ public class ImageFrame extends JFrame {
 	 * @since 1.4
 	 */
 	public static ImageFrame display(final Image img){
-		ImageFrame frame = new ImageFrame().useDefaultSettings();
-		SwingUtilities.invokeLater( () -> {
-			frame.setImage(img);
-			frame.setVisible(true);
-		});
-		return frame;
+		return createAndShowNew().setImage(img);
 	}
 	
 	/**
@@ -142,7 +149,13 @@ public class ImageFrame extends JFrame {
 	 * @since 1.4
 	 */
 	public static ImageFrame display(final Img img){
-		return display(img.getRemoteBufferedImage());
+		return createAndShowNew().setImg(img);
+	}
+	
+	public static ImageFrame displayRefreshable(final AWT_Displayable displayable){
+		ImageFrame frame = createAndShowNew();
+		frame.getPanel().setRefreshableImage(displayable);
+		return frame;
 	}
 	
 	/**
