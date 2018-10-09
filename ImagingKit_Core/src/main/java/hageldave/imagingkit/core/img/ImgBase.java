@@ -105,7 +105,30 @@ public interface ImgBase<P extends PixelBase<P>> extends Iterable<P>, Dimensions
 	public default <T extends ImgBase<P>> T copyArea(int x, int y, int w, int h, T destination, int destX, int destY){
 		Objects.requireNonNull(destination);
 		ImagingKitUtils.requireAreaInImageBounds(x, y, w, h, this);
-		// TODO: change copy area to not violate destination bounds
+		// sanitize copy area
+		if(destX < 0){
+			/* negative destination x
+			 * need to shrink area by overlap and translate area origin */
+			x -= destX;
+			w += destX;
+			destX = 0;
+		}
+		if(destY < 0){
+			/* negative destination y
+			 * need to shrink area by overlap and translate area origin */
+			y -= destY;
+			h += destY;
+			destY = 0;
+		}
+		// limit area to not exceed targets bounds
+		w = Math.min(w, destination.getWidth() -destX);
+		h = Math.min(h, destination.getHeight()-destY);
+		if(w <= 0 || h <= 0){
+			// no area to copy
+			return destination;
+		}
+		
+		final int areaX=x, areaY=y, targetX=destX, targetY=destY;
 		PixelConverter<P, Pair<P, P>> converter = new PixelConverter<P, Pair<P, P>>(){
 			@Override
 			public Pair<P, P> allocateElement() {
@@ -114,14 +137,14 @@ public interface ImgBase<P extends PixelBase<P>> extends Iterable<P>, Dimensions
 			@Override
 			public void convertPixelToElement(P px, Pair<P, P> pair) {
 				pair.e1 = px;
-				pair.e2.setPosition(destX+px.getX()-x, destY+px.getY()-y);
+				pair.e2.setPosition(targetX+px.getX()-areaX, targetY+px.getY()-areaY);
 			}
 			@Override
 			public void convertElementToPixel(Pair<P, P> element, P px) {
 				/* nothing to do here */
 			}
 		};
-		this.forEach(converter, false, x, y, w, h, (Pair<P, P> pair) ->{
+		this.forEach(converter, false, areaX, areaY, w, h, (Pair<P, P> pair) ->{
 			for(int ch = 0; ch < Math.min(pair.e1.numChannels(),pair.e2.numChannels()); ch++){
 				pair.e2.setValue(ch, pair.e1.getValue(ch));
 			}
