@@ -36,6 +36,7 @@ public class ImageFrameTest {
 		assertEquals(2, colors.size());
 		
 		panel.setImg(img);
+		waitForPanelToRefresh(panel);
 		imgGraphics.paint(g2d->panel.paint(g2d));
 		for(int i = 0; i < img.numValues(); i++){
 			assertEquals(img.getData()[i], imgGraphics.getData()[i]);
@@ -112,4 +113,12 @@ public class ImageFrameTest {
 		frame.dispose();
 	}
 	
+	
+	static void waitForPanelToRefresh(ImagePanel panel){
+		if(panel.refreshWorker != null){
+			while(!panel.refreshWorker.isDone()){
+				Thread.yield();
+			}
+		}
+	}
 }
