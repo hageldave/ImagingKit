@@ -214,14 +214,14 @@ public class PixelConvertingSpliterator<P extends PixelBase<?>, T> implements Sp
 
 			@Override
 			public void convertPixelToElement(P px, double[] array) {
-				for(int ch=0; ch<Math.min(n, px.numChannels());ch++){
+				for(int ch=0; ch<Math.min(n, px.getSource().numChannels());ch++){
 					array[ch] = px.getValue(ch);
 				}
 			}
 
 			@Override
 			public void convertElementToPixel(double[] array, P px) {
-				for(int ch=0; ch<Math.min(n, px.numChannels());ch++){
+				for(int ch=0; ch<Math.min(n, px.getSource().numChannels());ch++){
 					 px.setValue(ch,array[ch]);
 				}
 			}

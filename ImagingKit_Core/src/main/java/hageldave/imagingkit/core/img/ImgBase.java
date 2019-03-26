@@ -144,8 +144,9 @@ public interface ImgBase<P extends PixelBase<P>> extends Iterable<P>, Dimensions
 				/* nothing to do here */
 			}
 		};
+		int numChannels = Math.min(this.numChannels(),destination.numChannels());
 		this.forEach(converter, false, areaX, areaY, w, h, (Pair<P, P> pair) ->{
-			for(int ch = 0; ch < Math.min(pair.e1.numChannels(),pair.e2.numChannels()); ch++){
+			for(int ch = 0; ch < numChannels; ch++){
 				pair.e2.setValue(ch, pair.e1.getValue(ch));
 			}
 		});

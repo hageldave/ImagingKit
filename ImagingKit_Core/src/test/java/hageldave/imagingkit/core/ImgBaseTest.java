@@ -106,8 +106,8 @@ public class ImgBaseTest {
 		}
 		
 		@Override
-		public int numChannels() {
-			return 4;
+		public TestPixel self() {
+			return this;
 		}
 		
 		@Override

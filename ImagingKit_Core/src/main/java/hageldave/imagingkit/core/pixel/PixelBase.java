@@ -41,11 +41,16 @@ import hageldave.imagingkit.core.img.ImgBase;
  */
 public interface PixelBase<SELF> {
 	
-	public int numChannels();
+	public default double getValue(int ch){
+		return getSource().getValueAt(ch, getX(), getY());
+	}
 	
-	public double getValue(int ch);
+	public SELF self();
 	
-	public SELF setValue(int ch, double v);
+	public default SELF setValue(int ch, double v){
+		getSource().setValueAt(ch, getX(), getY(), v);
+		return self();
+	}
 
 	/**
 	 * @return the x coordinate of this pixel's current position
@@ -159,7 +164,7 @@ public interface PixelBase<SELF> {
 	 * 
 	 * @see ImgBase
 	 */
-	public ImgBase<?> getSource();
+	public ImgBase<? extends PixelBase<SELF>> getSource();
 
 	/**
 	 * Returns a String representation of this pixel at its current position.
@@ -175,7 +180,7 @@ public interface PixelBase<SELF> {
 		sb.append(',');
 		sb.append(getY());
 		sb.append(")-[");
-		int numChannels = numChannels();
+		int numChannels = getSource().numChannels();
 		for(int ch=0; ch<numChannels; ch++){
 			sb.append(String.format(Locale.US, "%.3f", getValue(ch)));
 			if(ch < numChannels-1)

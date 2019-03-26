@@ -86,15 +86,15 @@ public class ColorPixel implements Pixel3<ColorPixel>, Pixel4<ColorPixel> {
 	public ColorPixel(ColorImg img, int x, int y) {
 		this(img, y*img.getWidth()+x);
 	}
+	
+	@Override
+	public ColorPixel self() {
+		return this;
+	}
 
 	@Override
 	public ColorImg getSource() {
 		return img;
-	}
-	
-	@Override
-	public int numChannels() {
-		return img.hasAlpha() ? 4:3;
 	}
 
 	@Override

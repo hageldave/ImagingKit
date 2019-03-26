@@ -83,6 +83,11 @@ public class Pixel implements Pixel3<Pixel>, Pixel4<Pixel> {
 	public Pixel(Img img, int x, int y) {
 		this(img, y*img.getWidth()+x);
 	}
+	
+	@Override
+	public Pixel self() {
+		return this;
+	}
 
 	/**
 	 * @return the Img this Pixel belongs to.
@@ -90,11 +95,6 @@ public class Pixel implements Pixel3<Pixel>, Pixel4<Pixel> {
 	 */
 	public Img getSource() {
 		return img;
-	}
-	
-	@Override
-	public int numChannels() {
-		return 4;
 	}
 	
 	@Override
