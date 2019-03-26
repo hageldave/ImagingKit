@@ -38,14 +38,23 @@ import hageldave.imagingkit.core.img.ImgBase;
  * 
  * @author hageldave
  * @since 2.0
+ * 
+ * @param <SELF> the implementing type, needed to infer the least general type for chaining to prevent
+ * loss of type information.
  */
 public interface PixelBase<SELF> {
+	
+	/**
+	 * Returns this. 
+	 * Is used to default implement chainable methods with the correct type.
+	 * Since SELF is the implementing class, type truncation can be prevented.
+	 * @return this
+	 */
+	public SELF self();
 	
 	public default double getValue(int ch){
 		return getSource().getValueAt(ch, getX(), getY());
 	}
-	
-	public SELF self();
 	
 	public default SELF setValue(int ch, double v){
 		getSource().setValueAt(ch, getX(), getY(), v);

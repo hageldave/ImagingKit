@@ -1,109 +1,98 @@
 package hageldave.imagingkit.core.pixel;
 
+/**
+ * The Pixel4 interface models a Pixel which consists of four values.
+ * This does not necessarily mean that the implementing type actually consists
+ * of four values but instead this interface provides a four value view of
+ * the pixel.
+ * 
+ * @author hageldave
+ *
+ * @param <SELF> the implementing type, needed to infer the least general type for chaining to prevent
+ * loss of type information.
+ */
 public interface Pixel4<SELF> extends PixelBase<SELF> {
 
 	/**
-	 * Returns the alpha value of this pixel at its current position. 
-	 * If the underlying image does not support alpha, 1.0 is returned.
-	 * @return alpha value of this pixel with 0.0 as fully transparent and 1.0 as fully opaque.
-	 * May exceed [0,1] range depending on implementation.
-	 * 
-	 * @see #setValueCh3(double)
-	 * @see #r_asDouble
-	 * @see #g_asDouble
-	 * @see #b_asDouble
+	 * Returns the 0th channel value of this pixel at its current position.
+	 * @return 0th channel value.
 	 */
-	public double getValueCh3();
-
-	/**
-	 * Returns the red value of this pixel at its current position.
-	 * @return red value of this pixel with 0.0 as no red contribution and 1.0 as full red contribution.
-	 * May exceed [0,1] range depending on implementation.
-	 * 
-	 * @see #setValueCh0(double)
-	 * @see #a_asDouble
-	 * @see #g_asDouble
-	 * @see #b_asDouble
-	 */
-	public double getValueCh0();
-
-	/**
-	 * Returns the green value of this pixel at its current position.
-	 * @return green value of this pixel with 0.0 as no green contribution and 1.0 as full green contribution.
-	 * May exceed [0,1] range depending on implementation.
-	 * 
-	 * @see #setValueCh1(double)
-	 * @see #a_asDouble
-	 * @see #r_asDouble
-	 * @see #b_asDouble
-	 */
-	public double getValueCh1();
-
-	/**
-	 * Returns the blue value of this pixel at its current position.
-	 * @return blue value of this pixel with 0.0 as no blue contribution and 1.0 as full blue contribution.
-	 * May exceed [0,1] range depending on implementation.
-	 * 
-	 * @see #setValueCh2(double)
-	 * @see #a_asDouble
-	 * @see #r_asDouble
-	 * @see #g_asDouble
-	 */
-	public double getValueCh2();
-
-	/**
-	 * Sets the alpha value of this pixel at its current position with 0.0 as fully transparent and 1.0 as fully opaque.
-	 * If the underlying image does not support alpha, this call imediately returns without modifying the image. 
-	 * @param a the alpha value. May exceed [0,1] range depending on implementation.
-	 * @return this pixel for chaining.
-	 * 
-	 * @see #getValueCh3()
-	 * @see #setValueCh0(double)
-	 * @see #setValueCh1(double)
-	 * @see #setValueCh2(double)
-	 * @see #setValues(double, double, double, double)
-	 */
-	public SELF setValueCh3(double a);
-
-	/**
-	 * Sets the red value of this pixel at its current position with 0.0 as no red contribution and 1.0 as full red contribution. 
-	 * @param r the red value. May exceed [0,1] range depending on implementation.
-	 * @return this pixel for chaining.
-	 * 
-	 * @see #getValueCh0()
-	 * @see #setValueCh3(double)
-	 * @see #setValueCh1(double)
-	 * @see #setValueCh2(double)
-	 * @see #setValues(double, double, double, double)
-	 */
-	public SELF setValueCh0(double r);
-
-	/**
-	 * Sets the green value of this pixel at its current position with 0.0 as no green contribution and 1.0 as full green contribution. 
-	 * @param g the green value. May exceed [0,1] range depending on implementation.
-	 * @return this pixel for chaining.
-	 * 
-	 * @see #getValueCh1()
-	 * @see #setValueCh3(double)
-	 * @see #setValueCh0(double)
-	 * @see #setValueCh2(double)
-	 * @see #setValues(double, double, double, double)
-	 */
-	public SELF setValueCh1(double g);
-
-	/**
-	 * Sets the blue value of this pixel at its current position with 0.0 as no blue contribution and 1.0 as full blue contribution. 
-	 * @param b the blue value. May exceed [0,1] range depending on implementation.
-	 * @return this pixel for chaining.
-	 * 
-	 * @see #getValueCh2()
-	 * @see #setValueCh3(double)
-	 * @see #setValueCh0(double)
-	 * @see #setValueCh1(double)
-	 * @see #setValues(double, double, double, double)
-	 */
-	public SELF setValueCh2(double b);
+	public default double getValueCh0() {
+		return getValue(0);
+	}
 	
+	/**
+	 * Sets the value of the 0th channel.
+	 * @param v0 the value
+	 * @return this pixel for chaining.
+	 */
+	public default SELF setValueCh0(double v0){
+		setValue(0, v0);
+		return self();
+	}
+
+	/**
+	 * Returns the 1st channel value of this pixel at its current position.
+	 * @return 1st channel value.
+	 */
+	public default double getValueCh1() {
+		return getValue(1);
+	}
+
+	/**
+	 * Sets the value of the 1st channel.
+	 * @param v1 the value
+	 * @return this pixel for chaining.
+	 */
+	public default SELF setValueCh1(double v1){
+		setValue(1, v1);
+		return self();
+	}
+	
+	/**
+	 * Returns the 2nd channel value of this pixel at its current position.
+	 * @return 2nd channel value.
+	 */
+	public default double getValueCh2() {
+		return getValue(2);
+	}
+
+	/**
+	 * Sets the value of the 2nd channel.
+	 * @param v2 the value
+	 * @return this pixel for chaining.
+	 */
+	public default SELF setValueCh2(double v2){
+		setValue(2, v2);
+		return self();
+	}
+	
+	/**
+	 * Returns the 3rd channel value of this pixel at its current position.
+	 * @return 3rd channel value.
+	 */
+	public default double getValueCh3() {
+		return getValue(3);
+	}
+
+	/**
+	 * Sets the value of the 3rd channel.
+	 * @param v3 the value
+	 * @return this pixel for chaining.
+	 */
+	public default SELF setValueCh3(double v3){
+		setValue(3, v3);
+		return self();
+	}
+	
+	/**
+	 * Sets the values for channels 0, 1, 2 and 3.
+	 * @param v0 value for channel 0
+	 * @param v1 value for channel 1
+	 * @param v2 value for channel 2
+	 * @param v3 value for channel 3
+	 * @return this pixel for chaining.
+	 */
 	public default SELF setValues(double v0, double v1, double v2, double v3){
 		setValueCh0(v0);
 		setValueCh1(v1);
