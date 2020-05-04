@@ -8,7 +8,7 @@
 	<artifactId>imagingkit-fourier</artifactId>
 	<name>ImagingKit-Fourier</name>
 	<groupId>com.github.hageldave.imagingkit</groupId>
-	<version>2.1-SNAPSHOT</version>
+	<version>2.1</version>
 	<url>https://github.com/hageldave/ImagingKit</url>
 	<description>The ImagingKit-Fourier artifact provides classes for Fast Fourier Transformations (FFT) for the ImagingKit framework.</description>
 
@@ -161,7 +161,7 @@
 		<dependency>
 			<groupId>com.github.hageldave.imagingkit</groupId>
 			<artifactId>imagingkit-core</artifactId>
-			<version>2.0</version>
+			<version>2.1</version>
 		</dependency>
 		<dependency>
 			<groupId>com.github.hageldave.ezfftw</groupId>
