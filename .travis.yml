@@ -9,7 +9,6 @@ services:
   - xvfb # (x virtual frame buffer for gui testing)
   
 before_script:
-  - "export DISPLAY=:99.0"
   - "export _JAVA_OPTIONS=\"-Xms2g -Xmx2g -verbose:gc\""
 
 script: mvn -P travis -X clean test jacoco:report
