@@ -42,14 +42,14 @@ public enum ColorSpaceTransformation implements Consumer<PixelBase> {
 	/**
 	 * Transforms colors from the RGB domain to the CIE L*a*b* domain.
 	 * <p>
-	 * The L component ranges from 0 to 255, the A and B component from 0 to 254.
-	 * Zero chromaticity is located at A=127 B=127 on the AB plane.
+	 * The L component ranges from 0 to 255 (0 to 1 for floating point valued pixels), 
+	 * the A and B component from 0 to 254 (0 to 1 for floating point valued pixels).
+	 * Zero chromaticity is located at A=127 B=127 (0.5 for floating point valued pixels) on the AB plane.
 	 * <p>
-	 * The B component is mapped to the least significant 8 bits of the integer
-	 * value (0..7 equivalent to blue in RGB), <br>
-	 * the A component to the next 8 bits (8..15 equivalent to green in RGB) and <br>
-	 * the L component to the following 8 bits (16..23 equivalent to red in RGB). <br>
-	 * The alpha channel (most significant 8 bits 24..31) will be preserved.
+	 * The B component is mapped to the BLUE channel, <br>
+	 * the A component is mapped to the GREEN channel and <br>
+	 * the L component is mapped to the RED channel. <br>
+	 * The alpha channel will be preserved.
 	 * <p>
 	 * This is a two step transformation as RGB needs to be transformed to CIE XYZ
 	 * and then to CIE L*a*b*. For the transformation to XYZ it is assumed that
@@ -81,11 +81,11 @@ public enum ColorSpaceTransformation implements Consumer<PixelBase> {
 	/**
 	 * Transforms colors from the RGB domain to the HSV domain (hue, saturation, value).
 	 * <p>
-	 * All of the HSV components range from 0 to 255 and therefore use 8bits of the
+	 * All of the HSV components range from 0 to 255 (0 to 1 for floating point valued pixels) and therefore use 8bits of the
 	 * integer value each. <br>
-	 * The V component uses the least significant 8 bits (0..7 equivalent to blue in RGB), <br>
-	 * the S component uses the next 8 bits (8..15 equivalent to green in RGB) and <br>
-	 * the H component the following 8 bits (16..23 equivalent to red in RGB). <br>
+	 * The V component is mapped to the BLUE channel, <br>
+	 * the S component is mapped to the GREEN channel and <br>
+	 * the H component is mapped to the RED channel. <br>
 	 * The alpha channel (most significant 8 bits 24..31) will be preserved.
 	 * <p>
 	 * Notice that the H (hue) component is cyclic (describes an angle) and can therefore
@@ -93,6 +93,7 @@ public enum ColorSpaceTransformation implements Consumer<PixelBase> {
 	 * 8bit truncation {@code (h&0xff)} which is implemented by all of the
 	 * Pixel.argb or rgb methods that do not explicitly state differently
 	 * (e.g. rgb_fast or rgb_bounded do not use truncation).
+	 * 
 	 * @see #HSV_2_RGB
 	 * @since 1.2
 	 */
