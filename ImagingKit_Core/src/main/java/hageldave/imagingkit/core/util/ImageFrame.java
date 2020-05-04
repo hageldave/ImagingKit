@@ -24,7 +24,6 @@ package hageldave.imagingkit.core.util;
 
 import java.awt.Dimension;
 import java.awt.Image;
-import java.lang.reflect.InvocationTargetException;
 
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;

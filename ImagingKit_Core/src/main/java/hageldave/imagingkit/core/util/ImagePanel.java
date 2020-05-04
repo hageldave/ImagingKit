@@ -130,6 +130,7 @@ public class ImagePanel extends JPanel{
 			@Override
 			public void keyPressed(KeyEvent e) {
 				if(e.getKeyCode() == KeyEvent.VK_F5){
+					e.consume();
 					refreshImage();
 				}
 			}
@@ -364,11 +365,11 @@ public class ImagePanel extends JPanel{
 				if(sy2 > imgH){
 					dy2-=(sy2-imgH); sy2=imgH;
 				}
-				
 				g.drawImage(img, 
 						dx1, dy1, dx2, dy2, 
 						sx1, sy1, sx2, sy2, 
 						obs_allbits);
+				
 			}
 		}
 	}
