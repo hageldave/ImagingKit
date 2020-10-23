@@ -24,9 +24,8 @@ package hageldave.imagingkit.core.io;
 
 import java.awt.Image;
 import java.awt.image.BufferedImage;
-import java.io.Closeable;
+import java.awt.image.RenderedImage;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -71,6 +70,15 @@ public class ImageSaver {
 		}
 	}
 	
+	public static boolean isFormatBWOnly(String imgFormat){
+		switch (imgFormat.toLowerCase()) {
+		case "wbmp":
+			return true;
+		default:
+			return false;
+		}
+	}
+	
 	/**
 	 * Saves specified Image to file of specified img file format.
 	 * <p>
@@ -84,25 +92,25 @@ public class ImageSaver {
 	 * @param os {@link OutputStream} to write image to.
 	 * @param imgFileFormat image file format. Consult {@link #getSaveableImageFileFormats()}
 	 * to get the supported img file formats of your system. 
-	 * @throws ImageSaverException if an IOException occured during 
+	 * @throws ImageSaverException if an IOException occurred during 
 	 * the process or no appropriate writer could be found for specified format.
 	 * @since 1.1
 	 */
 	public static void saveImage(Image image, OutputStream os, String imgFileFormat){
-		BufferedImage bImg = null;
-		if(image instanceof BufferedImage){
-			bImg = (BufferedImage) image;
+		final RenderedImage rImg;
+		if( isFormatRGBOnly(imgFileFormat) && !isBufferedImageOfType(image, BufferedImage.TYPE_INT_RGB) ){
+			rImg = BufferedImageFactory.get(image, BufferedImage.TYPE_INT_RGB);
+		} else 
+		if( isFormatBWOnly(imgFileFormat)  && !isBufferedImageOfType(image, BufferedImage.TYPE_BYTE_BINARY) ){
+			rImg = BufferedImageFactory.get(image, BufferedImage.TYPE_BYTE_BINARY);
+		} else
+		if( image instanceof RenderedImage ){
+			rImg = (RenderedImage) image;
 		} else {
-			bImg = BufferedImageFactory.getINT_ARGB(image);
-		}
-		
-		if(isFormatRGBOnly(imgFileFormat) && bImg.getType() != BufferedImage.TYPE_INT_RGB){
-			image = BufferedImageFactory.get(image, BufferedImage.TYPE_INT_RGB);
-		} else if(imgFileFormat.toLowerCase().equals("wbmp") && bImg.getType() != BufferedImage.TYPE_BYTE_BINARY){
-			image = BufferedImageFactory.get(image, BufferedImage.TYPE_BYTE_BINARY);
+			rImg = BufferedImageFactory.getINT_ARGB(image);
 		}
 		try { 
-			boolean success = ImageIO.write(bImg, imgFileFormat, os);
+			boolean success = ImageIO.write(rImg, imgFileFormat, os);
 			if(!success){
 				throw new ImageSaverException("Could not save Image! No appropriate writer was found.");
 			}
@@ -111,12 +119,16 @@ public class ImageSaver {
 		}
 	}
 	
+	private static final boolean isBufferedImageOfType(Image image, int type){
+		return image instanceof BufferedImage && ((BufferedImage)image).getType() == type;
+	}
+	
 	/**
 	 * Saves image using {@link #saveImage(Image, File, String)}.
 	 * @param image to be saved
 	 * @param filename path to file
 	 * @param imgFileFormat image file format. Consult {@link #getSaveableImageFileFormats()}
-	 * @throws ImageSaverException if an IOException occured during 
+	 * @throws ImageSaverException if an IOException occurred during 
 	 * the process, the provided filename path does refer to a directory or no 
 	 * appropriate writer could be found for specified format.
 	 * @since 1.0 
@@ -135,21 +147,17 @@ public class ImageSaver {
 	 * @param image to be saved
 	 * @param file to save image to
 	 * @param imgFileFormat image file format. Consult {@link #getSaveableImageFileFormats()}
-	 * @throws ImageSaverException if an IOException occured during 
+	 * @throws ImageSaverException if an IOException occurred during 
 	 * the process, no OutputStream could be created due to a 
 	 * FileNotFoundException or no appropriate writer could be found for 
 	 * specified format.
 	 * @since 1.0
 	 */
 	public static void saveImage(Image image, File file, String imgFileFormat){
-		FileOutputStream fos = null;
-		try {
-			fos = new FileOutputStream(file);
+		try (FileOutputStream fos = new FileOutputStream(file)){
 			saveImage(image, fos, imgFileFormat);
-		} catch (FileNotFoundException e) {
+		} catch (IOException e) {
 			throw new ImageSaverException(e);
-		} finally {
-			closeQuietly(fos);
 		}
 	}
 	
@@ -158,7 +166,7 @@ public class ImageSaver {
 	 * format is extracted from the files name.
 	 * @param image to be saved
 	 * @param file to save image to
-	 * @throws ImageSaverException if an IOException occured during 
+	 * @throws ImageSaverException if an IOException occurred during 
 	 * the process, the filename does not contain a dot to get the filetype
 	 * or no appropriate writer could be found for specified format.
 	 * @since 1.0
@@ -179,7 +187,7 @@ public class ImageSaver {
 	 * format is extracted from the files name.
 	 * @param image to be saved
 	 * @param filename path to file to save image to
-	 * @throws ImageSaverException if an IOException occured during 
+	 * @throws ImageSaverException if an IOException occurred during 
 	 * the process, the filename does not contain a dot to get the filetype,
 	 * the provided filename path does refer to a directory, 
 	 * or no appropriate writer could be found for specified format.
@@ -191,14 +199,6 @@ public class ImageSaver {
 			saveImage(image, f);
 		} else {
 			throw new ImageSaverException(new IOException(String.format("provided file name denotes a directory. %s", filename)));
-		}
-	}
-	
-	private static void closeQuietly(Closeable toClose){
-		if(toClose != null){
-			try {
-				toClose.close();
-			} catch (IOException e) {/* ignore */}
 		}
 	}
 	

@@ -3,13 +3,13 @@ language: java
 sudo: false
 
 jdk:
-  - openjdk8
+  - oraclejdk11
+
+services:
+  - xvfb # (x virtual frame buffer for gui testing)
   
 before_script:
-  - "export DISPLAY=:99.0"
   - "export _JAVA_OPTIONS=\"-Xms2g -Xmx2g -verbose:gc\""
-  - "sh -e /etc/init.d/xvfb start"
-  - sleep 3 # give xvfb some time to start (x virtual frame buffer for gui testing)
 
 script: mvn -P travis -X clean test jacoco:report
 
