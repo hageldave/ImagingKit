@@ -2,7 +2,7 @@
 #### [Master Branch](https://github.com/hageldave/ImagingKit/tree/master)
 [![Build Status](https://travis-ci.org/hageldave/ImagingKit.svg?branch=master)](https://travis-ci.org/hageldave/ImagingKit/branches)
 [![Coverage Status](https://coveralls.io/repos/github/hageldave/ImagingKit/badge.svg?branch=master)](https://coveralls.io/github/hageldave/ImagingKit?branch=master)
-[![Maven Central](https://img.shields.io/maven-central/v/com.github.hageldave.imagingkit/imagingkit-core.svg)](http://search.maven.org/#artifactdetails|com.github.hageldave.imagingkit|imagingkit-core|2.0|jar)
+[![Maven Central](https://img.shields.io/maven-central/v/com.github.hageldave.imagingkit/imagingkit-core.svg)](http://search.maven.org/#artifactdetails|com.github.hageldave.imagingkit|imagingkit-core|2.1|jar)
 ---
 #### [Development Branch](https://github.com/hageldave/ImagingKit/tree/devel2.0)
 [![Build Status](https://travis-ci.org/hageldave/ImagingKit.svg?branch=devel2.0)](https://travis-ci.org/hageldave/ImagingKit/branches)
@@ -16,13 +16,13 @@ So far the *ImagingKit-Core* and *ImagingKit-Fourier* artifacts of the library a
 <dependency>
   <groupId>com.github.hageldave.imagingkit</groupId>
   <artifactId>imagingkit-core</artifactId>
-  <version>2.0</version>
+  <version>2.1</version>
 </dependency>
 
 <dependency>
   <groupId>com.github.hageldave.imagingkit</groupId>
   <artifactId>imagingkit-fourier</artifactId>
-  <version>2.0</version>
+  <version>2.1</version>
 </dependency>
 ```
 
