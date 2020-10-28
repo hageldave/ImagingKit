@@ -116,11 +116,9 @@ public class IOTest {
 		}
 		
 		{// save Stream load Stream
-			Img img = new Img(100, 100);
-			// need uniform grey so jpeg compression will not alter the color
-			img.fill(0xff888888);
+			Img img = getTestImg(64,64);
 			ByteArrayOutputStream out = new ByteArrayOutputStream();
-			ImageSaver.saveImage(img.getRemoteBufferedImage(), out, "jpg");
+			ImageSaver.saveImage(img.getRemoteBufferedImage(), out, "png");
 			BufferedImage bimg = ImageLoader.loadImage(
 					new ByteArrayInputStream(out.toByteArray()), BufferedImage.TYPE_INT_ARGB);
 			Img loaded = Img.createRemoteImg(bimg);
