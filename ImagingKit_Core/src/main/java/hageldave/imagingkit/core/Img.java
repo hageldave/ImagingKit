@@ -69,7 +69,7 @@ import hageldave.imagingkit.core.util.ImagingKitUtils;
  * <pre>
  * {@code
  * Img img = new Img(1024, 1024);
- * img.forEachParallel(px -> {
+ * img.forEach(true, px -> {
  *     double x = (px.getX()-512)/512.0;
  *     double y = (px.getY()-512)/512.0;
  *     double len = Math.max(Math.abs(x),Math.abs(y));
