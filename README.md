@@ -4,11 +4,6 @@
 [![Coverage Status](https://coveralls.io/repos/github/hageldave/ImagingKit/badge.svg?branch=master)](https://coveralls.io/github/hageldave/ImagingKit?branch=master)
 [![Maven Central](https://img.shields.io/maven-central/v/com.github.hageldave.imagingkit/imagingkit-core.svg)](http://search.maven.org/#artifactdetails|com.github.hageldave.imagingkit|imagingkit-core|2.1|jar)
 ---
-#### [Development Branch](https://github.com/hageldave/ImagingKit/tree/devel2.0)
-[![Build Status](https://travis-ci.com/hageldave/ImagingKit.svg?branch=devel2.0)](https://travis-ci.com/github/hageldave/ImagingKit/branches)
-[![Coverage Status](https://coveralls.io/repos/github/hageldave/ImagingKit/badge.svg?branch=devel2.0)](https://coveralls.io/github/hageldave/ImagingKit?branch=devel2.0)
----
-
 A Java library for imaging tasks that integrates well with the commonly used java.awt.image environment (especially well with TYPE_INT BufferedImages). Its goal is to make image processing more convenient and to ease performance optimization. The library is intended for images using integer typed values like 24bit RGB or 32bit ARGB. 
 
 So far the *ImagingKit-Core* and *ImagingKit-Fourier* artifacts of the library are available through the maven central repository:
@@ -42,8 +37,9 @@ img.stream().parallel().forEach( px -> {
 });
 ```
 
----
+
 ### Code Examples
+---
 Convert an image to grayscale:
 ```java
 BufferedImage buffimg = ImageLoader.loadImage("myimage_colored.png", BufferedImage.TYPE_INT_ARGB);
@@ -57,6 +53,7 @@ ImageSaver.saveImage(buffimg,"myimage_grayscale.png");
 ![original lena image](ImagingKit_Core/src/test/resources/lena.128.png)
 ![greyscale lena image]( ImagingKit_Core/src/test/resources/exampleimages/lenagrey.png)
 
+---
 Draw into image (using java.awt.Graphics2D):
 ```java
 Img img = new Img(128, 128);
@@ -73,6 +70,7 @@ ImageSaver.saveImage(img.getRemoteBufferedImage(), "hello_world.png");
 ```
 ![hello world image](ImagingKit_Core/src/test/resources/exampleimages/helloworld.png)
 
+---
 Fancy polar color thing:
 ```java
 Img img = new Img(128, 128);
@@ -93,6 +91,7 @@ ImageFrame.display(img);
 ```
 ![fancy polor color image](ImagingKit_Core/src/test/resources/exampleimages/fancypolarcolor.png)
 
+---
 Shifting hue (using color space transformation):
 ```java
 Img img = ImageLoader.loadImgFromURL("http://sipi.usc.edu/database/preview/misc/4.2.03.png");
@@ -110,6 +109,7 @@ ImageFrame.display(img);
 ![baboon image](ImagingKit_Core/src/test/resources/baboon.128.png)
 ![hue shifted baboom image](ImagingKit_Core/src/test/resources/exampleimages/hueshift.png)
 
+---
 Fourier Filtering
 ```java
 ColorImg img = new ColorImg(128,128,false);
