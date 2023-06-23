@@ -22,13 +22,10 @@
 
 package hageldave.imagingkit.core.util;
 
-import java.awt.Dimension;
-import java.awt.Image;
-
-import javax.swing.JFrame;
-import javax.swing.SwingUtilities;
-
 import hageldave.imagingkit.core.Img;
+
+import javax.swing.*;
+import java.awt.*;
 
 /**
  * {@link JFrame} for displaying an image utilizing an {@link ImagePanel}.
@@ -67,6 +64,22 @@ public class ImageFrame extends JFrame {
 		super();
 		this.panel = new ImagePanel();
 		this.getContentPane().add(this.panel);
+
+		try {
+			System.setProperty("apple.laf.useScreenMenuBar", "true");
+			System.setProperty("com.apple.mrj.application.apple.menu.about.name", "Test");
+			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+		} catch (ClassNotFoundException | UnsupportedLookAndFeelException | InstantiationException |
+				 IllegalAccessException e) {
+			throw new RuntimeException(e);
+		}
+		JMenuBar menuBar = new JMenuBar();
+		JMenu menu = new JMenu("View");
+		menuBar.add(menu);
+		JMenuItem originalResolution = new JMenuItem("Zoom to original resolution");
+		menu.add(originalResolution);
+		originalResolution.addActionListener(e -> this.panel.setToOriginalResolution());
+		this.setJMenuBar(menuBar);
 	}
 	
 	/**

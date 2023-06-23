@@ -274,11 +274,13 @@ public class ImagePanel extends JPanel{
 				double panelRatio = this.getWidth()*1.0/this.getHeight();
 
 				// TODO: this probably needs to be put into the different branches below
+				AffineTransform at = (AffineTransform) g.getDeviceConfiguration().getDefaultTransform().clone();
 				if (zoomPoint != null) {
-					g.transform(AffineTransform.getTranslateInstance(this.zoomPoint.getX(), this.zoomPoint.getY()));
-					g.transform(AffineTransform.getScaleInstance(affineTransform.getScaleX(), affineTransform.getScaleY()));
-					g.transform(AffineTransform.getTranslateInstance(-this.zoomPoint.getX(), -this.zoomPoint.getY()));
+					at.translate(this.zoomPoint.getX(), this.zoomPoint.getY());
+					at.scale(affineTransform.getScaleX(), affineTransform.getScaleY());
+					at.translate(-this.zoomPoint.getX(), -this.zoomPoint.getY());
 				}
+				g.setTransform(at);
 				if(imgRatio > panelRatio) {
 					// image wider than panel
 					int height = (int) (this.getWidth()/imgRatio);
@@ -367,4 +369,8 @@ public class ImagePanel extends JPanel{
 		return new BasicStroke(size, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_BEVEL, 1, new float[]{0,size*2}, 0);
 	}
 	
+	public void setToOriginalResolution() {
+		this.affineTransform = new AffineTransform();
+		this.repaint();
+	}
 }
