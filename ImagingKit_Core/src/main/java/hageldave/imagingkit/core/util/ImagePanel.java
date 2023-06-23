@@ -30,6 +30,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Point2D;
 import java.awt.image.ImageObserver;
 import java.util.function.Function;
 
@@ -75,7 +77,9 @@ public class ImagePanel extends JPanel{
 	/** 8 by default */
 	private int checkerSize;
 	private Stroke checkerStroke;
-	
+
+	protected AffineTransform affineTransform = new AffineTransform();
+	protected Point2D zoomPoint;
 	
 	/**
 	 * Constructs a new ImagePanel. 
@@ -124,6 +128,14 @@ public class ImagePanel extends JPanel{
 				}
 			}
 		});
+
+		this.addMouseWheelListener(e -> {
+			zoomPoint = new Point2D.Double(e.getX(), e.getY());
+			double zoom = Math.pow(1.7, e.getWheelRotation()*0.4);
+			affineTransform.scale(zoom, zoom);
+			ImagePanel.this.repaint();
+		});
+
 		this.addMouseMotionListener(new MouseAdapter() {
 			@Override
 			public void mouseDragged(MouseEvent e) {
@@ -260,6 +272,13 @@ public class ImagePanel extends JPanel{
 			if(clickPoint == null){
 				double imgRatio = img.getWidth(obs_w)*1.0/img.getHeight(obs_h);
 				double panelRatio = this.getWidth()*1.0/this.getHeight();
+
+				// TODO: this probably needs to be put into the different branches below
+				if (zoomPoint != null) {
+					g.transform(AffineTransform.getTranslateInstance(this.zoomPoint.getX(), this.zoomPoint.getY()));
+					g.transform(AffineTransform.getScaleInstance(affineTransform.getScaleX(), affineTransform.getScaleY()));
+					g.transform(AffineTransform.getTranslateInstance(-this.zoomPoint.getX(), -this.zoomPoint.getY()));
+				}
 				if(imgRatio > panelRatio) {
 					// image wider than panel
 					int height = (int) (this.getWidth()/imgRatio);
