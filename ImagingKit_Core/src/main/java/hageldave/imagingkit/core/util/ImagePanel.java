@@ -23,22 +23,15 @@
 package hageldave.imagingkit.core.util;
 
 
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Image;
-import java.awt.Point;
-import java.awt.Stroke;
+import hageldave.imagingkit.core.Img;
+import hageldave.imagingkit.core.io.ImageSaver;
+
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.ImageObserver;
 import java.util.function.Function;
-
-import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
-
-import hageldave.imagingkit.core.Img;
 
 /**
  * Panel for displaying Images.
@@ -91,12 +84,36 @@ public class ImagePanel extends JPanel{
 	 * @since 1.4
 	 */
 	public ImagePanel() {
+		JPopupMenu popupMenu = new JPopupMenu();
+		JMenuItem saveItem = new JMenuItem("Save image");
+		popupMenu.add(saveItem);
+
+		saveItem.addActionListener(e -> {
+			FileDialog saveDialog = new FileDialog(new Frame(), "Choose where to save the file.", FileDialog.SAVE);
+			saveDialog.setVisible(true);
+			String fileName = saveDialog.getFile();
+			String directory = saveDialog.getDirectory();
+			if (fileName != null) {
+				for (String fileFormat: ImageSaver.getSaveableImageFileFormats()) {
+					if (fileName.endsWith(fileFormat)) {
+						ImageSaver.saveImage(img, directory + fileName);
+						System.out.println("Image has been exported to " + directory + fileName + ".");
+					}
+				}
+			}
+			popupMenu.setVisible(false);
+		});
+
 		this.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mousePressed(MouseEvent e) {
 				if(SwingUtilities.isLeftMouseButton(e)){
 					ImagePanel.this.clickPoint = e.getPoint();
 					ImagePanel.this.repaint();
+					popupMenu.setVisible(false);
+				} else if (SwingUtilities.isRightMouseButton(e)) {
+					popupMenu.setLocation(e.getXOnScreen(), e.getYOnScreen());
+					popupMenu.setVisible(true);
 				}
 			}
 			@Override
