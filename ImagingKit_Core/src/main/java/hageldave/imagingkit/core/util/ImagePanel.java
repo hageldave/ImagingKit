@@ -169,6 +169,11 @@ public class ImagePanel extends JPanel{
 					ImagePanel.this.repaint();
 					ImagePanel.this.dragStart.setLocation(e.getX(), e.getY());
 				}
+
+				if(clickPoint != null){
+					ImagePanel.this.clickPoint = e.getPoint();
+					ImagePanel.this.repaint();
+				}
 			}
 		});
 
@@ -223,15 +228,6 @@ public class ImagePanel extends JPanel{
             }
         });
 
-		this.addMouseMotionListener(new MouseAdapter() {
-			@Override
-			public void mouseDragged(MouseEvent e) {
-				if(clickPoint != null){
-					ImagePanel.this.clickPoint = e.getPoint();
-					ImagePanel.this.repaint();
-				}
-			}
-		});
 		this.setBackground(CHECKERBOARD_COLOR_2);
 		this.setForeground(CHECKERBOARD_COLOR_1);
 		this.checkerSize = 8;
