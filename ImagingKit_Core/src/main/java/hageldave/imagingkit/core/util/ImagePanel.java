@@ -178,14 +178,16 @@ public class ImagePanel extends JPanel{
 			}
 		});
 
-		this.addMouseWheelListener(e -> {
-			double zoom = Math.pow(1.7, e.getWheelRotation()*0.7);
+        this.addMouseWheelListener(e -> {
+            if (pressedKeycode == KeyEvent.VK_SHIFT) {
+                double zoom = Math.pow(1.7, e.getWheelRotation() * 0.2);
 
-			double prevScale = ImagePanel.this.zoomAffineTransform.getScaleX();
-			double imageWidth = getWidth()*prevScale;
-			double imageHeight = getHeight()*prevScale;
-			double imageX = ImagePanel.this.zoomAffineTransform.transform(new Point2D.Double(0, 0), new Point2D.Double()).getX();
-			double imageY = ImagePanel.this.zoomAffineTransform.transform(new Point2D.Double(0, 0), new Point2D.Double()).getY();
+                double prevScaleX = ImagePanel.this.zoomAffineTransform.getScaleX();
+                double prevScaleY = ImagePanel.this.zoomAffineTransform.getScaleY();
+                double imageWidth = getWidth() * prevScaleX;
+                double imageHeight = getHeight() * prevScaleY;
+                double imageX = ImagePanel.this.zoomAffineTransform.transform(new Point2D.Double(0, 0), new Point2D.Double()).getX();
+                double imageY = ImagePanel.this.zoomAffineTransform.transform(new Point2D.Double(0, 0), new Point2D.Double()).getY();
 
 //			TODO: this is for mouse centered zooming (doesn't work correctly currently)
 //			ImagePanel.this.affineTransform.translate(e.getX(), e.getY());
@@ -193,12 +195,21 @@ public class ImagePanel extends JPanel{
 //			ImagePanel.this.affineTransform.translate(-e.getX(), -e.getY());
 
 //			This zooms by the center of the panel
-			ImagePanel.this.zoomAffineTransform.translate(imageWidth/2.0 + imageX, imageHeight/2.0 + imageY);
-			ImagePanel.this.zoomAffineTransform.scale(zoom, zoom);
-			ImagePanel.this.zoomAffineTransform.translate(-(imageWidth/2.0 + imageX), -(imageHeight/2.0 + imageY));
+                ImagePanel.this.zoomAffineTransform.translate(imageWidth / 2.0 + imageX, imageHeight / 2.0 + imageY);
+                ImagePanel.this.zoomAffineTransform.scale(zoom, zoom);
+                ImagePanel.this.zoomAffineTransform.translate(-(imageWidth / 2.0 + imageX), -(imageHeight / 2.0 + imageY));
 
-			ImagePanel.this.repaint();
-		});
+                ImagePanel.this.repaint();
+            } else {
+                double scroll = e.getPreciseWheelRotation() * 1.3;
+                if (pressedKeycode == KeyEvent.VK_ALT) {
+                    panningAffineTransform.translate(scroll, 0);
+                } else {
+                    panningAffineTransform.translate(0, scroll);
+                }
+                ImagePanel.this.repaint();
+            }
+        });
 
 		this.addMouseMotionListener(new MouseAdapter() {
 			@Override
