@@ -28,6 +28,8 @@ import hageldave.imagingkit.core.io.ImageSaver;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.AffineTransform;
@@ -78,8 +80,10 @@ public class ImagePanel extends JPanel{
 	private int checkerSize;
 	private Stroke checkerStroke;
 
-	protected AffineTransform affineTransform = new AffineTransform();
-	protected Point2D zoomPoint;
+	protected AffineTransform zoomAffineTransform = new AffineTransform();
+	protected AffineTransform panningAffineTransform = new AffineTransform();
+	protected Point2D dragStart = null;
+	protected int pressedKeycode = -1;
 	
 	/**
 	 * Constructs a new ImagePanel. 
@@ -108,13 +112,23 @@ public class ImagePanel extends JPanel{
 			popupMenu.setVisible(false);
 		});
 
+		JMenuItem originalResolution = new JMenuItem("Zoom to original resolution");
+		popupMenu.add(originalResolution);
+		originalResolution.addActionListener(e -> setToOriginalResolution());
+
+		this.setFocusable(true);
+
 		this.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mousePressed(MouseEvent e) {
 				if(SwingUtilities.isLeftMouseButton(e)){
-					ImagePanel.this.clickPoint = e.getPoint();
-					ImagePanel.this.repaint();
-					popupMenu.setVisible(false);
+					if (pressedKeycode != KeyEvent.VK_E) {
+						ImagePanel.this.clickPoint = e.getPoint();
+						ImagePanel.this.repaint();
+						popupMenu.setVisible(false);
+					} else {
+						ImagePanel.this.dragStart = e.getPoint();
+					}
 				} else if (SwingUtilities.isRightMouseButton(e)) {
 					popupMenu.setLocation(e.getXOnScreen(), e.getYOnScreen());
 					popupMenu.setVisible(true);
@@ -125,14 +139,64 @@ public class ImagePanel extends JPanel{
 				if(SwingUtilities.isLeftMouseButton(e)){
 					ImagePanel.this.clickPoint = null;
 					ImagePanel.this.repaint();
+					ImagePanel.this.dragStart = null;
 				}
 			}
 		});
 
+		this.addMouseMotionListener(new MouseAdapter() {
+			@Override
+			public void mouseDragged(MouseEvent e) {
+				if (ImagePanel.this.dragStart != null) {
+					ImagePanel.this.setCursor(Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR));
+					double mouseTx = e.getX()-ImagePanel.this.dragStart.getX();
+					double mouseTy = e.getY()-ImagePanel.this.dragStart.getY();
+					double scaleX = panningAffineTransform.getScaleX();
+					double scaleY = panningAffineTransform.getScaleY();
+					mouseTx /= scaleX;
+					mouseTy /= scaleY;
+
+					panningAffineTransform.translate(mouseTx, mouseTy);
+					ImagePanel.this.repaint();
+					ImagePanel.this.dragStart.setLocation(e.getX(), e.getY());
+				}
+			}
+		});
+
+		this.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyPressed(KeyEvent e) {
+				super.keyPressed(e);
+				ImagePanel.this.pressedKeycode = e.getKeyCode();
+			}
+
+			@Override
+			public void keyReleased(KeyEvent e) {
+				super.keyReleased(e);
+				ImagePanel.this.pressedKeycode = -1;
+				ImagePanel.this.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+			}
+		});
+
 		this.addMouseWheelListener(e -> {
-			zoomPoint = new Point2D.Double(e.getX(), e.getY());
-			double zoom = Math.pow(1.7, e.getWheelRotation()*0.4);
-			affineTransform.scale(zoom, zoom);
+			double zoom = Math.pow(1.7, e.getWheelRotation()*0.7);
+
+			double prevScale = ImagePanel.this.zoomAffineTransform.getScaleX();
+			double imageWidth = getWidth()*prevScale;
+			double imageHeight = getHeight()*prevScale;
+			double imageX = ImagePanel.this.zoomAffineTransform.transform(new Point2D.Double(0, 0), new Point2D.Double()).getX();
+			double imageY = ImagePanel.this.zoomAffineTransform.transform(new Point2D.Double(0, 0), new Point2D.Double()).getY();
+
+//			TODO: this is for mouse centered zooming (doesn't work correctly currently)
+//			ImagePanel.this.affineTransform.translate(e.getX(), e.getY());
+//			ImagePanel.this.affineTransform.scale(zoom, zoom);
+//			ImagePanel.this.affineTransform.translate(-e.getX(), -e.getY());
+
+//			This zooms by the center of the panel
+			ImagePanel.this.zoomAffineTransform.translate(imageWidth/2.0 + imageX, imageHeight/2.0 + imageY);
+			ImagePanel.this.zoomAffineTransform.scale(zoom, zoom);
+			ImagePanel.this.zoomAffineTransform.translate(-(imageWidth/2.0 + imageX), -(imageHeight/2.0 + imageY));
+
 			ImagePanel.this.repaint();
 		});
 
@@ -270,17 +334,12 @@ public class ImagePanel extends JPanel{
 		if(img != null){
 			Point clickPoint = this.clickPoint;
 			if(clickPoint == null){
+				g.transform(panningAffineTransform);
+				g.transform(zoomAffineTransform);
+
 				double imgRatio = img.getWidth(obs_w)*1.0/img.getHeight(obs_h);
 				double panelRatio = this.getWidth()*1.0/this.getHeight();
 
-				// TODO: this probably needs to be put into the different branches below
-				AffineTransform at = (AffineTransform) g.getDeviceConfiguration().getDefaultTransform().clone();
-				if (zoomPoint != null) {
-					at.translate(this.zoomPoint.getX(), this.zoomPoint.getY());
-					at.scale(affineTransform.getScaleX(), affineTransform.getScaleY());
-					at.translate(-this.zoomPoint.getX(), -this.zoomPoint.getY());
-				}
-				g.setTransform(at);
 				if(imgRatio > panelRatio) {
 					// image wider than panel
 					int height = (int) (this.getWidth()/imgRatio);
@@ -370,7 +429,7 @@ public class ImagePanel extends JPanel{
 	}
 	
 	public void setToOriginalResolution() {
-		this.affineTransform = new AffineTransform();
+		this.zoomAffineTransform = new AffineTransform();
 		this.repaint();
 	}
 }
