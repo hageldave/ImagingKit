@@ -24,6 +24,9 @@ package hageldave.imagingkit.core.util;
 
 
 import hageldave.imagingkit.core.Img;
+import hageldave.imagingkit.core.interaction.ImagePanning;
+import hageldave.imagingkit.core.interaction.ImageZooming;
+import hageldave.imagingkit.core.interaction.MouseWheelPanning;
 import hageldave.imagingkit.core.io.ImageSaver;
 
 import javax.swing.*;
@@ -33,7 +36,6 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.AffineTransform;
-import java.awt.geom.Point2D;
 import java.awt.image.ImageObserver;
 import java.util.function.Function;
 
@@ -80,9 +82,10 @@ public class ImagePanel extends JPanel{
 	private int checkerSize;
 	private Stroke checkerStroke;
 
+
+
 	protected AffineTransform zoomAffineTransform = new AffineTransform();
 	protected AffineTransform panningAffineTransform = new AffineTransform();
-	protected Point2D dragStart = null;
 	protected int pressedKeycode = -1;
 	
 	/**
@@ -136,8 +139,6 @@ public class ImagePanel extends JPanel{
 						ImagePanel.this.clickPoint = e.getPoint();
 						ImagePanel.this.repaint();
 						popupMenu.setVisible(false);
-					} else {
-						ImagePanel.this.dragStart = e.getPoint();
 					}
 				} else if (SwingUtilities.isRightMouseButton(e)) {
 					popupMenu.setLocation(e.getXOnScreen(), e.getYOnScreen());
@@ -149,7 +150,6 @@ public class ImagePanel extends JPanel{
 				if(SwingUtilities.isLeftMouseButton(e)){
 					ImagePanel.this.clickPoint = null;
 					ImagePanel.this.repaint();
-					ImagePanel.this.dragStart = null;
 				}
 			}
 		});
@@ -157,19 +157,6 @@ public class ImagePanel extends JPanel{
 		this.addMouseMotionListener(new MouseAdapter() {
 			@Override
 			public void mouseDragged(MouseEvent e) {
-				if (ImagePanel.this.dragStart != null) {
-					double mouseTx = e.getX()-ImagePanel.this.dragStart.getX();
-					double mouseTy = e.getY()-ImagePanel.this.dragStart.getY();
-					double scaleX = panningAffineTransform.getScaleX();
-					double scaleY = panningAffineTransform.getScaleY();
-					mouseTx /= scaleX;
-					mouseTy /= scaleY;
-
-					panningAffineTransform.translate(mouseTx, mouseTy);
-					ImagePanel.this.repaint();
-					ImagePanel.this.dragStart.setLocation(e.getX(), e.getY());
-				}
-
 				if(clickPoint != null){
 					ImagePanel.this.clickPoint = e.getPoint();
 					ImagePanel.this.repaint();
@@ -182,56 +169,23 @@ public class ImagePanel extends JPanel{
 			public void keyPressed(KeyEvent e) {
 				super.keyPressed(e);
 				ImagePanel.this.pressedKeycode = e.getKeyCode();
-                if (e.getKeyCode() == KeyEvent.VK_E) {
-                    ImagePanel.this.setCursor(Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR));
-                }
 			}
 
 			@Override
 			public void keyReleased(KeyEvent e) {
 				super.keyReleased(e);
 				ImagePanel.this.pressedKeycode = -1;
-				ImagePanel.this.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 			}
 		});
-
-        this.addMouseWheelListener(e -> {
-            if (pressedKeycode == KeyEvent.VK_SHIFT) {
-                double zoom = Math.pow(1.7, e.getWheelRotation() * 0.2);
-
-                double prevScaleX = ImagePanel.this.zoomAffineTransform.getScaleX();
-                double prevScaleY = ImagePanel.this.zoomAffineTransform.getScaleY();
-                double imageWidth = getWidth() * prevScaleX;
-                double imageHeight = getHeight() * prevScaleY;
-                double imageX = ImagePanel.this.zoomAffineTransform.transform(new Point2D.Double(0, 0), new Point2D.Double()).getX();
-                double imageY = ImagePanel.this.zoomAffineTransform.transform(new Point2D.Double(0, 0), new Point2D.Double()).getY();
-
-//			TODO: this is for mouse centered zooming (doesn't work correctly currently)
-//			ImagePanel.this.affineTransform.translate(e.getX(), e.getY());
-//			ImagePanel.this.affineTransform.scale(zoom, zoom);
-//			ImagePanel.this.affineTransform.translate(-e.getX(), -e.getY());
-
-//			This zooms by the center of the panel
-                ImagePanel.this.zoomAffineTransform.translate(imageWidth / 2.0 + imageX, imageHeight / 2.0 + imageY);
-                ImagePanel.this.zoomAffineTransform.scale(zoom, zoom);
-                ImagePanel.this.zoomAffineTransform.translate(-(imageWidth / 2.0 + imageX), -(imageHeight / 2.0 + imageY));
-
-                ImagePanel.this.repaint();
-            } else {
-                double scroll = e.getPreciseWheelRotation() * 1.3;
-                if (pressedKeycode == KeyEvent.VK_ALT) {
-                    panningAffineTransform.translate(scroll, 0);
-                } else {
-                    panningAffineTransform.translate(0, scroll);
-                }
-                ImagePanel.this.repaint();
-            }
-        });
 
 		this.setBackground(CHECKERBOARD_COLOR_2);
 		this.setForeground(CHECKERBOARD_COLOR_1);
 		this.checkerSize = 8;
 		setCheckerSize(getCheckerSize());
+
+		new ImagePanning(this).register();
+		new ImageZooming(this).register();
+		new MouseWheelPanning(this).register();
 	}
 	
 	/** 
@@ -445,5 +399,23 @@ public class ImagePanel extends JPanel{
 	 */
 	protected static final Stroke checkerStrokeForSize(int size) {
 		return new BasicStroke(size, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_BEVEL, 1, new float[]{0,size*2}, 0);
+	}
+
+	public AffineTransform getZoomAffineTransform() {
+		return zoomAffineTransform;
+	}
+
+	public void setZoomAffineTransform(AffineTransform zoomAffineTransform) {
+		this.zoomAffineTransform = zoomAffineTransform;
+		this.repaint();
+	}
+
+	public AffineTransform getPanningAffineTransform() {
+		return panningAffineTransform;
+	}
+
+	public void setPanningAffineTransform(AffineTransform panningAffineTransform) {
+		this.panningAffineTransform = panningAffineTransform;
+		this.repaint();
 	}
 }
