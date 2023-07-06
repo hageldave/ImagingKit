@@ -92,6 +92,7 @@ public class ImagePanel extends JPanel{
 	 * @since 1.4
 	 */
 	public ImagePanel() {
+        this.setFocusable(true);
 		JPopupMenu popupMenu = new JPopupMenu();
 		JMenuItem saveItem = new JMenuItem("Save image");
 		popupMenu.add(saveItem);
@@ -114,9 +115,18 @@ public class ImagePanel extends JPanel{
 
 		JMenuItem originalResolution = new JMenuItem("Zoom to original resolution");
 		popupMenu.add(originalResolution);
-		originalResolution.addActionListener(e -> setToOriginalResolution());
+		originalResolution.addActionListener(e -> {
+            this.zoomAffineTransform = new AffineTransform();
+            this.repaint();
+        });
 
-		this.setFocusable(true);
+        JMenuItem fitFrame = new JMenuItem("Fit to frame");
+        popupMenu.add(fitFrame);
+        fitFrame.addActionListener(e ->  {
+            this.zoomAffineTransform = new AffineTransform();
+            this.panningAffineTransform = new AffineTransform();
+            this.repaint();
+        });
 
 		this.addMouseListener(new MouseAdapter() {
 			@Override
@@ -148,7 +158,6 @@ public class ImagePanel extends JPanel{
 			@Override
 			public void mouseDragged(MouseEvent e) {
 				if (ImagePanel.this.dragStart != null) {
-					ImagePanel.this.setCursor(Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR));
 					double mouseTx = e.getX()-ImagePanel.this.dragStart.getX();
 					double mouseTy = e.getY()-ImagePanel.this.dragStart.getY();
 					double scaleX = panningAffineTransform.getScaleX();
@@ -168,6 +177,9 @@ public class ImagePanel extends JPanel{
 			public void keyPressed(KeyEvent e) {
 				super.keyPressed(e);
 				ImagePanel.this.pressedKeycode = e.getKeyCode();
+                if (e.getKeyCode() == KeyEvent.VK_E) {
+                    ImagePanel.this.setCursor(Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR));
+                }
 			}
 
 			@Override
@@ -437,10 +449,5 @@ public class ImagePanel extends JPanel{
 	 */
 	protected static final Stroke checkerStrokeForSize(int size) {
 		return new BasicStroke(size, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_BEVEL, 1, new float[]{0,size*2}, 0);
-	}
-	
-	public void setToOriginalResolution() {
-		this.zoomAffineTransform = new AffineTransform();
-		this.repaint();
 	}
 }
