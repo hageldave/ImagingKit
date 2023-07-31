@@ -82,11 +82,12 @@ public class ImagePanel extends JPanel{
 	private int checkerSize;
 	private Stroke checkerStroke;
 
-
-
 	protected AffineTransform zoomAffineTransform = new AffineTransform();
 	protected AffineTransform panningAffineTransform = new AffineTransform();
 	protected int pressedKeycode = -1;
+
+	protected ImagePanning imagePanning;
+	protected ImageZooming imageZooming;
 	
 	/**
 	 * Constructs a new ImagePanel. 
@@ -183,8 +184,8 @@ public class ImagePanel extends JPanel{
 		this.checkerSize = 8;
 		setCheckerSize(getCheckerSize());
 
-		new ImagePanning(this).register();
-		new ImageZooming(this).register();
+		this.imagePanning = new ImagePanning(this).register();
+		this.imageZooming = new ImageZooming(this).register();
 		new MouseWheelPanning(this).register();
 	}
 	
@@ -307,8 +308,9 @@ public class ImagePanel extends JPanel{
 		if(img != null){
 			Point clickPoint = this.clickPoint;
 			if(clickPoint == null){
-				g.transform(panningAffineTransform);
+				this.zoomAffineTransform = this.imageZooming.updateAffineTransform();
 				g.transform(zoomAffineTransform);
+				g.transform(panningAffineTransform);
 
 				double imgRatio = img.getWidth(obs_w)*1.0/img.getHeight(obs_h);
 				double panelRatio = this.getWidth()*1.0/this.getHeight();

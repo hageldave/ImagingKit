@@ -19,12 +19,14 @@ public class MouseWheelPanning extends PanelInteraction  {
     public void mouseWheelMoved(MouseWheelEvent e) {
         super.mouseWheelMoved(e);
         if (pressedKeycode != KeyEvent.VK_SHIFT) {
-            double scroll = e.getPreciseWheelRotation() * 1.3;
+            double scroll = e.getPreciseWheelRotation() * 1.5;
             AffineTransform panningAT = imagePanel.getPanningAffineTransform();
             if (pressedKeycode == KeyEvent.VK_ALT) {
-                panningAT.translate(scroll, 0);
+                double scaleX = imagePanel.getZoomAffineTransform().getScaleX();
+                panningAT.translate(scroll / scaleX, 0);
             } else {
-                panningAT.translate(0, scroll);
+                double scaleY = imagePanel.getZoomAffineTransform().getScaleY();
+                panningAT.translate(0, scroll / scaleY);
             }
             imagePanel.setPanningAffineTransform(panningAT);
         }

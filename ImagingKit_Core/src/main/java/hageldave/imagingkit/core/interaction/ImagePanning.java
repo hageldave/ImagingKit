@@ -24,8 +24,8 @@ public class ImagePanning extends PanelInteraction  {
         if (this.dragStart != null) {
             double mouseTx = e.getX()-this.dragStart.getX();
             double mouseTy = e.getY()-this.dragStart.getY();
-            double scaleX = imagePanel.getPanningAffineTransform().getScaleX();
-            double scaleY = imagePanel.getPanningAffineTransform().getScaleY();
+            double scaleX = imagePanel.getZoomAffineTransform().getScaleX();
+            double scaleY = imagePanel.getZoomAffineTransform().getScaleY();
             mouseTx /= scaleX;
             mouseTy /= scaleY;
 
