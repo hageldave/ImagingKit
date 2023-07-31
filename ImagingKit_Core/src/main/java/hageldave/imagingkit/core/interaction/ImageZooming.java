@@ -38,6 +38,10 @@ public class ImageZooming extends PanelInteraction  {
         }
     }
 
+    public void setZoom(double zoom) {
+        this.zoom = zoom;
+    }
+
     public AffineTransform updateAffineTransform() {
         double imageX = 0;
         double imageY = 0;

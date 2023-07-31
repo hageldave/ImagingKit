@@ -119,17 +119,13 @@ public class ImagePanel extends JPanel{
 
 		JMenuItem originalResolution = new JMenuItem("Zoom to original resolution");
 		popupMenu.add(originalResolution);
-		originalResolution.addActionListener(e -> {
-            this.zoomAffineTransform = new AffineTransform();
-            this.repaint();
-        });
+		originalResolution.addActionListener(e -> this.setZoomAffineTransform(new AffineTransform()));
 
         JMenuItem fitFrame = new JMenuItem("Fit to frame");
         popupMenu.add(fitFrame);
         fitFrame.addActionListener(e ->  {
-            this.zoomAffineTransform = new AffineTransform();
-            this.panningAffineTransform = new AffineTransform();
-            this.repaint();
+			this.setZoomAffineTransform(new AffineTransform());
+			this.setPanningAffineTransform(new AffineTransform());
         });
 
 		this.addMouseListener(new MouseAdapter() {
@@ -409,6 +405,7 @@ public class ImagePanel extends JPanel{
 
 	public void setZoomAffineTransform(AffineTransform zoomAffineTransform) {
 		this.zoomAffineTransform = zoomAffineTransform;
+		this.imageZooming.setZoom(zoomAffineTransform.getScaleX());
 		this.repaint();
 	}
 
