@@ -25,7 +25,7 @@ package hageldave.imagingkit.core.util;
 
 import hageldave.imagingkit.core.Img;
 import hageldave.imagingkit.core.interaction.ImagePanning;
-import hageldave.imagingkit.core.interaction.ImageZooming;
+import hageldave.imagingkit.core.interaction.MouseFocusedZooming;
 import hageldave.imagingkit.core.interaction.MouseWheelPanning;
 import hageldave.imagingkit.core.io.ImageSaver;
 
@@ -87,7 +87,8 @@ public class ImagePanel extends JPanel{
 	protected int pressedKeycode = -1;
 
 	protected ImagePanning imagePanning;
-	protected ImageZooming imageZooming;
+	protected MouseFocusedZooming imageZooming;
+//	protected ImageZooming imageZooming;
 	
 	/**
 	 * Constructs a new ImagePanel. 
@@ -181,7 +182,8 @@ public class ImagePanel extends JPanel{
 		setCheckerSize(getCheckerSize());
 
 		this.imagePanning = new ImagePanning(this).register();
-		this.imageZooming = new ImageZooming(this).register();
+//		this.imageZooming = new ImageZooming(this).register();
+		this.imageZooming = new MouseFocusedZooming(this).register();
 		new MouseWheelPanning(this).register();
 	}
 	
@@ -303,8 +305,7 @@ public class ImagePanel extends JPanel{
 		Image img = this.img;
 		if(img != null){
 			Point clickPoint = this.clickPoint;
-			if(clickPoint == null){
-				this.zoomAffineTransform = this.imageZooming.updateAffineTransform();
+			if (clickPoint == null) {
 				g.transform(zoomAffineTransform);
 				g.transform(panningAffineTransform);
 
@@ -405,7 +406,11 @@ public class ImagePanel extends JPanel{
 
 	public void setZoomAffineTransform(AffineTransform zoomAffineTransform) {
 		this.zoomAffineTransform = zoomAffineTransform;
-		this.imageZooming.setZoom(zoomAffineTransform.getScaleX());
+		this.repaint();
+	}
+
+	public void appendZoomAffineTransform(AffineTransform zoomAffineTransform) {
+		this.zoomAffineTransform.concatenate(zoomAffineTransform);
 		this.repaint();
 	}
 
