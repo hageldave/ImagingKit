@@ -23,22 +23,18 @@
 package hageldave.imagingkit.core.util;
 
 
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Image;
-import java.awt.Point;
-import java.awt.Stroke;
+import hageldave.imagingkit.core.Img;
+import hageldave.imagingkit.core.io.ImageSaver;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.geom.AffineTransform;
 import java.awt.image.ImageObserver;
 import java.util.function.Function;
-
-import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
-
-import hageldave.imagingkit.core.Img;
 
 /**
  * Panel for displaying Images.
@@ -57,7 +53,7 @@ import hageldave.imagingkit.core.Img;
  * @since 1.4
  */
 @SuppressWarnings("serial")
-public class ImagePanel extends JPanel{
+public class ImagePanel extends JPanel {
 	/** First color of checkerboard (0x999999) 
 	 * @since 1.4 */
 	public static final Color CHECKERBOARD_COLOR_1 = new Color(0x999999);
@@ -66,8 +62,6 @@ public class ImagePanel extends JPanel{
 	public static final Color CHECKERBOARD_COLOR_2 = new Color(0x666666);
 	
 
-	
-	
 	/** The image to be displayed, null if not set 
 	 * @since 1.4 */
 	protected Image img = null;
@@ -82,7 +76,10 @@ public class ImagePanel extends JPanel{
 	/** 8 by default */
 	private int checkerSize;
 	private Stroke checkerStroke;
-	
+
+	protected AffineTransform zoomAffineTransform = new AffineTransform();
+	protected AffineTransform panningAffineTransform = new AffineTransform();
+	protected int pressedKeycode = -1;
 	
 	/**
 	 * Constructs a new ImagePanel. 
@@ -91,12 +88,50 @@ public class ImagePanel extends JPanel{
 	 * @since 1.4
 	 */
 	public ImagePanel() {
+        this.setFocusable(true);
+		JPopupMenu popupMenu = new JPopupMenu();
+		JMenuItem saveItem = new JMenuItem("Save image");
+		popupMenu.add(saveItem);
+
+		saveItem.addActionListener(e -> {
+			FileDialog saveDialog = new FileDialog(new Frame(), "Choose where to save the file.", FileDialog.SAVE);
+			saveDialog.setVisible(true);
+			String fileName = saveDialog.getFile();
+			String directory = saveDialog.getDirectory();
+			if (fileName != null) {
+				for (String fileFormat: ImageSaver.getSaveableImageFileFormats()) {
+					if (fileName.endsWith(fileFormat)) {
+						ImageSaver.saveImage(img, directory + fileName);
+						System.out.println("Image has been exported to " + directory + fileName + ".");
+					}
+				}
+			}
+			popupMenu.setVisible(false);
+		});
+
+		JMenuItem originalResolution = new JMenuItem("Zoom to original resolution");
+		popupMenu.add(originalResolution);
+		originalResolution.addActionListener(e -> this.setZoomAffineTransform(new AffineTransform()));
+
+        JMenuItem fitFrame = new JMenuItem("Fit to frame");
+        popupMenu.add(fitFrame);
+        fitFrame.addActionListener(e ->  {
+			this.setZoomAffineTransform(new AffineTransform());
+			this.setPanningAffineTransform(new AffineTransform());
+        });
+
 		this.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mousePressed(MouseEvent e) {
 				if(SwingUtilities.isLeftMouseButton(e)){
-					ImagePanel.this.clickPoint = e.getPoint();
-					ImagePanel.this.repaint();
+					if (pressedKeycode != KeyEvent.VK_E) {
+						ImagePanel.this.clickPoint = e.getPoint();
+						ImagePanel.this.repaint();
+						popupMenu.setVisible(false);
+					}
+				} else if (SwingUtilities.isRightMouseButton(e)) {
+					popupMenu.setLocation(e.getXOnScreen(), e.getYOnScreen());
+					popupMenu.setVisible(true);
 				}
 			}
 			@Override
@@ -107,6 +142,7 @@ public class ImagePanel extends JPanel{
 				}
 			}
 		});
+
 		this.addMouseMotionListener(new MouseAdapter() {
 			@Override
 			public void mouseDragged(MouseEvent e) {
@@ -116,6 +152,21 @@ public class ImagePanel extends JPanel{
 				}
 			}
 		});
+
+		this.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyPressed(KeyEvent e) {
+				super.keyPressed(e);
+				ImagePanel.this.pressedKeycode = e.getKeyCode();
+			}
+
+			@Override
+			public void keyReleased(KeyEvent e) {
+				super.keyReleased(e);
+				ImagePanel.this.pressedKeycode = -1;
+			}
+		});
+
 		this.setBackground(CHECKERBOARD_COLOR_2);
 		this.setForeground(CHECKERBOARD_COLOR_1);
 		this.checkerSize = 8;
@@ -220,9 +271,7 @@ public class ImagePanel extends JPanel{
 		}
 		drawImage(g2d);
 	}
-	
-	
-	
+
 	/**
 	 * Draws the image to the specified graphics context
 	 * @param g graphics context to draw on
@@ -240,9 +289,13 @@ public class ImagePanel extends JPanel{
 		Image img = this.img;
 		if(img != null){
 			Point clickPoint = this.clickPoint;
-			if(clickPoint == null){
+			if (clickPoint == null) {
+				g.transform(zoomAffineTransform);
+				g.transform(panningAffineTransform);
+
 				double imgRatio = img.getWidth(obs_w)*1.0/img.getHeight(obs_h);
 				double panelRatio = this.getWidth()*1.0/this.getHeight();
+
 				if(imgRatio > panelRatio) {
 					// image wider than panel
 					int height = (int) (this.getWidth()/imgRatio);
@@ -330,5 +383,22 @@ public class ImagePanel extends JPanel{
 	protected static final Stroke checkerStrokeForSize(int size) {
 		return new BasicStroke(size, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_BEVEL, 1, new float[]{0,size*2}, 0);
 	}
-	
+
+	public AffineTransform getZoomAffineTransform() {
+		return zoomAffineTransform;
+	}
+
+	public void setZoomAffineTransform(AffineTransform zoomAffineTransform) {
+		this.zoomAffineTransform = zoomAffineTransform;
+		this.repaint();
+	}
+
+	public AffineTransform getPanningAffineTransform() {
+		return panningAffineTransform;
+	}
+
+	public void setPanningAffineTransform(AffineTransform panningAffineTransform) {
+		this.panningAffineTransform = panningAffineTransform;
+		this.repaint();
+	}
 }
