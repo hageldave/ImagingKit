@@ -9,11 +9,27 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.util.Arrays;
 
+/**
+ * This class implements panning of an {@link ImagePanel} by dragging the mouse.
+ * To activate the panning, the 'e' key has to be pressed.
+ * The panning is done by translating the panningAffineTransform {@link AffineTransform} of the image panel.
+ * <br>
+ * The ImagePanning class first has to be registered on the image panel by calling register() and
+ * passing the image panel object to the ImagePanning constructor.
+ * It can be deregistered if it isn't used anymore by calling deRegister().
+ * <br>
+ * Example use of the ImagePanning class:
+ * <pre>ImagePanning ip = new ImagePanning(imagePanel).register();</pre>
+ * <pre>ip.deRegister();</pre>
+ */
 public class ImagePanning extends PanelInteraction  {
-
     final protected ImagePanel imagePanel;
     protected Point2D dragStart = null;
 
+    /**
+     * Constructs a new ImagePanning interaction for the given image panel.
+     * @param imagePanel image panel to pan
+     */
     public ImagePanning(ImagePanel imagePanel) {
         this.imagePanel = imagePanel;
     }

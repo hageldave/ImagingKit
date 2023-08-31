@@ -24,9 +24,6 @@ package hageldave.imagingkit.core.util;
 
 
 import hageldave.imagingkit.core.Img;
-import hageldave.imagingkit.core.interaction.ImagePanning;
-import hageldave.imagingkit.core.interaction.MouseFocusedZooming;
-import hageldave.imagingkit.core.interaction.MouseWheelPanning;
 import hageldave.imagingkit.core.io.ImageSaver;
 
 import javax.swing.*;
@@ -56,7 +53,7 @@ import java.util.function.Function;
  * @since 1.4
  */
 @SuppressWarnings("serial")
-public class ImagePanel extends JPanel{
+public class ImagePanel extends JPanel {
 	/** First color of checkerboard (0x999999) 
 	 * @since 1.4 */
 	public static final Color CHECKERBOARD_COLOR_1 = new Color(0x999999);
@@ -65,8 +62,6 @@ public class ImagePanel extends JPanel{
 	public static final Color CHECKERBOARD_COLOR_2 = new Color(0x666666);
 	
 
-	
-	
 	/** The image to be displayed, null if not set 
 	 * @since 1.4 */
 	protected Image img = null;
@@ -85,10 +80,6 @@ public class ImagePanel extends JPanel{
 	protected AffineTransform zoomAffineTransform = new AffineTransform();
 	protected AffineTransform panningAffineTransform = new AffineTransform();
 	protected int pressedKeycode = -1;
-
-	protected ImagePanning imagePanning;
-	protected MouseFocusedZooming imageZooming;
-//	protected ImageZooming imageZooming;
 	
 	/**
 	 * Constructs a new ImagePanel. 
@@ -180,11 +171,6 @@ public class ImagePanel extends JPanel{
 		this.setForeground(CHECKERBOARD_COLOR_1);
 		this.checkerSize = 8;
 		setCheckerSize(getCheckerSize());
-
-		this.imagePanning = new ImagePanning(this).register();
-//		this.imageZooming = new ImageZooming(this).register();
-		this.imageZooming = new MouseFocusedZooming(this).register();
-		new MouseWheelPanning(this).register();
 	}
 	
 	/** 
@@ -285,9 +271,7 @@ public class ImagePanel extends JPanel{
 		}
 		drawImage(g2d);
 	}
-	
-	
-	
+
 	/**
 	 * Draws the image to the specified graphics context
 	 * @param g graphics context to draw on
@@ -406,11 +390,6 @@ public class ImagePanel extends JPanel{
 
 	public void setZoomAffineTransform(AffineTransform zoomAffineTransform) {
 		this.zoomAffineTransform = zoomAffineTransform;
-		this.repaint();
-	}
-
-	public void appendZoomAffineTransform(AffineTransform zoomAffineTransform) {
-		this.zoomAffineTransform.concatenate(zoomAffineTransform);
 		this.repaint();
 	}
 
