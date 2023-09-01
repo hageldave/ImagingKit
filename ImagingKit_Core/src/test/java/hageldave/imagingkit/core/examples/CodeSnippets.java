@@ -10,11 +10,12 @@ import hageldave.imagingkit.core.io.ImageLoader;
 import hageldave.imagingkit.core.io.ImageSaver;
 import hageldave.imagingkit.core.operations.ColorSpaceTransformation;
 import hageldave.imagingkit.core.util.ImageFrame;
+import hageldave.imagingkit.core.util.ImagePanel;
 
 public class CodeSnippets {
 
 	public static void main(String[] args) {
-		
+		ex1();
 	}
 	
 	static URL resource(String res){
@@ -30,7 +31,9 @@ public class CodeSnippets {
 		    px.setRGB(grey, grey, grey);
 		}
 		///////////////
-		ImageFrame.display(img);
+		ImageFrame frame = ImageFrame.display(img);
+		new ImagePanel.ImageZooming(frame.getPanel()).register();
+		new ImagePanel.ImagePanning(frame.getPanel()).register();
 	}
 	
 	static void ex2(){

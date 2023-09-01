@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 David Haegele
+ * Copyright 2023 David Haegele
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to 
@@ -30,10 +30,15 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseWheelEvent;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.NoninvertibleTransformException;
+import java.awt.geom.Point2D;
 import java.awt.image.ImageObserver;
+import java.util.Arrays;
 import java.util.function.Function;
 
 /**
@@ -108,10 +113,6 @@ public class ImagePanel extends JPanel {
 			}
 			popupMenu.setVisible(false);
 		});
-
-		JMenuItem originalResolution = new JMenuItem("Zoom to original resolution");
-		popupMenu.add(originalResolution);
-		originalResolution.addActionListener(e -> this.setZoomAffineTransform(new AffineTransform()));
 
         JMenuItem fitFrame = new JMenuItem("Fit to frame");
         popupMenu.add(fitFrame);
@@ -400,5 +401,327 @@ public class ImagePanel extends JPanel {
 	public void setPanningAffineTransform(AffineTransform panningAffineTransform) {
 		this.panningAffineTransform = panningAffineTransform;
 		this.repaint();
+	}
+	
+	/**
+	 * The PanelInteraction class is an abstract class that can be used to implement interactions with an {@link ImagePanel}.
+	 * It implements the {@link KeyListener} interface and provides a {@link #pressedKeycode} field that can be used to
+	 * check which key is currently pressed.
+	 * <br>
+	 * Implementations of the abstract class can be found in the {@link hageldave.imagingkit.core.interaction} package.
+	 */
+	public static abstract class PanelInteraction extends MouseAdapter implements KeyListener {
+	    int pressedKeycode = -1;
+	    @Override
+	    public void keyPressed(KeyEvent e) {
+	        this.pressedKeycode = e.getKeyCode();
+	    }
+
+	    @Override
+	    public void keyReleased(KeyEvent e) {
+	        this.pressedKeycode = -1;
+	    }
+
+	    @Override
+	    public void keyTyped(KeyEvent e) {
+
+	    }
+
+	    /**
+	     * Registers the interaction class to the image panel (e.g., calling addMouseListener() on the image panel).
+	     *
+	     * @return {@link PanelInteraction} this for chaining
+	     */
+	    public abstract PanelInteraction register();
+
+	    /**
+	     * Unregisters the interaction class from the image panel (e.g., calling removeMouseListener() on the image panel).
+	     *
+	     * @return {@link PanelInteraction} this for chaining
+	     */
+	    public abstract PanelInteraction deRegister();
+	}
+	
+	/**
+	 * This class implements panning of an {@link ImagePanel} by dragging the mouse.
+	 * To activate the panning, the 'e' key has to be pressed.
+	 * The panning is done by translating the panningAffineTransform {@link AffineTransform} of the image panel.
+	 * <br>
+	 * The ImagePanning class first has to be registered on the image panel by calling register() and
+	 * passing the image panel object to the ImagePanning constructor.
+	 * It can be deregistered if it isn't used anymore by calling deRegister().
+	 * <br>
+	 * Example use of the ImagePanning class:
+	 * <pre>ImagePanning ip = new ImagePanning(imagePanel).register();</pre>
+	 * <pre>ip.deRegister();</pre>
+	 */
+	public static class ImagePanning extends PanelInteraction  {
+	    final protected ImagePanel imagePanel;
+	    protected Point2D dragStart = null;
+
+	    /**
+	     * Constructs a new ImagePanning interaction for the given image panel.
+	     * @param imagePanel image panel to pan
+	     */
+	    public ImagePanning(ImagePanel imagePanel) {
+	        this.imagePanel = imagePanel;
+	    }
+
+	    @Override
+	    public void mouseDragged(MouseEvent e) {
+	        super.mouseDragged(e);
+	        if (this.dragStart != null) {
+	            double mouseTx = e.getX()-this.dragStart.getX();
+	            double mouseTy = e.getY()-this.dragStart.getY();
+	            double scaleX = imagePanel.getZoomAffineTransform().getScaleX();
+	            double scaleY = imagePanel.getZoomAffineTransform().getScaleY();
+	            mouseTx /= scaleX;
+	            mouseTy /= scaleY;
+
+	            AffineTransform transformedTrans = imagePanel.getPanningAffineTransform();
+	            transformedTrans.translate(mouseTx, mouseTy);
+	            imagePanel.setPanningAffineTransform(transformedTrans);
+	            this.dragStart.setLocation(e.getX(), e.getY());
+	        }
+	    }
+
+	    @Override
+	    public void mousePressed(MouseEvent e) {
+	        if (pressedKeycode == KeyEvent.VK_E) {
+	            this.dragStart = e.getPoint();
+	        }
+	    }
+
+	    @Override
+	    public void mouseReleased(MouseEvent e) {
+	        super.mouseReleased(e);
+	        this.dragStart = null;
+	    }
+
+	    @Override
+	    public void keyPressed(KeyEvent e) {
+	        super.keyPressed(e);
+	        if (e.getKeyCode() == KeyEvent.VK_E) {
+	            imagePanel.setCursor(Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR));
+	        }
+	    }
+
+	    @Override
+	    public void keyReleased(KeyEvent e) {
+	        super.keyReleased(e);
+	        imagePanel.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+	    }
+
+	    @Override
+	    public ImagePanning register(){
+	        if( ! Arrays.asList(imagePanel.getMouseListeners()).contains(this))
+	            imagePanel.addMouseListener(this);
+	        if( ! Arrays.asList(imagePanel.getMouseMotionListeners()).contains(this))
+	            imagePanel.addMouseMotionListener(this);
+	        if ( ! Arrays.asList(imagePanel.getKeyListeners()).contains(this))
+	            imagePanel.addKeyListener(this);
+	        return this;
+	    }
+
+	    @Override
+	    public ImagePanning deRegister(){
+	        imagePanel.removeMouseListener(this);
+	        imagePanel.removeMouseMotionListener(this);
+	        imagePanel.removeKeyListener(this);
+	        return this;
+	    }
+	}
+	
+	/**
+	 * This class implements zooming of an {@link ImagePanel} by scrolling the mouse wheel.
+	 * The zooming of this class is different from that of {@link MouseFocusedZooming},
+	 * as it always zooms into the center of the current viewport, not on the current mouse position.
+	 * <br>
+	 * To zoom on the image panel, the 'shift' key has to be pressed.
+	 * The zooming is done by scaling the zoomAffineTransform {@link AffineTransform} of the image panel.
+	 * <br>
+	 * The ImageZooming class first has to be registered on the image panel by calling register().
+	 * It can be deregistered if it isn't used anymore by calling deRegister().
+	 * <br>
+	 * Example use of the ImageZooming class:
+	 * <pre>ImageZooming iz = new ImageZooming(imagePanel).register();</pre>
+	 * <pre>iz.deRegister();</pre>
+	 */
+	public static class ImageZooming extends PanelInteraction  {
+	    final protected ImagePanel imagePanel;
+
+	    /**
+	     * Constructs a new ImageZooming interaction for the given image panel.
+	     * @param imagePanel image panel to zoom
+	     */
+	    public ImageZooming(ImagePanel imagePanel) {
+	        this.imagePanel = imagePanel;
+	    }
+
+	    @Override
+	    public void mouseWheelMoved(MouseWheelEvent e) {
+	        super.mouseWheelMoved(e);
+	        if (pressedKeycode == KeyEvent.VK_SHIFT) {
+	            AffineTransform zoomAT = this.calcZoomAffineTransform(Math.pow(1.7, e.getWheelRotation() * 0.1));
+	            AffineTransform panelAT = this.imagePanel.getZoomAffineTransform();
+	            panelAT.concatenate(zoomAT);
+	            this.imagePanel.setZoomAffineTransform(panelAT);
+	        }
+	    }
+
+	    protected AffineTransform calcZoomAffineTransform(double zoom) {
+	        double imageWidth = imagePanel.getBounds().getWidth();
+	        double imageHeight = imagePanel.getBounds().getHeight();
+
+	        AffineTransform zoomAT = new AffineTransform();
+	        zoomAT.translate(imageWidth / 2.0, imageHeight / 2.0);
+	        zoomAT.scale(zoom, zoom);
+	        zoomAT.translate(-(imageWidth / 2.0), -(imageHeight / 2.0));
+	        return zoomAT;
+	    }
+
+	    @Override
+	    public ImageZooming register(){
+	        if( ! Arrays.asList(imagePanel.getMouseWheelListeners()).contains(this))
+	            imagePanel.addMouseWheelListener(this);
+	        if ( ! Arrays.asList(imagePanel.getKeyListeners()).contains(this))
+	            imagePanel.addKeyListener(this);
+	        return this;
+	    }
+
+	    @Override
+	    public ImageZooming deRegister(){
+	        imagePanel.removeMouseWheelListener(this);
+	        imagePanel.removeKeyListener(this);
+	        return this;
+	    }
+	}
+	
+	/**
+	 * This class implements zooming of an {@link ImagePanel} by scrolling the mouse wheel.
+	 * The zooming of this class is different from that of {@link ImageZooming},
+	 * as it always zooms onto the current mouse position, not into the center of the current viewport.
+	 * <br>
+	 * To zoom on the image panel, the 'shift' key has to be pressed.
+	 * The zooming is done by scaling the zoomAffineTransform {@link AffineTransform} of the image panel.
+	 * <br>
+	 * The MouseFocusedZooming class first has to be registered on the image panel by calling register().
+	 * It can be deregistered if it isn't used anymore by calling deRegister().
+	 * <br>
+	 * Example use of the MouseFocusedZooming class:
+	 * <pre>MouseFocusedZooming mfz = new MouseFocusedZooming(imagePanel).register();</pre>
+	 * <pre>mfz.deRegister();</pre>
+	 */
+	public static class MouseFocusedZooming extends PanelInteraction {
+	    final protected ImagePanel imagePanel;
+
+	    /**
+	     * Constructs a new MouseFocusedZooming object for the given image panel.
+	     * @param imagePanel image panel to zoom
+	     */
+	    public MouseFocusedZooming(ImagePanel imagePanel) {
+	        this.imagePanel = imagePanel;
+	    }
+
+	    @Override
+	    public void mouseWheelMoved(MouseWheelEvent e) {
+	        super.mouseWheelMoved(e);
+	        if (pressedKeycode == KeyEvent.VK_SHIFT) {
+	            try {
+	                AffineTransform zoomAT = this.calcZoomAffineTransform(e, Math.pow(1.7, e.getWheelRotation() * 0.1));
+	                AffineTransform panelAT = this.imagePanel.getZoomAffineTransform();
+	                panelAT.concatenate(zoomAT);
+	                this.imagePanel.setZoomAffineTransform(panelAT);
+	            } catch (NoninvertibleTransformException ex) {
+	                throw new RuntimeException(ex);
+	            }
+	        }
+	    }
+
+	    protected AffineTransform calcZoomAffineTransform(MouseWheelEvent e, double zoom) throws NoninvertibleTransformException {
+	        Point2D.Double mouseCoordinates = new Point2D.Double(e.getX(), e.getY());
+	        mouseCoordinates = (Point2D.Double) imagePanel.getZoomAffineTransform().inverseTransform(mouseCoordinates, mouseCoordinates);
+
+	        AffineTransform zoomAT = new AffineTransform();
+	        zoomAT.translate(mouseCoordinates.getX(), mouseCoordinates.getY());
+	        zoomAT.scale(zoom, zoom);
+	        zoomAT.translate(-mouseCoordinates.getX(), -mouseCoordinates.getY());
+	        return zoomAT;
+	    }
+
+	    @Override
+	    public MouseFocusedZooming register(){
+	        if( ! Arrays.asList(imagePanel.getMouseWheelListeners()).contains(this))
+	            imagePanel.addMouseWheelListener(this);
+	        if ( ! Arrays.asList(imagePanel.getKeyListeners()).contains(this))
+	            imagePanel.addKeyListener(this);
+	        return this;
+	    }
+
+	    @Override
+	    public MouseFocusedZooming deRegister(){
+	        imagePanel.removeMouseWheelListener(this);
+	        imagePanel.removeKeyListener(this);
+	        return this;
+	    }
+	}
+	
+	/**
+	 * This class implements panning of an {@link ImagePanel} by scrolling the mouse wheel.
+	 * To avoid conflicts with other interactions, the 'shift' key can't be pressed during the panning.
+	 * The panning is either done horizontally or vertically, depending on whether the 'alt' key is pressed.
+	 * <br>
+	 * The MouseWheelPanning class first has to be registered on the image panel by calling register() and
+	 * passing the image panel object to the MouseWheelPanning constructor.
+	 * It can be deregistered if it isn't used anymore by calling deRegister().
+	 * <br>
+	 * Example use of the ImagePanning class:
+	 * <pre>MouseWheelPanning mwp = new MouseWheelPanning(imagePanel).register();</pre>
+	 * <pre>mwp.deRegister();</pre>
+	 */
+	public static class MouseWheelPanning extends PanelInteraction  {
+
+	    final protected ImagePanel imagePanel;
+
+	    /**
+	     * Constructs a new MouseWheelPanning interaction for the given image panel.
+	     * @param imagePanel image panel to pan
+	     */
+	    public MouseWheelPanning(ImagePanel imagePanel) {
+	        this.imagePanel = imagePanel;
+	    }
+
+	    @Override
+	    public void mouseWheelMoved(MouseWheelEvent e) {
+	        super.mouseWheelMoved(e);
+	        if (pressedKeycode != KeyEvent.VK_SHIFT) {
+	            double scroll = e.getPreciseWheelRotation() * 1.5;
+	            AffineTransform panningAT = imagePanel.getPanningAffineTransform();
+	            double scaleX = imagePanel.getZoomAffineTransform().getScaleX();
+	            double scaleY = imagePanel.getZoomAffineTransform().getScaleY();
+	            if (pressedKeycode == KeyEvent.VK_ALT) {
+	                panningAT.translate(scroll / scaleX, 0);
+	            } else {
+	                panningAT.translate(0, scroll / scaleY);
+	            }
+	            imagePanel.setPanningAffineTransform(panningAT);
+	        }
+	    }
+
+	    @Override
+	    public MouseWheelPanning register(){
+	        if( ! Arrays.asList(imagePanel.getMouseWheelListeners()).contains(this))
+	            imagePanel.addMouseWheelListener(this);
+	        if ( ! Arrays.asList(imagePanel.getKeyListeners()).contains(this))
+	            imagePanel.addKeyListener(this);
+	        return this;
+	    }
+
+	    @Override
+	    public MouseWheelPanning deRegister(){
+	        imagePanel.removeMouseWheelListener(this);
+	        imagePanel.removeKeyListener(this);
+	        return this;
+	    }
 	}
 }
