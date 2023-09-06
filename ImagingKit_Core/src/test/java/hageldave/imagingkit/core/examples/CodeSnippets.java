@@ -10,7 +10,6 @@ import hageldave.imagingkit.core.io.ImageLoader;
 import hageldave.imagingkit.core.io.ImageSaver;
 import hageldave.imagingkit.core.operations.ColorSpaceTransformation;
 import hageldave.imagingkit.core.util.ImageFrame;
-import hageldave.imagingkit.core.util.ImagePanel;
 
 public class CodeSnippets {
 
@@ -32,8 +31,7 @@ public class CodeSnippets {
 		}
 		///////////////
 		ImageFrame frame = ImageFrame.display(img);
-		new ImagePanel.ImageZooming(frame.getPanel()).register();
-		new ImagePanel.ImagePanning(frame.getPanel()).register();
+		frame.getPanel().enableCheckerboardBackground(true);
 	}
 	
 	static void ex2(){
