@@ -14,7 +14,7 @@ import hageldave.imagingkit.core.util.ImageFrame;
 public class CodeSnippets {
 
 	public static void main(String[] args) {
-		
+		ex1();
 	}
 	
 	static URL resource(String res){
@@ -30,7 +30,8 @@ public class CodeSnippets {
 		    px.setRGB(grey, grey, grey);
 		}
 		///////////////
-		ImageFrame.display(img);
+		ImageFrame frame = ImageFrame.display(img);
+		frame.getPanel().enableCheckerboardBackground(true);
 	}
 	
 	static void ex2(){

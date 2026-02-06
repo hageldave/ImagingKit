@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 David Haegele
+ * Copyright 2023 David Haegele
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to 
@@ -23,22 +23,23 @@
 package hageldave.imagingkit.core.util;
 
 
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Image;
-import java.awt.Point;
-import java.awt.Stroke;
+import hageldave.imagingkit.core.Img;
+import hageldave.imagingkit.core.io.ImageSaver;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseWheelEvent;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.NoninvertibleTransformException;
+import java.awt.geom.Point2D;
 import java.awt.image.ImageObserver;
+import java.util.Arrays;
 import java.util.function.Function;
-
-import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
-
-import hageldave.imagingkit.core.Img;
 
 /**
  * Panel for displaying Images.
@@ -57,7 +58,7 @@ import hageldave.imagingkit.core.Img;
  * @since 1.4
  */
 @SuppressWarnings("serial")
-public class ImagePanel extends JPanel{
+public class ImagePanel extends JPanel {
 	/** First color of checkerboard (0x999999) 
 	 * @since 1.4 */
 	public static final Color CHECKERBOARD_COLOR_1 = new Color(0x999999);
@@ -66,13 +67,12 @@ public class ImagePanel extends JPanel{
 	public static final Color CHECKERBOARD_COLOR_2 = new Color(0x666666);
 	
 
-	
-	
 	/** The image to be displayed, null if not set 
 	 * @since 1.4 */
 	protected Image img = null;
-	/** The left mouse button click point, null if not currently pressed 
+	/** The mouse button click point, null if not currently pressed 
 	 * @since 1.4 */
+	@Deprecated
 	protected Point clickPoint = null;
 	/** whether to draw a checkerboard background or not 
 	 * @since 1.4 */
@@ -82,7 +82,15 @@ public class ImagePanel extends JPanel{
 	/** 8 by default */
 	private int checkerSize;
 	private Stroke checkerStroke;
+
+	protected AffineTransform zoomAffineTransform = new AffineTransform();
+	protected AffineTransform panningAffineTransform = new AffineTransform();
+	protected int pressedKeycode = -1;
 	
+	protected OriginalSizePanning panelinteract_osp = new OriginalSizePanning(this);
+	protected MousePanning panelinteract_mp = new MousePanning(this);
+	protected ScrollZooming panelinteract_sz = new ScrollZooming(this);
+	protected MouseFocusedZooming panelinteract_mfz = new MouseFocusedZooming(this);
 	
 	/**
 	 * Constructs a new ImagePanel. 
@@ -91,20 +99,44 @@ public class ImagePanel extends JPanel{
 	 * @since 1.4
 	 */
 	public ImagePanel() {
+        this.setFocusable(true);
+        this.enableInputMethods(true);
+		JPopupMenu popupMenu = new JPopupMenu();
+		JMenuItem saveItem = new JMenuItem("Save image");
+		popupMenu.add(saveItem);
+		saveItem.addActionListener(e -> {
+			FileDialog saveDialog = new FileDialog(new Frame(), "Choose where to save the file.", FileDialog.SAVE);
+			saveDialog.setVisible(true);
+			String fileName = saveDialog.getFile();
+			String directory = saveDialog.getDirectory();
+			if (fileName != null) {
+				for (String fileFormat: ImageSaver.getSaveableImageFileFormats()) {
+					if (fileName.endsWith(fileFormat)) {
+						ImageSaver.saveImage(img, directory + fileName);
+						System.out.println("Image has been exported to " + directory + fileName + ".");
+					}
+				}
+			}
+		});
+
+        JMenuItem fitFrame = new JMenuItem("Fit to frame");
+        popupMenu.add(fitFrame);
+        fitFrame.addActionListener(e ->  {
+			this.setZoomAffineTransform(new AffineTransform());
+			this.setPanningAffineTransform(new AffineTransform());
+        });
+
 		this.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mousePressed(MouseEvent e) {
-				if(SwingUtilities.isLeftMouseButton(e)){
-					ImagePanel.this.clickPoint = e.getPoint();
-					ImagePanel.this.repaint();
-				}
+				ImagePanel.this.clickPoint = e.getPoint();
+				ImagePanel.this.repaint();
 			}
+			
 			@Override
 			public void mouseReleased(MouseEvent e) {
-				if(SwingUtilities.isLeftMouseButton(e)){
 					ImagePanel.this.clickPoint = null;
 					ImagePanel.this.repaint();
-				}
 			}
 		});
 		this.addMouseMotionListener(new MouseAdapter() {
@@ -116,6 +148,40 @@ public class ImagePanel extends JPanel{
 				}
 			}
 		});
+		
+		this.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mousePressed(MouseEvent e) {
+				checkPopup(e);
+			}
+			
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				checkPopup(e);
+			}
+			
+			void checkPopup(MouseEvent e) {
+				if(e.isPopupTrigger())
+					popupMenu.show(ImagePanel.this, e.getX(), e.getY());
+			}
+		});
+
+		this.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyPressed(KeyEvent e) {
+				super.keyPressed(e);
+				ImagePanel.this.pressedKeycode = e.getKeyCode();
+			}
+
+			@Override
+			public void keyReleased(KeyEvent e) {
+				super.keyReleased(e);
+				ImagePanel.this.pressedKeycode = -1;
+			}
+		});
+		
+		getOriginalSizePanning().register().setEventKey(KeyEvent.VK_UNDEFINED);
+
 		this.setBackground(CHECKERBOARD_COLOR_2);
 		this.setForeground(CHECKERBOARD_COLOR_1);
 		this.checkerSize = 8;
@@ -220,9 +286,7 @@ public class ImagePanel extends JPanel{
 		}
 		drawImage(g2d);
 	}
-	
-	
-	
+
 	/**
 	 * Draws the image to the specified graphics context
 	 * @param g graphics context to draw on
@@ -239,59 +303,22 @@ public class ImagePanel extends JPanel{
 		
 		Image img = this.img;
 		if(img != null){
-			Point clickPoint = this.clickPoint;
-			if(clickPoint == null){
-				double imgRatio = img.getWidth(obs_w)*1.0/img.getHeight(obs_h);
-				double panelRatio = this.getWidth()*1.0/this.getHeight();
-				if(imgRatio > panelRatio) {
-					// image wider than panel
-					int height = (int) (this.getWidth()/imgRatio);
-					int y = (this.getHeight()-height)/2;
-					g.drawImage(img, 0, y, this.getWidth(), y+height, 0, 0, img.getWidth(obs_w), img.getHeight(obs_h), obs_allbits);
-				} else {
-					// image higher than panel
-					int width = (int) (this.getHeight()*imgRatio);
-					int x = (this.getWidth()-width)/2;
-					g.drawImage(img, x, 0, x+width, this.getHeight(), 0, 0, img.getWidth(obs_w), img.getHeight(obs_h), obs_allbits);
-				}
+			g.transform(zoomAffineTransform);
+			g.transform(panningAffineTransform);
+
+			double imgRatio = img.getWidth(obs_w)*1.0/img.getHeight(obs_h);
+			double panelRatio = this.getWidth()*1.0/this.getHeight();
+
+			if(imgRatio > panelRatio) {
+				// image wider than panel
+				int height = (int) (this.getWidth()/imgRatio);
+				int y = (this.getHeight()-height)/2;
+				g.drawImage(img, 0, y, this.getWidth(), y+height, 0, 0, img.getWidth(obs_w), img.getHeight(obs_h), obs_allbits);
 			} else {
-				float relX = clickPoint.x / (1.0f * this.getWidth());
-				float relY = clickPoint.y / (1.0f * this.getHeight());
-				int imgW = img.getWidth(obs_w);
-				int imgH = img.getHeight(obs_h);
-				int imgX = (int) (relX*imgW);
-				int imgY = (int) (relY*imgH);
-				
-				int dx1,dy1,dx2,dy2, sx1,sy1,sx2,sy2;
-				dx1 = dy1 = 0;
-				dx2 = this.getWidth();
-				dy2 = this.getHeight();
-				
-				sx1 = imgX-this.getWidth()/2;
-				sy1 = imgY-this.getHeight()/2;
-				sx2 = imgX+this.getWidth()-(this.getWidth()/2);
-				sy2 = imgY+this.getHeight()-(this.getHeight()/2);
-				
-				// manual clipping of image drawing coordinates
-				// depending on OS and window manager this may be needed
-				// to prevent trail artifacts when moving the image around
-				if(sx1 < 0){
-					dx1-=sx1; sx1=0;
-				}
-				if(sy1 < 0){
-					dy1-=sy1; sy1=0;
-				}
-				if(sx2 > imgW){
-					dx2-=(sx2-imgW); sx2=imgW;
-				}
-				if(sy2 > imgH){
-					dy2-=(sy2-imgH); sy2=imgH;
-				}
-				
-				g.drawImage(img, 
-						dx1, dy1, dx2, dy2, 
-						sx1, sy1, sx2, sy2, 
-						obs_allbits);
+				// image higher than panel
+				int width = (int) (this.getHeight()*imgRatio);
+				int x = (this.getWidth()-width)/2;
+				g.drawImage(img, x, 0, x+width, this.getHeight(), 0, 0, img.getWidth(obs_w), img.getHeight(obs_h), obs_allbits);
 			}
 		}
 	}
@@ -329,6 +356,398 @@ public class ImagePanel extends JPanel{
 	 */
 	protected static final Stroke checkerStrokeForSize(int size) {
 		return new BasicStroke(size, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_BEVEL, 1, new float[]{0,size*2}, 0);
+	}
+
+	public AffineTransform getZoomAffineTransform() {
+		return zoomAffineTransform;
+	}
+
+	public void setZoomAffineTransform(AffineTransform zoomAffineTransform) {
+		this.zoomAffineTransform = zoomAffineTransform;
+		this.repaint();
+	}
+
+	public AffineTransform getPanningAffineTransform() {
+		return panningAffineTransform;
+	}
+
+	public void setPanningAffineTransform(AffineTransform panningAffineTransform) {
+		this.panningAffineTransform = panningAffineTransform;
+		this.repaint();
+	}
+	
+	public OriginalSizePanning getOriginalSizePanning() {
+		return panelinteract_osp;
+	}
+	
+	public MousePanning getMousePanning() {
+		return panelinteract_mp;
+	}
+	
+	public ScrollZooming getScrollZooming() {
+		return panelinteract_sz;
+	}
+	
+	public MouseFocusedZooming getMouseFocusedZooming() {
+		return panelinteract_mfz;
+	}
+	
+	
+	/**
+	 * The PanelInteraction class is an abstract class that can be used to implement interactions with an {@link ImagePanel}.
+	 * It implements the {@link KeyListener} interface and provides a {@link #pressedKey} field that can be used to
+	 * check which key is currently pressed.
+	 * <br>
+	 * Implementations of the abstract class can be found in the {@link hageldave.imagingkit.core.interaction} package.
+	 */
+	public static abstract class PanelInteraction extends MouseAdapter implements KeyListener {
+	    protected int pressedKey = KeyEvent.VK_UNDEFINED;;
+	    public int eventKey = KeyEvent.VK_UNDEFINED; 
+	    
+	    
+	    @Override
+	    public void keyPressed(KeyEvent e) {
+	        this.pressedKey = e.getKeyCode();
+	    }
+
+	    @Override
+	    public void keyReleased(KeyEvent e) {
+	        this.pressedKey = KeyEvent.VK_UNDEFINED;
+	    }
+
+	    @Override
+	    public void keyTyped(KeyEvent e) {
+	    }
+
+	    /**
+	     * Registers the interaction class to the image panel (e.g., calling addMouseListener() on the image panel).
+	     *
+	     * @return {@link PanelInteraction} this for chaining
+	     */
+	    public abstract PanelInteraction register();
+
+	    /**
+	     * Unregisters the interaction class from the image panel (e.g., calling removeMouseListener() on the image panel).
+	     *
+	     * @return {@link PanelInteraction} this for chaining
+	     */
+	    public abstract PanelInteraction deRegister();
+	    
+	    public void setEventKey(int eventKey) {
+			this.eventKey = eventKey;
+		}
+	    
+	    public int getEventKey() {
+			return eventKey;
+		}
+	    
+	    public int getPressedKey() {
+			return pressedKey;
+		}
+	}
+	
+	public static class OriginalSizePanning extends PanelInteraction {
+		protected final ImagePanel imagePanel;
+		
+		public OriginalSizePanning(ImagePanel imagePanel) {
+	        this.imagePanel = imagePanel;
+	        this.setEventKey(KeyEvent.VK_SPACE);
+	    }
+		
+		@Override
+		public void mouseDragged(MouseEvent e) {
+			this.mousePressed(e);
+		}
+		
+		@Override
+		public void mousePressed(MouseEvent e) {
+			if(e.isPopupTrigger() || getPressedKey() != getEventKey()) 
+				return;
+			// image observer generator
+			Function<Integer, ImageObserver> obs = flags->{
+				return (image, infoflags, x, y, width, height)->(infoflags & flags)!=flags;
+			};
+			ImageObserver obs_w = obs.apply(ImageObserver.WIDTH);
+			ImageObserver obs_h = obs.apply(ImageObserver.HEIGHT);
+			
+			Point clickPoint = e.getPoint();
+			float relX = clickPoint.x / (1.0f * imagePanel.getWidth());
+			float relY = clickPoint.y / (1.0f * imagePanel.getHeight());
+			int imgW = imagePanel.img.getWidth(obs_w);
+			int imgH = imagePanel.img.getHeight(obs_h);
+			int panelW = imagePanel.getWidth();
+			int panelH = imagePanel.getHeight();
+			
+			double imgRatio = imgW*1.0/imgH;
+			double panelRatio = panelW*1.0/panelH;
+			
+			
+			AffineTransform origSizeZoom = new AffineTransform();
+			origSizeZoom.translate(imagePanel.getWidth()*0.5, imagePanel.getHeight()*0.5);
+			if(imgRatio > panelRatio) {
+				// image wider than panel
+				origSizeZoom.scale(imgW*1.0/panelW, imgW*1.0/panelW);
+			} else {
+				// image higher than panel
+				origSizeZoom.scale(imgH*1.0/panelH, imgH*1.0/panelH);
+			}
+			origSizeZoom.translate(-imagePanel.getWidth()*0.5, -imagePanel.getHeight()*0.5);
+			imagePanel.setZoomAffineTransform(origSizeZoom);
+			
+			AffineTransform mouseLocTranslation = new AffineTransform();
+			mouseLocTranslation.translate((-relX+.5)*imgW*.5,(-relY+.5)*imgH*.5);
+			imagePanel.setPanningAffineTransform(mouseLocTranslation);
+		}
+		
+		@Override
+		public void mouseReleased(MouseEvent e) {
+			imagePanel.setZoomAffineTransform(new AffineTransform());
+			imagePanel.setPanningAffineTransform(new AffineTransform());
+		}
+
+		@Override
+	    public OriginalSizePanning register(){
+	        if( ! Arrays.asList(imagePanel.getMouseListeners()).contains(this))
+	            imagePanel.addMouseListener(this);
+	        if( ! Arrays.asList(imagePanel.getMouseMotionListeners()).contains(this))
+	            imagePanel.addMouseMotionListener(this);
+	        if ( ! Arrays.asList(imagePanel.getKeyListeners()).contains(this))
+	            imagePanel.addKeyListener(this);
+	        return this;
+	    }
+
+	    @Override
+	    public OriginalSizePanning deRegister(){
+	        imagePanel.removeMouseListener(this);
+	        imagePanel.removeMouseMotionListener(this);
+	        imagePanel.removeKeyListener(this);
+	        return this;
+	    }
+	}
+	
+	/**
+	 * This class implements panning of an {@link ImagePanel} by dragging the mouse.
+	 * To activate the panning, the 'e' key has to be pressed.
+	 * The panning is done by translating the panningAffineTransform {@link AffineTransform} of the image panel.
+	 * <br>
+	 * The ImagePanning class first has to be registered on the image panel by calling register() and
+	 * passing the image panel object to the ImagePanning constructor.
+	 * It can be deregistered if it isn't used anymore by calling deRegister().
+	 * <br>
+	 * Example use of the ImagePanning class:
+	 * <pre>ImagePanning ip = new ImagePanning(imagePanel).register();</pre>
+	 * <pre>ip.deRegister();</pre>
+	 */
+	public static class MousePanning extends PanelInteraction  {
+	    protected final ImagePanel imagePanel;
+	    protected Point2D dragStart = null;
+
+	    /**
+	     * Constructs a new ImagePanning interaction for the given image panel.
+	     * @param imagePanel image panel to pan
+	     */
+	    public MousePanning(ImagePanel imagePanel) {
+	        this.imagePanel = imagePanel;
+	        this.setEventKey(KeyEvent.VK_SPACE);
+	    }
+
+	    @Override
+	    public void mouseDragged(MouseEvent e) {
+	        if (this.dragStart != null) {
+	            double mouseTx = e.getX()-this.dragStart.getX();
+	            double mouseTy = e.getY()-this.dragStart.getY();
+	            double scaleX = imagePanel.getZoomAffineTransform().getScaleX();
+	            double scaleY = imagePanel.getZoomAffineTransform().getScaleY();
+	            mouseTx /= scaleX;
+	            mouseTy /= scaleY;
+
+	            AffineTransform transformedTrans = imagePanel.getPanningAffineTransform();
+	            transformedTrans.translate(mouseTx, mouseTy);
+	            imagePanel.setPanningAffineTransform(transformedTrans);
+	            this.dragStart.setLocation(e.getX(), e.getY());
+	        }
+	    }
+
+	    @Override
+	    public void mousePressed(MouseEvent e) {
+	        if (this.getPressedKey() == this.getEventKey() && !e.isPopupTrigger()) {
+	            this.dragStart = e.getPoint();
+	        }
+	    }
+
+	    @Override
+	    public void mouseReleased(MouseEvent e) {
+	        this.dragStart = null;
+	    }
+
+	    @Override
+	    public void keyPressed(KeyEvent e) {
+	        super.keyPressed(e);
+	        if (e.getKeyCode() == this.getEventKey()) {
+	            imagePanel.setCursor(Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR));
+	        }
+	    }
+
+	    @Override
+	    public void keyReleased(KeyEvent e) {
+	        super.keyReleased(e);
+	        imagePanel.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+	    }
+
+	    @Override
+	    public MousePanning register(){
+	        if( ! Arrays.asList(imagePanel.getMouseListeners()).contains(this))
+	            imagePanel.addMouseListener(this);
+	        if( ! Arrays.asList(imagePanel.getMouseMotionListeners()).contains(this))
+	            imagePanel.addMouseMotionListener(this);
+	        if ( ! Arrays.asList(imagePanel.getKeyListeners()).contains(this))
+	            imagePanel.addKeyListener(this);
+	        return this;
+	    }
+
+	    @Override
+	    public MousePanning deRegister(){
+	        imagePanel.removeMouseListener(this);
+	        imagePanel.removeMouseMotionListener(this);
+	        imagePanel.removeKeyListener(this);
+	        return this;
+	    }
+	}
+	
+	/**
+	 * This class implements zooming of an {@link ImagePanel} by scrolling the mouse wheel.
+	 * The zooming of this class is different from that of {@link MouseFocusedZooming},
+	 * as it always zooms into the center of the current viewport, not on the current mouse position.
+	 * <br>
+	 * To zoom on the image panel, the 'shift' key has to be pressed.
+	 * The zooming is done by scaling the zoomAffineTransform {@link AffineTransform} of the image panel.
+	 * <br>
+	 * The ImageZooming class first has to be registered on the image panel by calling register().
+	 * It can be deregistered if it isn't used anymore by calling deRegister().
+	 * <br>
+	 * Example use of the ImageZooming class:
+	 * <pre>ImageZooming iz = new ImageZooming(imagePanel).register();</pre>
+	 * <pre>iz.deRegister();</pre>
+	 */
+	public static class ScrollZooming extends PanelInteraction  {
+	    final protected ImagePanel imagePanel;
+
+	    /**
+	     * Constructs a new ImageZooming interaction for the given image panel.
+	     * @param imagePanel image panel to zoom
+	     */
+	    public ScrollZooming(ImagePanel imagePanel) {
+	        this.imagePanel = imagePanel;
+	        this.setEventKey(KeyEvent.VK_SHIFT);
+	    }
+
+	    @Override
+	    public void mouseWheelMoved(MouseWheelEvent e) {
+	        super.mouseWheelMoved(e);
+	        if (this.getPressedKey() == this.getEventKey()) {
+	            AffineTransform zoomAT = this.calcZoomAffineTransform(Math.pow(1.7, e.getWheelRotation() * 0.1));
+	            AffineTransform panelAT = this.imagePanel.getZoomAffineTransform();
+	            panelAT.concatenate(zoomAT);
+	            this.imagePanel.setZoomAffineTransform(panelAT);
+	        }
+	    }
+
+	    protected AffineTransform calcZoomAffineTransform(double zoom) {
+	        double panelWidth = imagePanel.getBounds().getWidth();
+	        double panelHeight = imagePanel.getBounds().getHeight();
+
+	        AffineTransform zoomAT = new AffineTransform();
+	        zoomAT.translate(panelWidth / 2.0, panelHeight / 2.0);
+	        zoomAT.scale(zoom, zoom);
+	        zoomAT.translate(-(panelWidth / 2.0), -(panelHeight / 2.0));
+	        return zoomAT;
+	    }
+
+	    @Override
+	    public ScrollZooming register(){
+	        if( ! Arrays.asList(imagePanel.getMouseWheelListeners()).contains(this))
+	            imagePanel.addMouseWheelListener(this);
+	        if ( ! Arrays.asList(imagePanel.getKeyListeners()).contains(this))
+	            imagePanel.addKeyListener(this);
+	        return this;
+	    }
+
+	    @Override
+	    public ScrollZooming deRegister(){
+	        imagePanel.removeMouseWheelListener(this);
+	        imagePanel.removeKeyListener(this);
+	        return this;
+	    }
+	}
+	
+	/**
+	 * This class implements zooming of an {@link ImagePanel} by scrolling the mouse wheel.
+	 * The zooming of this class is different from that of {@link ScrollZooming},
+	 * as it always zooms onto the current mouse position, not into the center of the current viewport.
+	 * <br>
+	 * To zoom on the image panel, the 'shift' key has to be pressed.
+	 * The zooming is done by scaling the zoomAffineTransform {@link AffineTransform} of the image panel.
+	 * <br>
+	 * The MouseFocusedZooming class first has to be registered on the image panel by calling register().
+	 * It can be deregistered if it isn't used anymore by calling deRegister().
+	 * <br>
+	 * Example use of the MouseFocusedZooming class:
+	 * <pre>MouseFocusedZooming mfz = new MouseFocusedZooming(imagePanel).register();</pre>
+	 * <pre>mfz.deRegister();</pre>
+	 */
+	public static class MouseFocusedZooming extends PanelInteraction {
+	    final protected ImagePanel imagePanel;
+
+	    /**
+	     * Constructs a new MouseFocusedZooming object for the given image panel.
+	     * @param imagePanel image panel to zoom
+	     */
+	    public MouseFocusedZooming(ImagePanel imagePanel) {
+	        this.imagePanel = imagePanel;
+	        this.setEventKey(KeyEvent.VK_SHIFT);
+	    }
+
+	    @Override
+	    public void mouseWheelMoved(MouseWheelEvent e) {
+	        super.mouseWheelMoved(e);
+	        if (this.getPressedKey() == this.getEventKey()) {
+	            try {
+	                AffineTransform zoomAT = this.calcZoomAffineTransform(e, Math.pow(1.7, e.getWheelRotation() * 0.1));
+	                AffineTransform panelAT = this.imagePanel.getZoomAffineTransform();
+	                panelAT.concatenate(zoomAT);
+	                this.imagePanel.setZoomAffineTransform(panelAT);
+	            } catch (NoninvertibleTransformException ex) {
+	                throw new RuntimeException(ex);
+	            }
+	        }
+	    }
+
+	    protected AffineTransform calcZoomAffineTransform(MouseWheelEvent e, double zoom) throws NoninvertibleTransformException {
+	        Point2D.Double mouseCoordinates = new Point2D.Double(e.getX(), e.getY());
+	        mouseCoordinates = (Point2D.Double) imagePanel.getZoomAffineTransform().inverseTransform(mouseCoordinates, mouseCoordinates);
+
+	        AffineTransform zoomAT = new AffineTransform();
+	        zoomAT.translate(mouseCoordinates.getX(), mouseCoordinates.getY());
+	        zoomAT.scale(zoom, zoom);
+	        zoomAT.translate(-mouseCoordinates.getX(), -mouseCoordinates.getY());
+	        return zoomAT;
+	    }
+
+	    @Override
+	    public MouseFocusedZooming register(){
+	        if( ! Arrays.asList(imagePanel.getMouseWheelListeners()).contains(this))
+	            imagePanel.addMouseWheelListener(this);
+	        if ( ! Arrays.asList(imagePanel.getKeyListeners()).contains(this))
+	            imagePanel.addKeyListener(this);
+	        return this;
+	    }
+
+	    @Override
+	    public MouseFocusedZooming deRegister(){
+	        imagePanel.removeMouseWheelListener(this);
+	        imagePanel.removeKeyListener(this);
+	        return this;
+	    }
 	}
 	
 }

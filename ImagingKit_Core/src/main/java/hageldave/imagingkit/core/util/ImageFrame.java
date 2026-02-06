@@ -22,13 +22,10 @@
 
 package hageldave.imagingkit.core.util;
 
-import java.awt.Dimension;
-import java.awt.Image;
-
-import javax.swing.JFrame;
-import javax.swing.SwingUtilities;
-
 import hageldave.imagingkit.core.Img;
+
+import javax.swing.*;
+import java.awt.*;
 
 /**
  * {@link JFrame} for displaying an image utilizing an {@link ImagePanel}.
