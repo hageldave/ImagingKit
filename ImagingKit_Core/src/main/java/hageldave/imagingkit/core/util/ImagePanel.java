@@ -397,8 +397,6 @@ public class ImagePanel extends JPanel {
 	 * The PanelInteraction class is an abstract class that can be used to implement interactions with an {@link ImagePanel}.
 	 * It implements the {@link KeyListener} interface and provides a {@link #pressedKey} field that can be used to
 	 * check which key is currently pressed.
-	 * <br>
-	 * Implementations of the abstract class can be found in the {@link hageldave.imagingkit.core.interaction} package.
 	 */
 	public static abstract class PanelInteraction extends MouseAdapter implements KeyListener {
 	    protected int pressedKey = KeyEvent.VK_UNDEFINED;;

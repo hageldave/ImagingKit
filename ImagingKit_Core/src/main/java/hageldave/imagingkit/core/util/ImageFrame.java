@@ -111,7 +111,7 @@ public class ImageFrame extends JFrame {
 	 * Displays the specified image in a new ImageFrame instance.
 	 * <p>
 	 * Creates a new ImageFrame, sets the specified image, and schedules a
-	 * call to <tt>setVisible(true)</tt> on the AWT event dispatching thread.
+	 * call to <code>setVisible(true)</code> on the AWT event dispatching thread.
 	 * @param img to be displayed
 	 * @return the frame that displays the image.
 	 * 
@@ -131,7 +131,7 @@ public class ImageFrame extends JFrame {
 	 * Displays the specified image in a new ImageFrame instance.
 	 * <p>
 	 * Creates a new ImageFrame, sets the specified image, and schedules a
-	 * call to <tt>setVisible(true)</tt> on the AWT event dispatching thread.
+	 * call to <code>setVisible(true)</code> on the AWT event dispatching thread.
 	 * @param img to be displayed
 	 * @return the frame that displays the image.
 	 * 

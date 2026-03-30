@@ -40,7 +40,7 @@ import java.util.stream.Stream;
  * For example, a specific operation should be applied to each pixel of the Img
  * which is specified as a function that takes a 3-dimensional vector as
  * argument with red, green and blue component e.g.
- * <br><tt>applyOperation(Vector3D vec){...}}</tt><br>
+ * <br><code>applyOperation(Vector3D vec){...}}</code><br>
  * To obtain a spliterator of the Img that will accept a {@code Consumer<Vector3D>}
  * a PixelConvertingSpliterator can be created from an ordinary {@code Spliterator<Pixel>}
  * providing the following functions:<br>

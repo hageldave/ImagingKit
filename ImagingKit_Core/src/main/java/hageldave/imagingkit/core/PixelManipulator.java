@@ -38,7 +38,7 @@ import hageldave.imagingkit.core.PixelConvertingSpliterator.PixelConverter;
  * <li>convert the element back to pixel using the converter</li>
  * </ol>
  * <p>
- * This is used with an image's <tt>forEach</tt> method (see {@link ImgBase#forEach(PixelManipulator)})
+ * This is used with an image's <code>forEach</code> method (see {@link ImgBase#forEach(PixelManipulator)})
  * 
  * @author hageldave
  * @param <P> the pixel type of the converter (PixelBase or an implementation of it)
