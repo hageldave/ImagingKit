@@ -11,13 +11,13 @@ So far the *ImagingKit-Core* and *ImagingKit-Fourier* artifacts of the library a
 <dependency>
   <groupId>com.github.hageldave.imagingkit</groupId>
   <artifactId>imagingkit-core</artifactId>
-  <version>2.1</version>
+  <version>2.2</version>
 </dependency>
 
 <dependency>
   <groupId>com.github.hageldave.imagingkit</groupId>
   <artifactId>imagingkit-fourier</artifactId>
-  <version>2.1</version>
+  <version>2.2</version>
 </dependency>
 ```
 
